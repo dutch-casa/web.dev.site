@@ -50,10 +50,10 @@ uniform float uGlitchAmount;
 uniform float uFlickerAmount;
 uniform float uNoiseAmp;
 uniform float uChromaticAberration;
- uniform float uDither;
- uniform float uCurvature;
- uniform vec3  uTint;
- uniform vec2  uMouse;
+uniform float uDither;
+uniform float uCurvature;
+uniform vec3  uTint;
+uniform vec2  uMouse;
 uniform float uMouseStrength;
 uniform float uUseMouse;
 uniform float uPageLoadProgress;
@@ -190,8 +190,8 @@ vec3 getColor(vec2 p){
                 digit(p + vec2(-off, 0.0)) + digit(p + vec2(0.0, 0.0)) + digit(p + vec2(off, 0.0)) +
                 digit(p + vec2(-off, off)) + digit(p + vec2(0.0, off)) + digit(p + vec2(off, off));
     
-     vec3 baseColor = vec3(0.9) * middle + sum * 0.1 * vec3(1.0) * bar;
-     return baseColor;
+    vec3 baseColor = vec3(0.9) * middle + sum * 0.1 * vec3(1.0) * bar;
+    return baseColor;
 }
 
 vec2 barrel(vec2 uv){

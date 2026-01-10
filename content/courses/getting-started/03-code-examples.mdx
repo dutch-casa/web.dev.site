@@ -1,0 +1,74 @@
+# Code Examples
+
+This lesson demonstrates the interactive code features available in lessons.
+
+## Syntax Highlighting
+
+Code blocks have syntax highlighting powered by Shiki. Hover over a code block to reveal the copy button.
+
+```typescript
+type User = {
+  readonly id: string
+  readonly email: string
+  readonly createdAt: Date
+}
+
+function createUser(email: string): User {
+  return {
+    id: crypto.randomUUID(),
+    email,
+    createdAt: new Date(),
+  }
+}
+```
+
+## Code Slides
+
+Use code slides to show step-by-step transformations or compare different approaches.
+
+<CodeSlides>
+```typescript
+// Step 1: Define the type
+type Result<T, E> =
+  | { ok: true; value: T }
+  | { ok: false; error: E }
+```
+
+```typescript
+// Step 2: Create helper constructors
+const ok = <T>(value: T): Result<T, never> =>
+  ({ ok: true, value })
+
+const err = <E>(error: E): Result<never, E> =>
+  ({ ok: false, error })
+```
+
+```typescript
+// Step 3: Use pattern matching
+function handleResult<T, E>(result: Result<T, E>) {
+  if (result.ok) {
+    console.log("Success:", result.value)
+  } else {
+    console.error("Error:", result.error)
+  }
+}
+```
+</CodeSlides>
+
+<Tip>
+Swipe left/right on mobile or use the arrow buttons to navigate between code slides.
+</Tip>
+
+## Starter Code
+
+For hands-on exercises, we provide starter code repositories.
+
+<StarterCode href="https://github.com/example/typescript-starter" label="TypeScript Starter" />
+
+## Inline Code
+
+Inline code like `const x = 42` renders with a subtle background.
+
+<Note>
+All code examples support TypeScript, JavaScript, Python, Go, Rust, and many other languages.
+</Note>

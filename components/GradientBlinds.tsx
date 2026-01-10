@@ -386,3 +386,4 @@ void main() {
 };
 
 export default GradientBlinds;
+

@@ -12,6 +12,7 @@ interface WobbleCardProps extends Omit<HTMLMotionProps<"div">, "children"> {
   perspective?: number;
   radialGradient?: boolean;
   noise?: boolean;
+  containerClassName?: string;
 }
 
 export function WobbleCard({
@@ -21,6 +22,7 @@ export function WobbleCard({
   perspective = 1,
   radialGradient = true,
   noise: showNoise = true,
+  containerClassName,
   style,
   ...props
 }: WobbleCardProps) {
@@ -78,7 +80,7 @@ export function WobbleCard({
             transform: isHovering ? innerTransform : "translate3d(0px, 0px, 0) scale3d(1, 1, 1)",
             transition: "transform 0.1s ease-out",
           }}
-          className={cn("h-full px-4 py-20 sm:px-10", perspective > 1 && "origin-center")}
+          className={cn("h-full", containerClassName ?? "px-4 py-20 sm:px-10", perspective > 1 && "origin-center")}
         >
           {showNoise && <WobbleCardNoise />}
           {children}

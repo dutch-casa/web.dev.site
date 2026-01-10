@@ -1,0 +1,16 @@
+{
+  "id": "getting-started",
+  "title": "Getting Started",
+  "author": "Web.Dev",
+  "description": "Learn the fundamentals of our learning platform and how to make the most of interactive lessons.",
+  "modules": [
+    {
+      "title": "Welcome",
+      "lessons": ["01-intro", "02-navigation"]
+    },
+    {
+      "title": "Interactive Features",
+      "lessons": ["03-code-examples", "04-quizzes", "05-playground"]
+    }
+  ]
+}

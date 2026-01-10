@@ -29,7 +29,8 @@ const CurvedLoop: FC<CurvedLoopProps> = ({
   const [offset, setOffset] = useState(0);
   const uid = useId();
   const pathId = `curve-${uid}`;
-  const pathD = `M-100,40 Q500,${40 + curveAmount} 1540,40`;
+  const curveY = 0;
+  const pathD = `M-100,${curveY} Q720,${curveY + curveAmount} 1540,${curveY}`;
 
   const dragRef = useRef(false);
   const lastXRef = useRef(0);
@@ -45,8 +46,20 @@ const CurvedLoop: FC<CurvedLoopProps> = ({
   const ready = spacing > 0;
 
   useEffect(() => {
-    if (measureRef.current) setSpacing(measureRef.current.getComputedTextLength());
-  }, [text, className]);
+    if (measureRef.current) {
+      setSpacing(measureRef.current.getComputedTextLength());
+    }
+    // Force re-measure after a short delay in case font isn't loaded
+    const timeout = setTimeout(() => {
+      if (measureRef.current) {
+        const len = measureRef.current.getComputedTextLength();
+        if (len > 0 && len !== spacing) {
+          setSpacing(len);
+        }
+      }
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [text, className, spacing]);
 
   useEffect(() => {
     if (!spacing) return;
@@ -109,7 +122,7 @@ const CurvedLoop: FC<CurvedLoopProps> = ({
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center w-full"
+      className="h-64 md:h-96 w-screen -ml-[calc(50vw-50%)] flex items-center justify-center overflow-hidden"
       style={{ visibility: ready ? 'visible' : 'hidden', cursor: cursorStyle }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -117,8 +130,8 @@ const CurvedLoop: FC<CurvedLoopProps> = ({
       onPointerLeave={endDrag}
     >
       <svg
-        className="select-none w-full overflow-visible block aspect-[100/12] text-[6rem] font-bold uppercase leading-none"
-        viewBox="0 0 1440 120"
+        className="select-none w-[1440px] max-w-none text-[5rem] md:text-[8rem] font-bold uppercase leading-none"
+        viewBox="0 0 1440 600"
       >
         <text ref={measureRef} xmlSpace="preserve" style={{ visibility: 'hidden', opacity: 0, pointerEvents: 'none' }}>
           {text}
@@ -127,7 +140,7 @@ const CurvedLoop: FC<CurvedLoopProps> = ({
           <path ref={pathRef} id={pathId} d={pathD} fill="none" stroke="transparent" />
         </defs>
         {ready && (
-          <text xmlSpace="preserve" className={`fill-white ${className ?? ''}`}>
+          <text xmlSpace="preserve" className={className}>
             <textPath ref={textPathRef} href={`#${pathId}`} startOffset={offset + 'px'} xmlSpace="preserve">
               {totalText}
             </textPath>

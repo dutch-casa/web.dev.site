@@ -1,0 +1,125 @@
+# Web Playground
+
+Experiment with code directly in your browser using our interactive playground. The playground runs a full development environment powered by WebContainers.
+
+## Try It Yourself
+
+Edit the HTML below and click Run to see your changes live. Try changing the colors, the text, or add new elements!
+
+<Playground
+  files={{
+    "package.json": JSON.stringify({
+      name: "playground-demo",
+      type: "module",
+      dependencies: {
+        "vite": "latest"
+      },
+      scripts: {
+        "dev": "vite --port 5173 --host"
+      }
+    }, null, 2),
+    "index.html": String.raw`<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Page</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 400px;
+        text-align: center;
+      }
+
+      h1 {
+        color: #1a1a2e;
+        margin-bottom: 16px;
+        font-size: 1.75rem;
+      }
+
+      p {
+        color: #4a4a6a;
+        line-height: 1.6;
+        margin-bottom: 24px;
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Hello, World!</h1>
+      <p>Edit this file in the playground and click Run to see your changes.</p>
+      <button onclick="this.textContent='Clicked!'">Click Me</button>
+    </div>
+  </body>
+</html>`,
+    "vite.config.js": String.raw`import { defineConfig } from 'vite'
+export default defineConfig({
+  server: {
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+    }
+  }
+})`
+  }}
+  startCommand="npm run dev"
+  autoStart={true}
+/>
+
+## How It Works
+
+The playground runs a complete Node.js environment directly in your browser using WebContainers. When you click Run:
+
+1. **Boot** - The WebContainer initializes
+2. **Mount** - Your files are loaded into the virtual filesystem
+3. **Install** - Dependencies from package.json are installed
+4. **Start** - The dev server spins up and serves your application
+
+## Challenge
+
+Try modifying the code to:
+
+- Change the gradient colors on the body background
+- Update the card's border-radius for a different look
+- Add a new element to the card
+- Change the button's hover effect
+
+<Tip>
+The playground supports hot module replacement (HMR), so changes you make will automatically reload in the preview without needing to click Run again.
+</Tip>

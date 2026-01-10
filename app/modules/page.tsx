@@ -1,22 +1,46 @@
+import Link from "next/link"
+import { getAllCourses } from "@/lib/course-loader"
+import { flattenLessons } from "@/lib/course-types"
+import { CourseCard } from "@/components/modules/course-card"
+
 export const metadata = {
   title: "Modules",
-  description: "Learning modules for Auburn University Club",
+  description: "Free learning modules - progress tracked locally",
 }
 
-export default function ModulesPage() {
+export default async function ModulesPage() {
+  const courses = await getAllCourses()
+
   return (
-    <main className="min-h-screen flex items-center justify-center px-4">
-      <div className="text-center space-y-8">
-        <h1 className="text-balance bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-bold text-6xl md:text-8xl tracking-tight">
-          Coming Soon
-        </h1>
-        <p className="text-muted-foreground mx-auto max-w-2xl text-lg md:text-xl">
-          Learning modules are under development. Check back soon!
-        </p>
-        <button className="group/btn relative rounded-full bg-primary px-8 py-3 text-primary-foreground transition-all duration-[120ms] ease-out hover:scale-105 hover:shadow-lg active:scale-95">
-          <span className="relative z-10 font-semibold">Go Home</span>
-          <span className="absolute inset-0 rounded-full bg-primary/20 blur-xl opacity-0 transition-opacity duration-[300ms] ease-out group-hover/btn:opacity-100" />
-        </button>
+    <main className="min-h-screen px-4 py-16 md:px-8 lg:px-16">
+      <div className="mx-auto max-w-6xl">
+        <header className="mb-12 space-y-4">
+          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+            Learning Modules
+          </h1>
+          <p className="max-w-2xl text-lg text-muted-foreground">
+            Free courses with interactive code examples, quizzes, and hands-on
+            exercises. Your progress is saved locally.
+          </p>
+        </header>
+
+        {courses.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-muted-foreground/30 p-12 text-center">
+            <p className="text-muted-foreground">
+              No courses available yet. Check back soon!
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {courses.map((course) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                totalLessons={flattenLessons(course).length}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </main>
   )

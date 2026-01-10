@@ -1,0 +1,77 @@
+# Interactive Quizzes
+
+Test your understanding with interactive quiz components.
+
+## Multiple Choice
+
+The simplest quiz format. Select the correct answer from the options.
+
+<MultipleChoice
+  question="What does the `readonly` modifier do in TypeScript?"
+  options={[
+    "Makes a property immutable after initialization",
+    "Makes a property private",
+    "Makes a property optional",
+    "Makes a property required"
+  ]}
+  correct={0}
+/>
+
+## Fill in the Blank
+
+Type the missing word or phrase. The answer is fuzzy-matched (small typos are forgiven).
+
+<FillBlank
+  question="The ___ keyword declares a block-scoped variable that cannot be reassigned."
+  answer="const"
+  fuzzyThreshold={2}
+/>
+
+<Tip>
+Fill-in-the-blank uses Levenshtein distance for fuzzy matching. A threshold of 2 means up to 2 character differences are allowed.
+</Tip>
+
+## Short Answer
+
+For longer answers, use short answer questions. These use similarity matching.
+
+<ShortAnswer
+  question="Why is immutability important in functional programming?"
+  expectedAnswer="Immutability prevents side effects and makes code easier to reason about. It enables referential transparency and simplifies concurrent programming."
+  fuzzyThreshold={0.5}
+/>
+
+<Note>
+If you think your answer was correct but the fuzzy matching disagreed, click "Actually, I was right" to override.
+</Note>
+
+## Quiz Independence
+
+<Warning>
+Quiz results are independent of lesson completion. You can mark a lesson complete without answering quizzes, and quiz answers don't automatically mark lessons complete.
+</Warning>
+
+## More Examples
+
+Here's another multiple choice to practice:
+
+<MultipleChoice
+  question="Which hook should you use for data fetching in React?"
+  options={[
+    "useQuery (React Query)",
+    "useEffect",
+    "useState",
+    "useMemo"
+  ]}
+  correct={0}
+/>
+
+And a fill-in-the-blank:
+
+<FillBlank
+  question="In TypeScript, ___ is used to define a union type."
+  answer="|"
+  fuzzyThreshold={0}
+/>
+
+You've completed the Getting Started course. Mark this lesson complete and explore other courses.

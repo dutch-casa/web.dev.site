@@ -1,0 +1,20 @@
+$ next build
+▲ Next.js 16.1.1 (Turbopack)
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 7.2s
+  Running TypeScript ...
+Failed to compile.
+
+./components/editor/index.tsx:150:54
+Type error: Property 'expandEditor' does not exist on type 'EditorStoreState'.
+
+[0m [90m 148 |[39m
+ [90m 149 |[39m   [90m// Get command[39m
+[31m[1m>[22m[39m[90m 150 |[39m   [36mconst[39m expandEditor [33m=[39m useEditorStore(state [33m=>[39m state[33m.[39mexpandEditor)
+ [90m     |[39m                                                      [31m[1m^[22m[39m
+ [90m 151 |[39m
+ [90m 152 |[39m   [90m// Get first file for preview[39m
+ [90m 153 |[39m   [36mconst[39m firstFile [33m=[39m [33mObject[39m[33m.[39mentries(files)[[35m0[39m][0m
+Next.js build worker exited with code: 1 and signal: null
+error: script "build" exited with code 1

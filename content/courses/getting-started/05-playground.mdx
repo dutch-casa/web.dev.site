@@ -1,125 +1,229 @@
-# Web Playground
+# Interactive Playground
 
-Experiment with code directly in your browser using our interactive playground. The playground runs a full development environment powered by WebContainers.
+Experiment with React code directly in your browser. This playground runs a complete Node.js development environment powered by WebContainers.
 
-## Try It Yourself
+## What You're Learning
 
-Edit the HTML below and click Run to see your changes live. Try changing the colors, the text, or add new elements!
+This example demonstrates core React concepts:
 
-<Playground
-  files={{
-    "package.json": JSON.stringify({
-      name: "playground-demo",
-      type: "module",
-      dependencies: {
-        "vite": "latest"
-      },
-      scripts: {
-        "dev": "vite --port 5173 --host"
-      }
-    }, null, 2),
-    "index.html": String.raw`<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Page</title>
-    <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      body {
-        font-family: system-ui, -apple-system, sans-serif;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 20px;
-      }
-
-      .card {
-        background: white;
-        border-radius: 16px;
-        padding: 32px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        max-width: 400px;
-        text-align: center;
-      }
-
-      h1 {
-        color: #1a1a2e;
-        margin-bottom: 16px;
-        font-size: 1.75rem;
-      }
-
-      p {
-        color: #4a4a6a;
-        line-height: 1.6;
-        margin-bottom: 24px;
-      }
-
-      button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 12px 32px;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: transform 0.2s, box-shadow 0.2s;
-      }
-
-      button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-      }
-    </style>
-  </head>
-  <body>
-    <div class="card">
-      <h1>Hello, World!</h1>
-      <p>Edit this file in the playground and click Run to see your changes.</p>
-      <button onclick="this.textContent='Clicked!'">Click Me</button>
-    </div>
-  </body>
-</html>`,
-    "vite.config.js": String.raw`import { defineConfig } from 'vite'
-export default defineConfig({
-  server: {
-    headers: {
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Cross-Origin-Opener-Policy': 'same-origin',
-    }
-  }
-})`
-  }}
-  startCommand="npm run dev"
-  autoStart={true}
-/>
-
-## How It Works
-
-The playground runs a complete Node.js environment directly in your browser using WebContainers. When you click Run:
-
-1. **Boot** - The WebContainer initializes
-2. **Mount** - Your files are loaded into the virtual filesystem
-3. **Install** - Dependencies from package.json are installed
-4. **Start** - The dev server spins up and serves your application
-
-## Challenge
-
-Try modifying the code to:
-
-- Change the gradient colors on the body background
-- Update the card's border-radius for a different look
-- Add a new element to the card
-- Change the button's hover effect
+- **`useState`** - Managing state (the task list, input value)
+- **Event handlers** - `onChange`, `onKeyDown`, `onClick`
+- **Conditional rendering** - `{tasks.length === 0 && <p>...</p>}`
+- **Derived state** - `completedCount` calculated from tasks
+- **Immutability** - Using spread operator for updates
 
 <Tip>
-The playground supports hot module replacement (HMR), so changes you make will automatically reload in the preview without needing to click Run again.
+The playground runs completely in your browser using WebContainers. No installation required!
 </Tip>
+
+## Try It: Build a Counter
+
+Click to expand the exercise below. Your task is to implement a counter using `useState`:
+
+<ExerciseBlock
+  id="counter-exercise"
+  title="Build a Counter"
+  description="Learn useState by implementing increment and decrement"
+  files={[
+    {
+      path: "/src/App.tsx",
+      content: `import { useState } from 'react'
+
+export default function App() {
+  // TODO: Replace this with useState
+  const count = 0
+
+  // TODO: Implement increment
+  function increment() {
+    // Your code here
+  }
+
+  // TODO: Implement decrement
+  function decrement() {
+    // Your code here
+  }
+
+  return (
+    <div style={styles.container}>
+      <h1 style={styles.title}>Counter</h1>
+      <div style={styles.counter}>{count}</div>
+      <div style={styles.buttons}>
+        <button onClick={decrement} style={styles.button}>-</button>
+        <button onClick={increment} style={styles.button}>+</button>
+      </div>
+    </div>
+  )
+}
+
+const styles = {
+  container: {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: 'system-ui, sans-serif',
+    background: 'linear-gradient(180deg, #f0f4ff 0%, #fff 100%)',
+  },
+  title: {
+    fontSize: '2rem',
+    fontWeight: 700,
+    color: '#1e293b',
+    marginBottom: '1rem',
+  },
+  counter: {
+    fontSize: '4rem',
+    fontWeight: 700,
+    color: '#3b82f6',
+    marginBottom: '1rem',
+  },
+  buttons: {
+    display: 'flex',
+    gap: '1rem',
+  },
+  button: {
+    width: '60px',
+    height: '60px',
+    fontSize: '2rem',
+    fontWeight: 600,
+    border: 'none',
+    borderRadius: '12px',
+    background: '#3b82f6',
+    color: 'white',
+    cursor: 'pointer',
+  },
+}`
+    }
+  ]}
+/>
+
+## Solution
+
+Once you've tried implementing it yourself, here's the solution:
+
+1. Replace `const count = 0` with `const [count, setCount] = useState(0)`
+2. In `increment`, call `setCount(count + 1)`
+3. In `decrement`, call `setCount(count - 1)`
+
+<Note>
+The `useState` hook returns a pair: the current state value and a function to update it. When you call the update function, React re-renders the component with the new value.
+</Note>
+
+## Full Todo App
+
+Ready for something more complex? Try the full todo app playground:
+
+<ExerciseBlock
+  id="todo-app"
+  title="Todo List App"
+  description="A complete todo app with add, toggle, and delete"
+  defaultExpanded={false}
+  height={700}
+  files={[
+    {
+      path: "/src/App.tsx",
+      content: `import { useState } from 'react'
+
+interface Task {
+  id: number
+  text: string
+  completed: boolean
+}
+
+export default function App() {
+  const [tasks, setTasks] = useState<Task[]>([
+    { id: 1, text: 'Learn React', completed: true },
+    { id: 2, text: 'Build a project', completed: false },
+  ])
+
+  const [inputValue, setInputValue] = useState('')
+
+  function addTask() {
+    if (!inputValue.trim()) return
+
+    setTasks([...tasks, {
+      id: Date.now(),
+      text: inputValue,
+      completed: false,
+    }])
+    setInputValue('')
+  }
+
+  function toggleTask(id: number) {
+    setTasks(tasks.map(task =>
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ))
+  }
+
+  function deleteTask(id: number) {
+    setTasks(tasks.filter(task => task.id !== id))
+  }
+
+  const completedCount = tasks.filter(t => t.completed).length
+
+  return (
+    <div style={styles.container}>
+      <h1 style={styles.title}>Todo List</h1>
+      <div style={styles.stats}>{tasks.length} tasks - {completedCount} done</div>
+
+      <div style={styles.inputRow}>
+        <input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && addTask()}
+          placeholder="Add a task..."
+          style={styles.input}
+        />
+        <button onClick={addTask} style={styles.addButton}>Add</button>
+      </div>
+
+      <ul style={styles.list}>
+        {tasks.map(task => (
+          <li key={task.id} style={styles.listItem}>
+            <label style={styles.label}>
+              <input
+                type="checkbox"
+                checked={task.completed}
+                onChange={() => toggleTask(task.id)}
+              />
+              <span style={{
+                textDecoration: task.completed ? 'line-through' : 'none',
+                opacity: task.completed ? 0.6 : 1,
+              }}>{task.text}</span>
+            </label>
+            <button onClick={() => deleteTask(task.id)} style={styles.deleteButton}>
+              x
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      {tasks.length === 0 && <p style={styles.empty}>No tasks yet</p>}
+    </div>
+  )
+}
+
+const styles = {
+  container: {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    padding: '40px 20px',
+    background: 'linear-gradient(180deg, #f0f4ff 0%, #fff 100%)',
+    fontFamily: 'system-ui, sans-serif',
+  },
+  title: { fontSize: '2rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px' },
+  stats: { color: '#64748b', marginBottom: '24px' },
+  inputRow: { display: 'flex', gap: '12px', marginBottom: '24px' },
+  input: { padding: '12px 16px', fontSize: '1rem', border: '2px solid #e2e8f0', borderRadius: '8px', width: '280px', outline: 'none' },
+  addButton: { padding: '12px 24px', fontSize: '1rem', fontWeight: 600, background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' },
+  list: { listStyle: 'none', padding: 0, width: '100%', maxWidth: '400px' },
+  listItem: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'white', borderRadius: '8px', marginBottom: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' },
+  label: { display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' },
+  deleteButton: { padding: '6px 12px', fontSize: '0.875rem', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', cursor: 'pointer' },
+  empty: { color: '#94a3b8', marginTop: '32px' },
+}`
+    }
+  ]}
+/>

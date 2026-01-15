@@ -1,0 +1,66 @@
+{
+  "id": "react-counter",
+  "title": "Build a Counter",
+  "description": "Learn useState by building a simple counter component",
+  "focus": "/src/App.tsx",
+  "files": [
+    {
+      "path": "/package.json",
+      "content": {
+        "kind": "inline",
+        "content": "{\n  \"name\": \"react-counter\",\n  \"version\": \"1.0.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"vite build\"\n  },\n  \"dependencies\": {\n    \"react\": \"^18.2.0\",\n    \"react-dom\": \"^18.2.0\"\n  },\n  \"devDependencies\": {\n    \"vite\": \"^5.0.0\",\n    \"@vitejs/plugin-react\": \"^4.2.0\"\n  }\n}"
+      },
+      "hidden": true
+    },
+    {
+      "path": "/vite.config.js",
+      "content": {
+        "kind": "inline",
+        "content": "import { defineConfig } from 'vite'\nimport react from '@vitejs/plugin-react'\n\nexport default defineConfig({\n  plugins: [react()],\n  server: { port: 5173, host: true }\n})"
+      },
+      "hidden": true
+    },
+    {
+      "path": "/index.html",
+      "content": {
+        "kind": "inline",
+        "content": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Counter</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.tsx\"></script>\n  </body>\n</html>"
+      },
+      "hidden": true
+    },
+    {
+      "path": "/src/main.tsx",
+      "content": {
+        "kind": "inline",
+        "content": "import React from 'react'\nimport ReactDOM from 'react-dom/client'\nimport App from './App'\n\nReactDOM.createRoot(document.getElementById('root')!).render(\n  <React.StrictMode>\n    <App />\n  </React.StrictMode>\n)"
+      },
+      "hidden": true
+    },
+    {
+      "path": "/src/App.tsx",
+      "content": {
+        "kind": "inline",
+        "content": "import { useState } from 'react'\n\nexport default function App() {\n  // TODO: Add state for the counter\n  const count = 0\n\n  // TODO: Implement increment function\n  function increment() {\n    // Your code here\n  }\n\n  // TODO: Implement decrement function\n  function decrement() {\n    // Your code here\n  }\n\n  return (\n    <div style={styles.container}>\n      <h1 style={styles.title}>Counter</h1>\n      <div style={styles.counter}>{count}</div>\n      <div style={styles.buttons}>\n        <button onClick={decrement} style={styles.button}>-</button>\n        <button onClick={increment} style={styles.button}>+</button>\n      </div>\n    </div>\n  )\n}\n\nconst styles = {\n  container: {\n    minHeight: '100vh',\n    display: 'flex',\n    flexDirection: 'column' as const,\n    alignItems: 'center',\n    justifyContent: 'center',\n    fontFamily: 'system-ui, sans-serif',\n    background: 'linear-gradient(180deg, #f0f4ff 0%, #fff 100%)',\n  },\n  title: {\n    fontSize: '2rem',\n    fontWeight: 700,\n    color: '#1e293b',\n    marginBottom: '1rem',\n  },\n  counter: {\n    fontSize: '4rem',\n    fontWeight: 700,\n    color: '#3b82f6',\n    marginBottom: '1rem',\n  },\n  buttons: {\n    display: 'flex',\n    gap: '1rem',\n  },\n  button: {\n    width: '60px',\n    height: '60px',\n    fontSize: '2rem',\n    fontWeight: 600,\n    border: 'none',\n    borderRadius: '12px',\n    background: '#3b82f6',\n    color: 'white',\n    cursor: 'pointer',\n  },\n}"
+      }
+    }
+  ],
+  "solution": [
+    {
+      "path": "/src/App.tsx",
+      "content": {
+        "kind": "inline",
+        "content": "import { useState } from 'react'\n\nexport default function App() {\n  const [count, setCount] = useState(0)\n\n  function increment() {\n    setCount(count + 1)\n  }\n\n  function decrement() {\n    setCount(count - 1)\n  }\n\n  return (\n    <div style={styles.container}>\n      <h1 style={styles.title}>Counter</h1>\n      <div style={styles.counter}>{count}</div>\n      <div style={styles.buttons}>\n        <button onClick={decrement} style={styles.button}>-</button>\n        <button onClick={increment} style={styles.button}>+</button>\n      </div>\n    </div>\n  )\n}\n\nconst styles = {\n  container: {\n    minHeight: '100vh',\n    display: 'flex',\n    flexDirection: 'column' as const,\n    alignItems: 'center',\n    justifyContent: 'center',\n    fontFamily: 'system-ui, sans-serif',\n    background: 'linear-gradient(180deg, #f0f4ff 0%, #fff 100%)',\n  },\n  title: {\n    fontSize: '2rem',\n    fontWeight: 700,\n    color: '#1e293b',\n    marginBottom: '1rem',\n  },\n  counter: {\n    fontSize: '4rem',\n    fontWeight: 700,\n    color: '#3b82f6',\n    marginBottom: '1rem',\n  },\n  buttons: {\n    display: 'flex',\n    gap: '1rem',\n  },\n  button: {\n    width: '60px',\n    height: '60px',\n    fontSize: '2rem',\n    fontWeight: 600,\n    border: 'none',\n    borderRadius: '12px',\n    background: '#3b82f6',\n    color: 'white',\n    cursor: 'pointer',\n  },\n}"
+      }
+    }
+  ],
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "@vitejs/plugin-react": "^4.2.0"
+  },
+  "devCommand": "npm run dev",
+  "previewPort": 5173
+}

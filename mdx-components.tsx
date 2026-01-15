@@ -12,7 +12,8 @@ import {
   MultipleChoice,
   FillBlank,
   ShortAnswer,
-  PlaygroundSimple,
+  SimpleExercise,
+  ExerciseBlock,
 } from "@/components/mdx"
 import { CodeBlockWrapper } from "@/components/mdx/code-block"
 
@@ -87,8 +88,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     FillBlank,
     ShortAnswer,
 
-    // Interactive playground (WebContainers)
-    Playground: PlaygroundSimple,
+    // Interactive exercises (ExerciseBlock for MDX authoring)
+    SimpleExercise,
+    ExerciseBlock,
 
     ...components,
   }

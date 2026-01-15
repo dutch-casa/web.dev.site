@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.claude
+.claude
+.claude
+.claude/tsc-cache/ses_456baabdcffeouiMCw55skftkw/affected-repos.txt
+.claude/tsc-cache/ses_456baabdcffeouiMCw55skftkw/edited-files.log
+.tldr
+.tldrignore

@@ -247,3 +247,83 @@
     animation-delay: calc(var(--index) * 68ms);
   }
 }
+
+/* xterm.js terminal styles */
+.xterm {
+  position: relative;
+  font-family: var(--font-jetbrains-mono), 'Geist Mono', ui-monospace, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  height: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.xterm.focus,
+.xterm:focus {
+  outline: none;
+}
+
+.xterm .xterm-helpers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+}
+
+.xterm .xterm-helper-textarea {
+  position: absolute;
+  opacity: 0;
+  left: -9999px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  resize: none;
+  white-space: pre;
+  border: 0;
+}
+
+.xterm .xterm-viewport {
+  overflow-y: scroll;
+  width: 100%;
+  height: 100%;
+  cursor: default;
+}
+
+.xterm .xterm-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.xterm .xterm-decoration {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+}
+
+.xterm-cursor {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.xterm-bold {
+  font-weight: bold;
+}
+
+.xterm-italic {
+  font-style: italic;
+}
+
+.xterm-underline {
+  text-decoration: underline;
+}
+
+.xterm-strikethrough {
+  text-decoration: line-through;
+}

@@ -1,0 +1,7 @@
+{
+  "id": "react-basics",
+  "name": "React Basics",
+  "description": "Introduction to React with a simple counter component",
+  "startCommand": "npm run dev",
+  "entryFile": "src/App.tsx"
+}

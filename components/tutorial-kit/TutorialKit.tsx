@@ -69,7 +69,7 @@ interface TutorialKitContextValue {
 const TutorialKitContext: ReactContext<TutorialKitContextValue | null> =
   createContext<TutorialKitContextValue | null>(null)
 
-function useTutorialKitContext() {
+export function useTutorialKitContext() {
   const ctx = useContext(TutorialKitContext)
   if (!ctx) {
     throw new Error("TutorialKit.* components must be used within TutorialKit.Root")

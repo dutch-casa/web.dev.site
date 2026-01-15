@@ -1,6 +1,10 @@
 // TutorialKit Store - Zustand with immer for immutable updates
 import { createStore, type StoreApi } from "zustand"
 import { immer } from "zustand/middleware/immer"
+import { enableMapSet } from "immer"
+
+// Enable Immer plugins for Set/Map support (used by editor.dirty)
+enableMapSet()
 import type {
   TutorialState,
   TutorialAction,

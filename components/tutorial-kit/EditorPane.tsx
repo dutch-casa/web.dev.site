@@ -179,10 +179,10 @@ export function EditorPane({
 
     editor.updateOptions({
       fontSize,
-      lineNumbers: lineNumbers ? "on" : "off",
+      lineNumbers: lineNumbersOption,
       wordWrap: wordWrap ? "on" : "off",
     })
-  }, [fontSize, lineNumbers, wordWrap])
+  }, [fontSize, lineNumbers, wordWrap, vimMode, lineNumbersOption])
 
   const handleEditorMount: OnMount = useCallback((editor, monaco) => {
     editorRef.current = editor
@@ -233,6 +233,11 @@ export function EditorPane({
       `,
       "file:///node_modules/@types/react/index.d.ts"
     )
+
+    // Track cursor position for hybrid line numbers
+    editor.onDidChangeCursorPosition((e) => {
+      setCursorLine(e.position.lineNumber)
+    })
   }, [])
 
   const handleChange = useCallback(
@@ -299,7 +304,7 @@ export function EditorPane({
                 lineHeight: 1.6,
                 minimap: { enabled: false },
                 scrollBeyondLastLine: false,
-                lineNumbers: lineNumbers ? "on" : "off",
+                lineNumbers: lineNumbersOption,
                 wordWrap: wordWrap ? "on" : "off",
                 automaticLayout: true,
                 tabSize: 2,

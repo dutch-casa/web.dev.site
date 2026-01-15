@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Editor, { type OnMount, type Monaco } from "@monaco-editor/react"
 import type { editor } from "monaco-editor"
 import { IconX, IconCircle } from "@tabler/icons-react"
@@ -12,6 +12,7 @@ import {
   useTutorialActions,
   useTutorial,
 } from "@/lib/tutorial-kit/context"
+import { useSettings } from "@/lib/tutorial-kit/settings"
 
 // ============================================================================
 // Language Detection
@@ -111,9 +112,58 @@ export function EditorPane({
   const actions = useTutorialActions()
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const monacoRef = useRef<Monaco | null>(null)
+  const vimModeRef = useRef<{ dispose: () => void } | null>(null)
+  const statusBarRef = useRef<HTMLDivElement | null>(null)
+
+  // Settings
+  const { vimMode, fontSize, lineNumbers, wordWrap } = useSettings()
+  const [vimStatus, setVimStatus] = useState("")
 
   const content = activeFile ? files[activeFile] ?? "" : ""
   const language = activeFile ? getLanguage(activeFile) : "plaintext"
+
+  // Initialize/cleanup vim mode
+  useEffect(() => {
+    const editor = editorRef.current
+    if (!editor) return
+
+    // Cleanup existing vim mode
+    if (vimModeRef.current) {
+      vimModeRef.current.dispose()
+      vimModeRef.current = null
+      setVimStatus("")
+    }
+
+    if (vimMode && statusBarRef.current) {
+      // Dynamically import monaco-vim
+      import("monaco-vim").then(({ initVimMode }) => {
+        if (!editorRef.current || !statusBarRef.current) return
+        vimModeRef.current = initVimMode(editorRef.current, statusBarRef.current)
+      }).catch(() => {
+        // monaco-vim not available
+        console.warn("monaco-vim not installed")
+      })
+    }
+
+    return () => {
+      if (vimModeRef.current) {
+        vimModeRef.current.dispose()
+        vimModeRef.current = null
+      }
+    }
+  }, [vimMode])
+
+  // Update editor options when settings change
+  useEffect(() => {
+    const editor = editorRef.current
+    if (!editor) return
+
+    editor.updateOptions({
+      fontSize,
+      lineNumbers: lineNumbers ? "on" : "off",
+      wordWrap: wordWrap ? "on" : "off",
+    })
+  }, [fontSize, lineNumbers, wordWrap])
 
   const handleEditorMount: OnMount = useCallback((editor, monaco) => {
     editorRef.current = editor
@@ -213,7 +263,7 @@ export function EditorPane({
         </div>
 
         {/* Editor */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-hidden">
           {activeFile ? (
             <Editor
               height="100%"
@@ -226,12 +276,12 @@ export function EditorPane({
               options={{
                 fontFamily: "'JetBrains Mono', 'Fira Code', ui-monospace, monospace",
                 fontLigatures: true,
-                fontSize: 14,
+                fontSize,
                 lineHeight: 1.6,
                 minimap: { enabled: false },
                 scrollBeyondLastLine: false,
-                lineNumbers: "on",
-                wordWrap: "on",
+                lineNumbers: lineNumbers ? "on" : "off",
+                wordWrap: wordWrap ? "on" : "off",
                 automaticLayout: true,
                 tabSize: 2,
                 insertSpaces: true,
@@ -266,6 +316,14 @@ export function EditorPane({
             </div>
           )}
         </div>
+
+        {/* Vim status bar */}
+        {vimMode && (
+          <div
+            ref={statusBarRef}
+            className="shrink-0 h-6 px-2 text-xs font-mono bg-[#1e1e1e] text-gray-400 flex items-center border-t border-[#333]"
+          />
+        )}
       </ResizablePanel>
     </>
   )

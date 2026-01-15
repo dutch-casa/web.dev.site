@@ -52,6 +52,7 @@ import {
   useTutorialActiveFileContent,
 } from "@/lib/tutorial-kit/context"
 import { useAutoBootWebContainer } from "@/lib/tutorial-kit/use-webcontainer"
+import { SettingsPopover } from "./SettingsPopover"
 import type { ExerciseConfig, ExerciseFile } from "@/lib/tutorial-kit/types"
 
 // ============================================================================
@@ -393,6 +394,7 @@ function Toolbar({ className }: ToolbarProps) {
           >
             <IconEye className="w-4 h-4" />
           </Button>
+          <SettingsPopover />
         </div>
 
         {/* Run/Stop button */}

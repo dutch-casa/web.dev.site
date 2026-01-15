@@ -118,9 +118,28 @@ export function EditorPane({
   // Settings
   const { vimMode, fontSize, lineNumbers, wordWrap } = useSettings()
   const [vimStatus, setVimStatus] = useState("")
+  const [cursorLine, setCursorLine] = useState(1)
 
   const content = activeFile ? files[activeFile] ?? "" : ""
   const language = activeFile ? getLanguage(activeFile) : "plaintext"
+
+  // Hybrid line numbers function: current line = absolute, others = relative
+  const hybridLineNumbers = useCallback(
+    (lineNumber: number): string => {
+      if (lineNumber === cursorLine) {
+        return String(lineNumber)
+      }
+      return String(Math.abs(lineNumber - cursorLine))
+    },
+    [cursorLine]
+  )
+
+  // Determine line numbers mode
+  const lineNumbersOption = vimMode
+    ? hybridLineNumbers
+    : lineNumbers
+      ? "on"
+      : "off"
 
   // Initialize/cleanup vim mode
   useEffect(() => {

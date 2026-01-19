@@ -119,9 +119,9 @@ const SpeedDialNav = () => {
         </defs>
       </svg>
 
-      {/* Gooey Container */}
+      {/* Gooey Container - disable filter on Safari due to rendering bugs */}
       <motion.div
-        style={{ filter: `url(#${filterId})` }}
+        style={{ filter: isSafari ? "none" : `url(#${filterId})` }}
         className="relative flex items-center justify-center"
       >
         {/* Radial Nav Items */}

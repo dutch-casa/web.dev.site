@@ -48,7 +48,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${figtree.variable} ${playfair.variable} ${ebGaramond.variable} overflow-x-hidden`}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${jetbrainsMono.variable} antialiased overflow-x-hidden`}
       >
         {children}
         <div className="fixed bottom-8 right-8 z-50">

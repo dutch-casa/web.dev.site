@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, type Variants } from "motion/react";
-import { useState, useId } from "react";
+import { useState, useId, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -55,7 +55,16 @@ const itemVariants: Variants = {
 
 const SpeedDialNav = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const filterId = useId();
+  const [isSafari, setIsSafari] = useState(false);
+  const rawId = useId();
+  // Safari has issues with colons in SVG filter IDs - sanitize them
+  const filterId = `goo-${rawId.replace(/:/g, "")}`;
+
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(ua);
+    setIsSafari(isSafariBrowser);
+  }, []);
 
   const navItems: NavItem[] = [
     {

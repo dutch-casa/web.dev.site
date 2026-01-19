@@ -1,0 +1,570 @@
+{
+  "resources": [
+    {
+      "url": "https://react.dev",
+      "tags": ["frontend", "react"],
+      "free": true
+    },
+    {
+      "url": "https://nextjs.org/docs",
+      "tags": ["frontend", "react", "nextjs"],
+      "free": true
+    },
+    {
+      "url": "https://tailwindcss.com",
+      "tags": ["frontend", "css"],
+      "free": true
+    },
+    {
+      "url": "https://ui.shadcn.com",
+      "tags": ["frontend", "react", "components", "design"],
+      "free": true
+    },
+    {
+      "url": "https://motion.dev",
+      "tags": ["frontend", "animation"],
+      "free": true
+    },
+    {
+      "url": "https://nodejs.org/docs/latest/api/",
+      "tags": ["backend", "nodejs"],
+      "free": true
+    },
+    {
+      "url": "https://www.postgresql.org/docs",
+      "tags": ["backend", "database"],
+      "free": true
+    },
+    {
+      "url": "https://redis.io/docs",
+      "tags": ["backend", "database"],
+      "free": true
+    },
+    {
+      "url": "https://docs.docker.com",
+      "tags": ["devops", "containers"],
+      "free": true
+    },
+    {
+      "url": "https://kubernetes.io/docs",
+      "tags": ["devops", "containers"],
+      "free": true
+    },
+    {
+      "url": "https://github.com/features/actions",
+      "tags": ["devops", "ci-cd"],
+      "free": true
+    },
+    {
+      "url": "https://www.typescriptlang.org/docs",
+      "tags": ["general", "typescript"],
+      "free": true
+    },
+    {
+      "url": "https://git-scm.com/doc",
+      "tags": ["general", "git"],
+      "free": true
+    },
+    {
+      "url": "https://www.components.build/",
+      "tags": ["frontend", "design", "components"],
+      "free": true
+    },
+    {
+      "url": "https://flexboxfroggy.com/",
+      "tags": ["frontend", "css", "general"],
+      "free": true
+    },
+    {
+      "url": "https://codepip.com/games/grid-garden/",
+      "tags": ["frontend", "css", "general"],
+      "free": true
+    },
+    {
+      "url": "https://codepip.com/games/",
+      "tags": ["frontend", "css", "general"],
+      "free": true
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=4KvbVq3Eg5w",
+      "tags": ["frontend", "react", "design"],
+      "free": true
+    },
+    {
+      "url": "https://loggingsucks.com/",
+      "tags": ["backend", "general"],
+      "free": true
+    },
+    {
+      "url": "https://bytebytego.com/guides/",
+      "tags": ["backend", "general", "architecture"],
+      "free": true
+    },
+    {
+      "url": "https://animations.dev/",
+      "tags": ["frontend", "animation", "design"],
+      "free": false
+    },
+    {
+      "url": "https://devouringdetails.com/",
+      "tags": ["design"],
+      "free": false
+    },
+    {
+      "url": "https://rauno.me/craft",
+      "tags": ["design", "frontend"],
+      "free": true
+    },
+    {
+      "url": "https://boot.dev/",
+      "tags": ["backend", "general"],
+      "free": false
+    },
+    {
+      "url": "https://www.cncf.io/",
+      "tags": ["devops", "containers"],
+      "free": true
+    },
+    {
+      "url": "https://overreacted.io/",
+      "tags": ["frontend", "react", "general"],
+      "free": true
+    },
+    {
+      "url": "https://kentcdodds.com/blog",
+      "tags": ["frontend", "react", "testing"],
+      "free": true
+    },
+    {
+      "url": "https://www.joshwcomeau.com/",
+      "tags": ["frontend", "css", "react", "animation"],
+      "free": true
+    },
+    {
+      "url": "https://web.dev/",
+      "tags": ["frontend", "general", "performance"],
+      "free": true
+    },
+    {
+      "url": "https://javascript.info/",
+      "tags": ["frontend", "general"],
+      "free": true
+    },
+    {
+      "url": "https://css-tricks.com/",
+      "tags": ["frontend", "css"],
+      "free": true
+    },
+    {
+      "url": "https://www.patterns.dev/",
+      "tags": ["frontend", "general", "architecture"],
+      "free": true
+    },
+    {
+      "url": "https://refactoring.guru/",
+      "tags": ["general", "architecture"],
+      "free": true
+    },
+    {
+      "url": "https://roadmap.sh/",
+      "tags": ["general"],
+      "free": true
+    },
+    {
+      "url": "https://roadmap.sh/frontend",
+      "tags": ["frontend", "general"],
+      "free": true
+    },
+    {
+      "url": "https://roadmap.sh/backend",
+      "tags": ["backend", "general"],
+      "free": true
+    },
+    {
+      "url": "https://roadmap.sh/devops",
+      "tags": ["devops", "general"],
+      "free": true
+    },
+    {
+      "url": "https://roadmap.sh/react",
+      "tags": ["frontend", "react"],
+      "free": true
+    },
+    {
+      "url": "https://roadmap.sh/typescript",
+      "tags": ["general", "typescript"],
+      "free": true
+    },
+    {
+      "url": "https://roadmap.sh/postgresql-dba",
+      "tags": ["backend", "database"],
+      "free": true
+    },
+    {
+      "url": "https://roadmap.sh/docker",
+      "tags": ["devops", "containers"],
+      "free": true
+    },
+    {
+      "url": "https://roadmap.sh/kubernetes",
+      "tags": ["devops", "containers"],
+      "free": true
+    },
+    {
+      "url": "https://roadmap.sh/system-design",
+      "tags": ["backend", "architecture"],
+      "free": true
+    },
+    {
+      "url": "https://www.freecodecamp.org/",
+      "tags": ["general", "frontend", "backend"],
+      "free": true
+    },
+    {
+      "url": "https://www.theodinproject.com/",
+      "tags": ["general", "frontend", "backend"],
+      "free": true
+    },
+    {
+      "url": "https://exercism.org/",
+      "tags": ["general", "backend"],
+      "free": true
+    },
+    {
+      "url": "https://www.youtube.com/c/ThePrimeagen",
+      "tags": ["general", "backend"],
+      "free": true
+    },
+    {
+      "url": "https://www.youtube.com/c/Fireship",
+      "tags": ["general", "frontend", "backend"],
+      "free": true
+    },
+        {
+      "url": "https://blog.pragmaticengineer.com/",
+      "tags": ["backend", "architecture", "general"],
+      "free": true
+    },
+    {
+      "url": "https://architecturenotes.co/",
+      "tags": ["backend", "architecture"],
+      "free": true
+    },
+    {
+      "url": "https://highscalability.com/",
+      "tags": ["backend", "architecture"],
+      "free": true
+    },
+    {
+      "url": "https://12factor.net/",
+      "tags": ["backend", "devops", "architecture"],
+      "free": true
+    },
+    {
+      "url": "https://microservices.io/",
+      "tags": ["backend", "architecture"],
+      "free": true
+    },
+    {
+      "url": "https://www.restapitutorial.com/",
+      "tags": ["backend", "general"],
+      "free": true
+    },
+    {
+      "url": "https://graphql.org/learn/",
+      "tags": ["backend", "frontend", "general"],
+      "free": true
+    },
+    {
+      "url": "https://grpc.io/docs/",
+      "tags": ["backend"],
+      "free": true
+    },
+    {
+      "url": "https://kafka.apache.org/documentation/",
+      "tags": ["backend", "architecture"],
+      "free": true
+    },
+    {
+      "url": "https://www.rabbitmq.com/tutorials",
+      "tags": ["backend"],
+      "free": true
+    },
+    {
+      "url": "https://go.dev/doc/",
+      "tags": ["backend"],
+      "free": true
+    },
+    {
+      "url": "https://doc.rust-lang.org/book/",
+      "tags": ["backend", "general"],
+      "free": true
+    },
+    {
+      "url": "https://docs.python.org/3/tutorial/",
+      "tags": ["backend", "general"],
+      "free": true
+    },
+    {
+      "url": "https://sqlbolt.com/",
+      "tags": ["backend", "database"],
+      "free": true
+    },
+    {
+      "url": "https://use-the-index-luke.com/",
+      "tags": ["backend", "database"],
+      "free": true
+    },
+    {
+      "url": "https://www.mongodb.com/docs/",
+      "tags": ["backend", "database"],
+      "free": true
+    },
+    {
+      "url": "https://supabase.com/docs",
+      "tags": ["backend", "database", "frontend"],
+      "free": true
+    },
+    {
+      "url": "https://www.prisma.io/docs",
+      "tags": ["backend", "database"],
+      "free": true
+    },
+    {
+      "url": "https://orm.drizzle.team/docs/overview",
+      "tags": ["backend", "database"],
+      "free": true
+    },
+    {
+      "url": "https://trpc.io/docs",
+      "tags": ["backend", "frontend", "typescript"],
+      "free": true
+    },
+    {
+      "url": "https://hono.dev/",
+      "tags": ["backend"],
+      "free": true
+    },
+    {
+      "url": "https://esbuild.github.io/",
+      "tags": ["frontend", "devops"],
+      "free": true
+    },
+    {
+      "url": "https://vitejs.dev/",
+      "tags": ["frontend", "devops"],
+      "free": true
+    },
+    {
+      "url": "https://turbo.build/",
+      "tags": ["frontend", "devops"],
+      "free": true
+    },
+    {
+      "url": "https://bun.sh/docs",
+      "tags": ["backend", "frontend"],
+      "free": true
+    },
+    {
+      "url": "https://deno.land/manual",
+      "tags": ["backend"],
+      "free": true
+    },
+    {
+      "url": "https://www.terraform.io/docs",
+      "tags": ["devops"],
+      "free": true
+    },
+    {
+      "url": "https://docs.ansible.com/",
+      "tags": ["devops"],
+      "free": true
+    },
+    {
+      "url": "https://prometheus.io/docs/",
+      "tags": ["devops"],
+      "free": true
+    },
+    {
+      "url": "https://grafana.com/docs/",
+      "tags": ["devops"],
+      "free": true
+    },
+    {
+      "url": "https://www.nginx.com/resources/wiki/",
+      "tags": ["devops", "backend"],
+      "free": true
+    },
+    {
+      "url": "https://caddyserver.com/docs/",
+      "tags": ["devops", "backend"],
+      "free": true
+    },
+    {
+      "url": "https://fly.io/docs/",
+      "tags": ["devops"],
+      "free": true
+    },
+    {
+      "url": "https://railway.app/docs",
+      "tags": ["devops"],
+      "free": true
+    },
+    {
+      "url": "https://vercel.com/docs",
+      "tags": ["devops", "frontend"],
+      "free": true
+    },
+    {
+      "url": "https://www.netlify.com/docs/",
+      "tags": ["devops", "frontend"],
+      "free": true
+    },
+    {
+      "url": "https://testing-library.com/docs/",
+      "tags": ["frontend", "testing"],
+      "free": true
+    },
+    {
+      "url": "https://vitest.dev/",
+      "tags": ["frontend", "testing"],
+      "free": true
+    },
+    {
+      "url": "https://playwright.dev/docs/intro",
+      "tags": ["frontend", "testing"],
+      "free": true
+    },
+    {
+      "url": "https://www.cypress.io/",
+      "tags": ["frontend", "testing"],
+      "free": true
+    },
+    {
+      "url": "https://storybook.js.org/docs",
+      "tags": ["frontend", "components", "testing"],
+      "free": true
+    },
+    {
+      "url": "https://a11yproject.com/",
+      "tags": ["frontend", "general"],
+      "free": true
+    },
+    {
+      "url": "https://www.smashingmagazine.com/",
+      "tags": ["frontend", "design", "general"],
+      "free": true
+    },
+    {
+      "url": "https://alistapart.com/",
+      "tags": ["frontend", "design", "general"],
+      "free": true
+    },
+    {
+      "url": "https://csswizardry.com/",
+      "tags": ["frontend", "css", "performance"],
+      "free": true
+    },
+        {
+      "url": "https://cubic-bezier.com/",
+      "tags": ["frontend", "css", "animation"],
+      "free": true
+    },
+    {
+      "url": "https://easings.net/",
+      "tags": ["frontend", "animation"],
+      "free": true
+    },
+    {
+      "url": "https://www.nan.fyi/",
+      "tags": ["frontend", "react", "animation"],
+      "free": true
+    },
+    {
+      "url": "https://samselikoff.com/",
+      "tags": ["frontend", "react", "animation"],
+      "free": true
+    },
+    {
+      "url": "https://emilkowal.ski/",
+      "tags": ["frontend", "react", "animation", "design"],
+      "free": true
+    },
+    {
+      "url": "https://www.uidesigndaily.com/",
+      "tags": ["design"],
+      "free": true
+    },
+    {
+      "url": "https://mobbin.com/",
+      "tags": ["design"],
+      "free": true
+    },
+    {
+      "url": "https://designsystemchecklist.com/",
+      "tags": ["design", "frontend"],
+      "free": true
+    },
+    {
+      "url": "https://www.refactoringui.com/",
+      "tags": ["design", "frontend"],
+      "free": false
+    },
+    {
+      "url": "https://lawsofux.com/",
+      "tags": ["design"],
+      "free": true
+    },
+    {
+      "url": "https://www.nngroup.com/articles/",
+      "tags": ["design"],
+      "free": true
+    },
+    {
+      "url": "https://anthonyhobday.com/sideprojects/saferules/",
+      "tags": ["design"],
+      "free": true
+    },
+    {
+      "url": "https://typescale.com/",
+      "tags": ["design", "frontend"],
+      "free": true
+    },
+    {
+      "url": "https://colorhunt.co/",
+      "tags": ["design"],
+      "free": true
+    },
+    {
+      "url": "https://realfavicongenerator.net/",
+      "tags": ["design", "frontend"],
+      "free": true
+    },
+    {
+      "url": "https://fontpair.co/",
+      "tags": ["design"],
+      "free": true
+    }
+  ],
+  "tags": [
+    { "id": "frontend", "label": "Frontend" },
+    { "id": "backend", "label": "Backend" },
+    { "id": "devops", "label": "DevOps" },
+    { "id": "general", "label": "General" },
+    { "id": "design", "label": "Design" },
+    { "id": "react", "label": "React" },
+    { "id": "nextjs", "label": "Next.js" },
+    { "id": "css", "label": "CSS" },
+    { "id": "components", "label": "Components" },
+    { "id": "animation", "label": "Animation" },
+    { "id": "nodejs", "label": "Node.js" },
+    { "id": "database", "label": "Database" },
+    { "id": "containers", "label": "Containers" },
+    { "id": "ci-cd", "label": "CI/CD" },
+    { "id": "typescript", "label": "TypeScript" },
+    { "id": "git", "label": "Git" },
+    { "id": "architecture", "label": "Architecture" },
+    { "id": "testing", "label": "Testing" },
+    { "id": "performance", "label": "Performance" }
+  ]
+}

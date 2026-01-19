@@ -10,7 +10,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](CONTRIBUTING.md)
 
-[Live Site](https://auweb.dev) | [Documentation](docs/course-authoring-guide.md) | [Contributing](#contributing)
+[Live Site](https://auweb.dev) | [How to author a course](docs/course-authoring-guide.md) | [Contributing](#contributing)
 
 </div>
 

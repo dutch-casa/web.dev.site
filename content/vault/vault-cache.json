@@ -1,0 +1,786 @@
+{
+  "https://react.dev": {
+    "title": "React",
+    "description": "React is the library for web and native user interfaces. Build user interfaces out of individual pieces called components written in JavaScript. React is designed to let you seamlessly combine components written by independent people, teams, and organizations.",
+    "image": "https://react.dev/images/og-home.png",
+    "logo": "https://react.dev/apple-touch-icon.png",
+    "url": "https://react.dev"
+  },
+  "https://nextjs.org/docs": {
+    "title": "Next.js Docs | Next.js",
+    "description": "Welcome to the Next.js Documentation.",
+    "image": "https://nextjs.org/api/docs-og?title=Next.js%20Docs",
+    "logo": "https://nextjs.org/favicon.ico?favicon.d29c4393.ico",
+    "url": "https://nextjs.org/docs"
+  },
+  "https://tailwindcss.com": {
+    "title": "Tailwind CSS - Rapidly build modern websites without ever leaving your HTML.",
+    "description": "Tailwind CSS is a utility-first CSS framework for rapidly building modern websites without ever leaving your HTML.",
+    "image": "https://tailwindcss.com/opengraph-image.jpg?opengraph-image.c1dec83c.jpg",
+    "logo": "https://tailwindcss.com/favicons/apple-touch-icon.png?v=4",
+    "url": "https://tailwindcss.com"
+  },
+  "https://ui.shadcn.com": {
+    "title": "The Foundation for your Design System - shadcn/ui",
+    "description": "A set of beautifully designed components that you can customize, extend, and build on. Start here then make it your own. Open Source. Open Code.",
+    "image": "https://ui.shadcn.com/og?title=The%20Foundation%20for%20your%20Design%20System&description=A%20set%20of%20beautifully%20designed%20components%20that%20you%20can%20customize%2C%20extend%2C%20and%20build%20on.%20Start%20here%20then%20make%20it%20your%20own.%20Open%20Source.%20Open%20Code.",
+    "logo": "https://ui.shadcn.com/favicon-16x16.png",
+    "url": "https://ui.shadcn.com"
+  },
+  "https://motion.dev": {
+    "title": "Motion — JavaScript & React animation library",
+    "description": "Motion (prev Framer Motion) is a fast, production-grade web animation library for React, JavaScript and Vue. Build smooth UI animations with examples, tutorials, and a tiny footprint.",
+    "image": "https://framerusercontent.com/images/9IOwyTKAykVZTetDEOb7qh81ZQ.png",
+    "logo": "https://framerusercontent.com/images/f2ty4wDsdPyAVgaHD2Szuz9aKE8.png",
+    "url": "https://motion.dev"
+  },
+  "https://nodejs.org/docs": {
+    "title": "Index of /docs/",
+    "description": "",
+    "image": null,
+    "logo": "https://nodejs.org/static/images/favicons/favicon.png",
+    "url": "https://nodejs.org/docs"
+  },
+  "https://www.postgresql.org/docs": {
+    "title": "PostgreSQL: Documentation",
+    "description": "View the manual",
+    "image": "https://www.postgresql.org/media/img/about/press/elephant.png",
+    "logo": "https://www.postgresql.org/favicon.ico",
+    "url": "https://www.postgresql.org/docs"
+  },
+  "https://redis.io/docs": {
+    "title": "Docs",
+    "description": "Set up a Free Redis-managed database on AWS, GCP, or Azure",
+    "image": null,
+    "logo": "https://redis.io/docs/latest/images/favicons/mstile-310x310.png",
+    "url": "https://redis.io/docs"
+  },
+  "https://docs.docker.com": {
+    "title": "Home",
+    "description": "Docker Documentation is the official Docker library of resources, manuals, and guides to help you containerize applications.",
+    "image": "https://docs.docker.com/images/thumbnail.webp",
+    "logo": "https://docs.docker.com/assets/images/favicon.svg",
+    "url": "https://docs.docker.com"
+  },
+  "https://kubernetes.io/docs": {
+    "title": "Kubernetes Documentation",
+    "description": "Kubernetes is an open source container orchestration engine for automating deployment, scaling, and management of containerized applications. The open source project is hosted by the Cloud Native Computing Foundation.",
+    "image": "https://kubernetes.io/images/kubernetes-open-graph.png",
+    "logo": "https://kubernetes.io/icons/apple-touch-icon-256x256.png",
+    "url": "https://kubernetes.io/docs"
+  },
+  "https://github.com/features/actions": {
+    "title": "GitHub Actions",
+    "description": "Easily build, package, release, update, and deploy your project in any language—on GitHub or any external system—without having to run code yourself.",
+    "image": "https://images.ctfassets.net/8aevphvgewt8/63gHnduk1FaJfdjcP9gGKe/3b7a9634823e54957e885a25b0e5ebc1/features-actions-social.jpg",
+    "logo": "https://github.com/fluidicon.png",
+    "url": "https://github.com/features/actions"
+  },
+  "https://www.typescriptlang.org/docs": {
+    "title": "The starting point for learning TypeScript",
+    "description": "Find TypeScript starter projects: from Angular to React or Node.js and CLIs.",
+    "image": "data:image/png;base64,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",
+    "logo": "https://www.typescriptlang.org/icons/icon-512x512.png?v=8944a05a8b601855de116c8a56d3b3ae",
+    "url": "https://www.typescriptlang.org/docs"
+  },
+  "https://git-scm.com/doc": {
+    "title": "Git - Reference",
+    "description": "Quick reference guide: Cheat Sheet",
+    "image": "https://git-scm.com/images/logo@2x.png",
+    "logo": "https://git-scm.com/favicon.ico",
+    "url": "https://git-scm.com/doc"
+  },
+  "https://www.components.build/": {
+    "title": "Overview",
+    "description": "components.build is an open-source standard for building modern, composable and accessible UI components.",
+    "image": "https://www.components.build/og/image.png",
+    "logo": "https://www.components.build/favicon.ico?favicon.0b3bf435.ico",
+    "url": "https://www.components.build/"
+  },
+  "https://flexboxfroggy.com/": {
+    "title": "Flexbox Froggy",
+    "description": "A game for learning CSS flexbox",
+    "image": "https://flexboxfroggy.com/images/screenshot.png",
+    "logo": "https://flexboxfroggy.com/favicon.ico",
+    "url": "https://flexboxfroggy.com/"
+  },
+  "https://codepip.com/games/grid-garden/": {
+    "title": "Grid Garden - A game for learning CSS grid",
+    "description": "How well can you tend to your carrot garden using CSS grid? In this game, you must water your carrot crops and poison the weeds by mastering CSS grid, a powerful new module that makes 2-dimensional grid layouts a piece of cake. With it you can define columns, rows, and grid template areas. Learning Objectives Introduce the fundamentals of using…",
+    "image": "https://codepip.com/wp-content/plugins/codepip/images/screenshots/grid-garden.png",
+    "logo": "https://codepip.com/wp-content/plugins/codepip/games/grid-garden/favicon.ico",
+    "url": "https://codepip.com/games/grid-garden/"
+  },
+  "https://codepip.com/games/": {
+    "title": "Codepip Games",
+    "description": "Codepip’s coding games, including Flexbox Froggy, Grid Garden, Code Crunchers, Disarray, and Querymon.",
+    "image": "https://codepip.com/wp-content/plugins/codepip/images/home.png",
+    "logo": "https://codepip.com/wp-content/plugins/codepip/images/apple-touch-icon-180x180.png",
+    "url": "https://codepip.com/games/"
+  },
+  "https://www.youtube.com/watch?v=4KvbVq3Eg5w": {
+    "title": "- YouTube",
+    "description": "Enjoy the videos and music you love, upload original content, and share it all with friends, family, and the world on YouTube.",
+    "image": "https://img.youtube.com/vi/4KvbVq3Eg5w/maxresdefault.jpg",
+    "logo": "https://www.youtube.com/s/desktop/191847ec/img/favicon_144x144.png",
+    "url": "https://www.youtube.com/watch?v=4KvbVq3Eg5w"
+  },
+  "https://loggingsucks.com/": {
+    "title": "Logging Sucks - Your Logs Are Lying To You",
+    "description": "Why traditional logging fails and how wide events can fix your observability",
+    "image": "https://loggingsucks.com/og-image.png",
+    "logo": null,
+    "url": "https://loggingsucks.com/"
+  },
+  "https://bytebytego.com/guides/": {
+    "title": "ByteByteGo | Visual Guides",
+    "description": "Visual guides for developers",
+    "image": "https://bytebytego.com/guides/og/guides-landing.png",
+    "logo": "https://bytebytego.com/guides/favicon.ico",
+    "url": "https://bytebytego.com/guides/"
+  },
+  "https://animations.dev/": {
+    "title": "Animations on the Web",
+    "description": "Learn the theory and practice behind great animations with this interactive learning experience.",
+    "image": "https://animations.dev/opengraph-image-pwu6ef.png?opengraph-image.8dc3bdbf.png",
+    "logo": "https://animations.dev/favicon.ico?favicon.133223a6.ico",
+    "url": "https://animations.dev/"
+  },
+  "https://devouringdetails.com/": {
+    "title": "Devouring Details",
+    "description": "An interactive reference manual for interaction-curious designers.",
+    "image": "https://devouringdetails.com/og/main.png",
+    "logo": "https://devouringdetails.com/favicon.png",
+    "url": "https://devouringdetails.com/"
+  },
+  "https://rauno.me/craft": {
+    "title": "Craft",
+    "description": "Combobox",
+    "image": "https://rauno.me/og4.png",
+    "logo": "https://rauno.me/apple-touch-icon.png",
+    "url": "https://rauno.me/craft"
+  },
+  "https://boot.dev/": {
+    "title": "Learn backend development the smart way | Boot.dev",
+    "description": "Welcome to the most captivating, finger-flying, addictive way to learn to code. The smartest way to learn a thing is to ensure you’re never bored.",
+    "image": "https://www.boot.dev/_nuxt/bootsballanbackground.8TRvC7a3.webp",
+    "logo": "https://www.boot.dev/apple-touch-icon.png",
+    "url": "https://boot.dev/"
+  },
+  "https://www.cncf.io/": {
+    "title": "Cloud Native Computing Foundation",
+    "description": "CNCF is the vendor-neutral hub of cloud native computing, dedicated to making cloud native ubiquitous.",
+    "image": "https://www.cncf.io/wp-content/uploads/2022/05/cncf_social_share.jpg",
+    "logo": "https://www.cncf.io/wp-content/themes/cncf-twenty-two/images/apple-touch-icon.png",
+    "url": "https://www.cncf.io/"
+  },
+  "https://overreacted.io/": {
+    "title": "overreacted",
+    "description": "A blog by Dan Abramov",
+    "image": "https://overreacted.io/opengraph-image?7c3850b1702447d4",
+    "logo": "https://overreacted.io/icon.png?e0852c1e2c7f0e65",
+    "url": "https://overreacted.io/"
+  },
+  "https://kentcdodds.com/blog": {
+    "title": "The Kent C. Dodds Blog",
+    "description": "Join 740.83k people who have read Kent’s 205 articles on JavaScript, TypeScript, React, Testing, Career, and more.",
+    "image": null,
+    "logo": "https://kentcdodds.com/favicons/apple-touch-icon.png",
+    "url": "https://kentcdodds.com/blog"
+  },
+  "https://www.joshwcomeau.com/": {
+    "title": "Josh W. Comeau",
+    "description": "Friendly tutorials for developers. Focus on React, CSS, Animation, and more!",
+    "image": "https://www.joshwcomeau.com/opengraph-image.png?cac0cc658da9fd03",
+    "logo": "https://www.joshwcomeau.com/favicon.png",
+    "url": "https://www.joshwcomeau.com/"
+  },
+  "https://web.dev/": {
+    "title": "web.dev",
+    "description": "Guidance to build modern web experiences that work on any browser.",
+    "image": "https://web.dev/images/social-wide.jpg",
+    "logo": "https://www.gstatic.com/devrel-devsite/prod/v3df8aae39978de8281d519c083a1ff09816fe422ab8f1bf9f8e360a62fb9949d/web/images/favicon.png",
+    "url": "https://web.dev/"
+  },
+  "https://javascript.info/": {
+    "title": "The Modern JavaScript Tutorial",
+    "description": "Modern JavaScript Tutorial: simple, but detailed explanations with examples and tasks, including: closures, document and events, object oriented programming and more.",
+    "image": "https://javascript.info/img/site_preview_en_1200x630.png",
+    "logo": "https://javascript.info/img/favicon/apple-touch-icon-precomposed.png",
+    "url": "https://javascript.info/"
+  },
+  "https://css-tricks.com/": {
+    "title": "CSS-Tricks - A Website About Making Websites",
+    "description": "If you’re reading this, chances are you already have some sort of way that you’re following when we publish new […]",
+    "image": "https://i0.wp.com/css-tricks.com/wp-content/uploads/2021/12/default-social-css-tricks.png",
+    "logo": "https://i0.wp.com/css-tricks.com/wp-content/uploads/2021/07/star.png?fit=180%2C180&ssl=1",
+    "url": "https://css-tricks.com/"
+  },
+  "https://www.patterns.dev/": {
+    "title": "Patterns.dev",
+    "description": "Learn JavaScript design and performance patterns for building more powerful web applications.",
+    "image": "https://res.cloudinary.com/ddxwdqwkr/image/upload/c_scale,f_auto,w_1600/v1704232232/patterns.dev/PostPreview_3x.jpg",
+    "logo": "https://www.patterns.dev/img/favicon/favicon.ico",
+    "url": "https://www.patterns.dev/"
+  },
+  "https://refactoring.guru/": {
+    "title": "Refactoring and Design Patterns",
+    "description": "Refactoring is a controllable process of improving code without creating new functionality. Design Patterns are typical solutions to the commonly occurring problems in software design.",
+    "image": "https://refactoring.guru/images/refactoring/social/facebook-share-preview.png?id=dbf9e98269595be86eb668f365be6868",
+    "logo": "https://refactoring.guru/favicon.png",
+    "url": "https://refactoring.guru/"
+  },
+  "https://roadmap.sh/": {
+    "title": "Developer Roadmaps - roadmap.sh",
+    "description": "Community driven roadmaps, articles and guides for developers to grow in their career.",
+    "image": "https://roadmap.sh/img/og-img.png",
+    "logo": "https://roadmap.sh/manifest/apple-touch-icon.png",
+    "url": "https://roadmap.sh/"
+  },
+  "https://www.freecodecamp.org/": {
+    "title": "freeCodeCamp.org",
+    "description": "Learn to Code — For Free",
+    "image": "https://cdn.freecodecamp.org/platform/universal/fcc_meta_1920X1080-indigo.png",
+    "logo": "https://www.freecodecamp.org/icons/icon-512x512.png",
+    "url": "https://www.freecodecamp.org/"
+  },
+  "https://www.theodinproject.com/": {
+    "title": "Your Career in Web Development Starts Here | The Odin Project",
+    "description": "The Odin Project empowers aspiring web developers to learn together for free",
+    "image": "https://www.theodinproject.com/assets/og-logo-2bdf3a30.png",
+    "logo": "https://www.theodinproject.com/apple-touch-icon.png",
+    "url": "https://www.theodinproject.com/"
+  },
+  "https://exercism.org/": {
+    "title": "Exercism",
+    "description": "Learn, practice and get world-class mentoring in over 50 languages. 100% free.",
+    "image": "https://assets.exercism.org/meta/og.png",
+    "logo": "https://assets.exercism.org/meta/apple-touch-icon.png",
+    "url": "https://exercism.org/"
+  },
+  "https://www.youtube.com/c/ThePrimeagen": {
+    "title": "ThePrimeagen",
+    "description": "Vim - Rust - TypeScript",
+    "image": "https://yt3.googleusercontent.com/ytc/AIdro_laY82JAzs_2edBDxrxLgLWshhMK04SpAqOfoEzexOBZg=s900-c-k-c0x00ffffff-no-rj",
+    "logo": "https://www.youtube.com/s/desktop/191847ec/img/favicon_144x144.png",
+    "url": "https://www.youtube.com/c/ThePrimeagen"
+  },
+  "https://www.youtube.com/c/Fireship": {
+    "title": "Fireship",
+    "description": "High-intensity ⚡ code tutorials and tech news to help you ship your app faster. New videos every week covering the topics every programmer should know. The original home of #100SecondsOfCode #TheCodeReport and #CodeThisNotThat. Created by Jeff Delaney. Building an app? Get project support, advanced full courses, and more at https://fireship.io",
+    "image": "https://yt3.googleusercontent.com/3fPNbkf_xPyCleq77ZhcxyeorY97NtMHVNUbaAON_RBDH9ydL4hJkjxC8x_4mpuopkB8oI7Ct6Y=s900-c-k-c0x00ffffff-no-rj",
+    "logo": "https://www.youtube.com/s/desktop/191847ec/img/favicon_144x144.png",
+    "url": "https://www.youtube.com/c/Fireship"
+  },
+  "https://martinfowler.com/": {
+    "title": "martinfowler.com",
+    "description": "A website on building software effectively",
+    "image": "https://martinfowler.com/logo-sq.png",
+    "logo": "https://martinfowler.com/favicon.ico",
+    "url": "https://martinfowler.com/"
+  },
+  "https://blog.pragmaticengineer.com/": {
+    "title": "The Pragmatic Engineer",
+    "description": "Observations across the software engineering industry.",
+    "image": "https://blog.pragmaticengineer.com/content/images/2023/05/Big-Tech---startups---from-the-inside.png",
+    "logo": "https://blog.pragmaticengineer.com/content/images/size/w256h256/2024/06/The-Pragmatic-Engineer-Blog-Publication-Icon--Logo-.png",
+    "url": "https://blog.pragmaticengineer.com/"
+  },
+  "https://architecturenotes.co/": {
+    "title": "Architecture Notes — System Design & Software Development | Mahdi Yusuf | Substack",
+    "description": "In your inbox every Sunday! ⚡️. Click to read Architecture Notes — System Design & Software Development, by Mahdi Yusuf, a Substack publication with tens of thousands of subscribers.",
+    "image": "https://substackcdn.com/image/fetch/$s_!qfOC!,f_auto,q_auto:best,fl_progressive:steep/https%3A%2F%2Farcnotes.substack.com%2Ftwitter%2Fsubscribe-card.jpg%3Fv%3D-1003483677%26version%3D9",
+    "logo": "https://substackcdn.com/image/fetch/$s_!LvgW!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F2531b798-37fb-4849-a40a-0b7146ed61ee%2Fapple-touch-icon-1024x1024.png",
+    "url": "https://architecturenotes.co/"
+  },
+  "https://highscalability.com/": {
+    "title": "High Scalability",
+    "description": "Building bigger, faster, more reliable websites.",
+    "image": "https://static.ghost.org/v5.0.0/images/publication-cover.jpg",
+    "logo": "https://highscalability.com/favicon.ico",
+    "url": "https://highscalability.com/"
+  },
+  "https://12factor.net/": {
+    "title": "The Twelve-Factor App",
+    "description": "A methodology for building modern, scalable, maintainable software-as-a-service apps.",
+    "image": "https://12factor.net/images/github-mark.svg",
+    "logo": "https://12factor.net/images/favicon.ico",
+    "url": "https://12factor.net/"
+  },
+  "https://microservices.io/": {
+    "title": "What are microservices?",
+    "description": "Microservices - also known as the microservice architecture - is an architectural style that structures an application as a collection of loosely coupled services, which implement business capabilities. The microservice architecture enables the continuous delivery/deployment of large, complex applications. It also enables an organization to evolve its technology stack.",
+    "image": "https://microservices.io/i/posts/pattern-thumbnails/thumbnail-microservices.png",
+    "logo": null,
+    "url": "https://microservices.io/"
+  },
+  "https://www.restapitutorial.com/": {
+    "title": "REST API Tutorial",
+    "description": "REST API tutorial covering design, HTTP methods, status codes, and best practices for building RESTful APIs.",
+    "image": "https://restapitutorial.com/images/logo.webp",
+    "logo": "https://www.restapitutorial.com/images/apple-touch-icon.png",
+    "url": "https://www.restapitutorial.com/"
+  },
+  "https://graphql.org/learn/": {
+    "title": "Learn | GraphQL",
+    "description": "In this tutorial-style introduction to GraphQL, you’ll learn the core concepts that power every GraphQL API. Follow a step-by-step path from basic queries to advanced features.",
+    "image": "https://graphql.org/_next/static/media/computer.baafda2e.svg",
+    "logo": "https://graphql.org/favicon.ico",
+    "url": "https://graphql.org/learn/"
+  },
+  "https://grpc.io/docs/": {
+    "title": "https://grpc.io/docs/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://grpc.io/docs/"
+  },
+  "https://kafka.apache.org/documentation/": {
+    "title": "https://kafka.apache.org/documentation/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://kafka.apache.org/documentation/"
+  },
+  "https://www.rabbitmq.com/tutorials": {
+    "title": "https://www.rabbitmq.com/tutorials",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://www.rabbitmq.com/tutorials"
+  },
+  "https://go.dev/doc/": {
+    "title": "https://go.dev/doc/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://go.dev/doc/"
+  },
+  "https://doc.rust-lang.org/book/": {
+    "title": "https://doc.rust-lang.org/book/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://doc.rust-lang.org/book/"
+  },
+  "https://docs.python.org/3/tutorial/": {
+    "title": "https://docs.python.org/3/tutorial/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://docs.python.org/3/tutorial/"
+  },
+  "https://sqlbolt.com/": {
+    "title": "https://sqlbolt.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://sqlbolt.com/"
+  },
+  "https://use-the-index-luke.com/": {
+    "title": "https://use-the-index-luke.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://use-the-index-luke.com/"
+  },
+  "https://www.mongodb.com/docs/": {
+    "title": "https://www.mongodb.com/docs/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://www.mongodb.com/docs/"
+  },
+  "https://supabase.com/docs": {
+    "title": "https://supabase.com/docs",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://supabase.com/docs"
+  },
+  "https://www.prisma.io/docs": {
+    "title": "https://www.prisma.io/docs",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://www.prisma.io/docs"
+  },
+  "https://orm.drizzle.team/docs/overview": {
+    "title": "https://orm.drizzle.team/docs/overview",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://orm.drizzle.team/docs/overview"
+  },
+  "https://trpc.io/docs": {
+    "title": "https://trpc.io/docs",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://trpc.io/docs"
+  },
+  "https://hono.dev/": {
+    "title": "https://hono.dev/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://hono.dev/"
+  },
+  "https://esbuild.github.io/": {
+    "title": "https://esbuild.github.io/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://esbuild.github.io/"
+  },
+  "https://vitejs.dev/": {
+    "title": "https://vitejs.dev/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://vitejs.dev/"
+  },
+  "https://turbo.build/": {
+    "title": "https://turbo.build/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://turbo.build/"
+  },
+  "https://bun.sh/docs": {
+    "title": "https://bun.sh/docs",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://bun.sh/docs"
+  },
+  "https://deno.land/manual": {
+    "title": "https://deno.land/manual",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://deno.land/manual"
+  },
+  "https://www.terraform.io/docs": {
+    "title": "https://www.terraform.io/docs",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://www.terraform.io/docs"
+  },
+  "https://docs.ansible.com/": {
+    "title": "https://docs.ansible.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://docs.ansible.com/"
+  },
+  "https://prometheus.io/docs/": {
+    "title": "https://prometheus.io/docs/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://prometheus.io/docs/"
+  },
+  "https://grafana.com/docs/": {
+    "title": "https://grafana.com/docs/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://grafana.com/docs/"
+  },
+  "https://www.nginx.com/resources/wiki/": {
+    "title": "https://www.nginx.com/resources/wiki/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://www.nginx.com/resources/wiki/"
+  },
+  "https://caddyserver.com/docs/": {
+    "title": "https://caddyserver.com/docs/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://caddyserver.com/docs/"
+  },
+  "https://fly.io/docs/": {
+    "title": "https://fly.io/docs/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://fly.io/docs/"
+  },
+  "https://railway.app/docs": {
+    "title": "https://railway.app/docs",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://railway.app/docs"
+  },
+  "https://vercel.com/docs": {
+    "title": "https://vercel.com/docs",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://vercel.com/docs"
+  },
+  "https://www.netlify.com/docs/": {
+    "title": "https://www.netlify.com/docs/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://www.netlify.com/docs/"
+  },
+  "https://testing-library.com/docs/": {
+    "title": "https://testing-library.com/docs/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://testing-library.com/docs/"
+  },
+  "https://vitest.dev/": {
+    "title": "https://vitest.dev/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://vitest.dev/"
+  },
+  "https://playwright.dev/docs/intro": {
+    "title": "https://playwright.dev/docs/intro",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://playwright.dev/docs/intro"
+  },
+  "https://www.cypress.io/": {
+    "title": "https://www.cypress.io/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://www.cypress.io/"
+  },
+  "https://storybook.js.org/docs": {
+    "title": "https://storybook.js.org/docs",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://storybook.js.org/docs"
+  },
+  "https://a11yproject.com/": {
+    "title": "https://a11yproject.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://a11yproject.com/"
+  },
+  "https://www.smashingmagazine.com/": {
+    "title": "https://www.smashingmagazine.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://www.smashingmagazine.com/"
+  },
+  "https://alistapart.com/": {
+    "title": "https://alistapart.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://alistapart.com/"
+  },
+  "https://csswizardry.com/": {
+    "title": "https://csswizardry.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://csswizardry.com/"
+  },
+  "https://every-layout.dev/": {
+    "title": "https://every-layout.dev/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://every-layout.dev/"
+  },
+  "https://cubic-bezier.com/": {
+    "title": "https://cubic-bezier.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://cubic-bezier.com/"
+  },
+  "https://easings.net/": {
+    "title": "https://easings.net/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://easings.net/"
+  },
+  "https://www.nan.fyi/": {
+    "title": "https://www.nan.fyi/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://www.nan.fyi/"
+  },
+  "https://samselikoff.com/": {
+    "title": "https://samselikoff.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://samselikoff.com/"
+  },
+  "https://emilkowal.ski/": {
+    "title": "https://emilkowal.ski/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://emilkowal.ski/"
+  },
+  "https://www.uidesigndaily.com/": {
+    "title": "https://www.uidesigndaily.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://www.uidesigndaily.com/"
+  },
+  "https://mobbin.com/": {
+    "title": "https://mobbin.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://mobbin.com/"
+  },
+  "https://designsystemchecklist.com/": {
+    "title": "https://designsystemchecklist.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://designsystemchecklist.com/"
+  },
+  "https://www.refactoringui.com/": {
+    "title": "https://www.refactoringui.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://www.refactoringui.com/"
+  },
+  "https://lawsofux.com/": {
+    "title": "https://lawsofux.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://lawsofux.com/"
+  },
+  "https://www.nngroup.com/articles/": {
+    "title": "https://www.nngroup.com/articles/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://www.nngroup.com/articles/"
+  },
+  "https://anthonyhobday.com/sideprojects/saferules/": {
+    "title": "https://anthonyhobday.com/sideprojects/saferules/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://anthonyhobday.com/sideprojects/saferules/"
+  },
+  "https://typescale.com/": {
+    "title": "https://typescale.com/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://typescale.com/"
+  },
+  "https://colorhunt.co/": {
+    "title": "https://colorhunt.co/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://colorhunt.co/"
+  },
+  "https://realfavicongenerator.net/": {
+    "title": "https://realfavicongenerator.net/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://realfavicongenerator.net/"
+  },
+  "https://fontpair.co/": {
+    "title": "https://fontpair.co/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://fontpair.co/"
+  },
+  "https://roadmap.sh/frontend": {
+    "title": "https://roadmap.sh/frontend",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://roadmap.sh/frontend"
+  },
+  "https://roadmap.sh/backend": {
+    "title": "https://roadmap.sh/backend",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://roadmap.sh/backend"
+  },
+  "https://roadmap.sh/devops": {
+    "title": "https://roadmap.sh/devops",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://roadmap.sh/devops"
+  },
+  "https://roadmap.sh/react": {
+    "title": "https://roadmap.sh/react",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://roadmap.sh/react"
+  },
+  "https://roadmap.sh/typescript": {
+    "title": "https://roadmap.sh/typescript",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://roadmap.sh/typescript"
+  },
+  "https://roadmap.sh/postgresql-dba": {
+    "title": "https://roadmap.sh/postgresql-dba",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://roadmap.sh/postgresql-dba"
+  },
+  "https://roadmap.sh/docker": {
+    "title": "https://roadmap.sh/docker",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://roadmap.sh/docker"
+  },
+  "https://roadmap.sh/kubernetes": {
+    "title": "https://roadmap.sh/kubernetes",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://roadmap.sh/kubernetes"
+  },
+  "https://roadmap.sh/system-design": {
+    "title": "https://roadmap.sh/system-design",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://roadmap.sh/system-design"
+  },
+  "https://nodejs.org/docs/latest/api/": {
+    "title": "https://nodejs.org/docs/latest/api/",
+    "description": "",
+    "image": null,
+    "logo": null,
+    "url": "https://nodejs.org/docs/latest/api/"
+  }
+}

@@ -11,10 +11,10 @@ export const EvervaultCard = ({
 
   // Initialize and continuously update random string
   useEffect(() => {
-    setRandomString(generateRandomString(2000));
+    setRandomString(generateRandomString(8000));
 
     const interval = setInterval(() => {
-      setRandomString(generateRandomString(2000));
+      setRandomString(generateRandomString(8000));
     }, 80);
 
     return () => clearInterval(interval);
@@ -23,20 +23,18 @@ export const EvervaultCard = ({
   return (
     <div
       className={cn(
-        "p-0.5 bg-transparent flex items-center justify-center w-full h-full relative",
+        "bg-transparent flex items-center justify-center w-full h-full relative",
         className
       )}
     >
-      <div className="rounded-2xl w-full relative overflow-hidden bg-black flex items-center justify-center h-full">
+      <div className="w-full relative overflow-hidden bg-black flex items-start justify-start h-full">
         {/* Full coverage gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B00] via-[#FF4500] to-[#0090FF] opacity-90" />
 
-        {/* Random characters layer */}
-        <div className="absolute inset-0 overflow-hidden">
-          <p className="absolute inset-0 text-[10px] leading-tight break-all whitespace-pre-wrap text-white/80 font-mono font-bold mix-blend-overlay">
-            {randomString}
-          </p>
-        </div>
+        {/* Random characters layer - edge to edge */}
+        <p className="absolute inset-0 text-[10px] leading-none break-all whitespace-pre-wrap text-white/80 font-mono font-bold mix-blend-overlay">
+          {randomString}
+        </p>
 
         {/* Scanline effect */}
         <div
@@ -46,12 +44,17 @@ export const EvervaultCard = ({
           }}
         />
 
-        {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center gap-4 p-6">
-          <div className="relative rounded-xl flex flex-col items-center justify-center text-white p-5 backdrop-blur-md bg-black/60 border border-white/10">
-            <p className="text-white/95 text-base leading-relaxed font-light text-center max-w-[280px]">
-              <span className="text-white font-semibold block mb-2">Yeah, there&apos;s a lot to learn.</span>
-              But hopefully this site can be a great place to help you start your journey.
+        {/* Content - left aligned */}
+        <div className="relative z-10 flex flex-col items-start justify-end p-5">
+          <div className="relative rounded-xl flex flex-col items-start text-white p-5 backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl shadow-black/20"
+            style={{
+              background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)",
+              boxShadow: "inset 0 1px 1px rgba(255,255,255,0.2), 0 20px 40px rgba(0,0,0,0.3)",
+            }}
+          >
+            <p className="text-white/95 text-base leading-relaxed font-light text-left max-w-[280px]">
+              <span className="text-white font-semibold block mb-2">Web dev is hard. You&apos;ve got this.</span>
+              Real projects. Clear explanations. No fluff. Just the skills you need to build anything.
             </p>
             <a
               href="/modules"

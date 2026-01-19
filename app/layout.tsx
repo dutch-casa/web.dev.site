@@ -46,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${figtree.variable} ${playfair.variable} ${ebGaramond.variable}`}>
+    <html lang="en" className={`${figtree.variable} ${playfair.variable} ${ebGaramond.variable} overflow-x-hidden`}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${jetbrainsMono.variable} antialiased`}
       >

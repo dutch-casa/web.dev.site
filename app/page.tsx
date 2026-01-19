@@ -7,6 +7,7 @@ import { WobbleCard } from "@/components/ui/wobble-card"
 import TypingCode from "@/components/TypingCode"
 import { Footer } from "@/components/Footer"
 import { MacbookScroll } from "@/components/ui/macbook-scroll"
+import { EvervaultCard } from "@/components/ui/evervault-card"
 
 const Globe = dynamic(() => import("@/components/ui/globe").then((mod) => mod.World), { ssr: false })
 const CrowdCanvas = dynamic(() => import("@/components/CrowdCanvas").then((mod) => mod.CrowdCanvas), { ssr: false })
@@ -86,10 +87,12 @@ export default function Home() {
               <span className="relative z-10">Join Discord</span>
               <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 blur-xl" />
             </button>
-            <button className="relative px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-semibold text-foreground bg-white border-2 border-foreground/20 rounded-full transition-all duration-120 ease-out-cubic hover:scale-105 hover:border-[#0171E4] hover:text-[#0171E4] active:scale-95"
+            <a
+              href="/modules"
+              className="relative px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-semibold text-foreground bg-white border-2 border-foreground/20 rounded-full transition-all duration-120 ease-out-cubic hover:scale-105 hover:border-[#0171E4] hover:text-[#0171E4] active:scale-95"
             >
               Start Learning
-            </button>
+            </a>
           </div>
         </div>
       </div>
@@ -131,7 +134,9 @@ export default function Home() {
         <MacbookScroll
           title="Start learning now!"
           showGradient={false}
-        />
+        >
+          <EvervaultCard className="w-full h-full" />
+        </MacbookScroll>
       </div>
 
       <Footer />

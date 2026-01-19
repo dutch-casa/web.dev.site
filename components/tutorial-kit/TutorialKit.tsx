@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
   type Context as ReactContext,
@@ -128,6 +129,8 @@ interface TutorialKitInnerProps {
   className?: string
 }
 
+const DEBOUNCE_MS = 300
+
 function TutorialKitInner({ children, config, className }: TutorialKitInnerProps) {
   const actions = useTutorialActions()
   const files = useTutorialFiles()
@@ -138,13 +141,43 @@ function TutorialKitInner({ children, config, className }: TutorialKitInnerProps
     autoRun: true,
   })
 
+  // Debounced write to WebContainer
+  const pendingWritesRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+
+  const debouncedWrite = useCallback(
+    (path: string, content: string) => {
+      // Clear existing timeout for this path
+      const existing = pendingWritesRef.current.get(path)
+      if (existing) clearTimeout(existing)
+
+      // Schedule new write
+      const timeout = setTimeout(() => {
+        pendingWritesRef.current.delete(path)
+        writeFileToContainer(path, content)
+        actions.markClean(path)
+      }, DEBOUNCE_MS)
+
+      pendingWritesRef.current.set(path, timeout)
+    },
+    [writeFileToContainer, actions]
+  )
+
+  // Cleanup pending writes on unmount
+  useEffect(() => {
+    return () => {
+      pendingWritesRef.current.forEach((timeout) => clearTimeout(timeout))
+    }
+  }, [])
+
   const handleFileChange = useCallback(
-    async (path: string, content: string) => {
+    (path: string, content: string) => {
+      // Update local state immediately (responsive UI)
       actions.updateFile(path, content)
       actions.markDirty(path)
-      await writeFileToContainer(path, content)
+      // Debounce write to WebContainer (triggers HMR)
+      debouncedWrite(path, content)
     },
-    [actions, writeFileToContainer]
+    [actions, debouncedWrite]
   )
 
   const handleReset = useCallback(() => {

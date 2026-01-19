@@ -38,7 +38,7 @@ export function Footer() {
               dominantBaseline="middle"
               className="fill-none stroke-white"
               style={{
-                fontFamily: "var(--font-playfair), 'Playfair Display', Georgia, serif",
+                fontFamily: "var(--font-eb-garamond), 'EB Garamond', Georgia, serif",
                 fontSize: "48px",
                 fontWeight: 400,
                 strokeWidth: "2px",
@@ -53,7 +53,7 @@ export function Footer() {
               dominantBaseline="middle"
               className="fill-none stroke-white"
               style={{
-                fontFamily: "var(--font-playfair), 'Playfair Display', Georgia, serif",
+                fontFamily: "var(--font-eb-garamond), 'EB Garamond', Georgia, serif",
                 fontSize: "48px",
                 fontWeight: 400,
                 strokeWidth: "2px",
@@ -76,7 +76,7 @@ export function Footer() {
               dominantBaseline="middle"
               className="fill-none stroke-white"
               style={{
-                fontFamily: "var(--font-playfair), 'Playfair Display', Georgia, serif",
+                fontFamily: "var(--font-eb-garamond), 'EB Garamond', Georgia, serif",
                 fontSize: "48px",
                 fontWeight: 400,
                 strokeWidth: "1.5px",
@@ -91,7 +91,7 @@ export function Footer() {
               dominantBaseline="middle"
               className="fill-none stroke-white"
               style={{
-                fontFamily: "var(--font-playfair), 'Playfair Display', Georgia, serif",
+                fontFamily: "var(--font-eb-garamond), 'EB Garamond', Georgia, serif",
                 fontSize: "48px",
                 fontWeight: 400,
                 strokeWidth: "1.5px",
@@ -114,7 +114,7 @@ export function Footer() {
               dominantBaseline="middle"
               className="fill-none stroke-white"
               style={{
-                fontFamily: "var(--font-playfair), 'Playfair Display', Georgia, serif",
+                fontFamily: "var(--font-eb-garamond), 'EB Garamond', Georgia, serif",
                 fontSize: "48px",
                 fontWeight: 400,
                 strokeWidth: "1px",
@@ -129,7 +129,7 @@ export function Footer() {
               dominantBaseline="middle"
               className="fill-none stroke-white"
               style={{
-                fontFamily: "var(--font-playfair), 'Playfair Display', Georgia, serif",
+                fontFamily: "var(--font-eb-garamond), 'EB Garamond', Georgia, serif",
                 fontSize: "48px",
                 fontWeight: 400,
                 strokeWidth: "1px",
@@ -162,7 +162,7 @@ export function Footer() {
               dominantBaseline="middle"
               className="fill-none stroke-white"
               style={{
-                fontFamily: "var(--font-playfair), 'Playfair Display', Georgia, serif",
+                fontFamily: "var(--font-eb-garamond), 'EB Garamond', Georgia, serif",
                 fontSize: "48px",
                 fontWeight: 400,
                 strokeWidth: "0.8px",
@@ -178,7 +178,7 @@ export function Footer() {
               dominantBaseline="middle"
               className="fill-none stroke-white"
               style={{
-                fontFamily: "var(--font-playfair), 'Playfair Display', Georgia, serif",
+                fontFamily: "var(--font-eb-garamond), 'EB Garamond', Georgia, serif",
                 fontSize: "48px",
                 fontWeight: 400,
                 strokeWidth: "0.8px",

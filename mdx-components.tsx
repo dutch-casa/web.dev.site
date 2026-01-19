@@ -12,6 +12,7 @@ import {
   MultipleChoice,
   FillBlank,
   ShortAnswer,
+  Exercise,
   SimpleExercise,
   ExerciseBlock,
 } from "@/components/mdx"
@@ -88,7 +89,10 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     FillBlank,
     ShortAnswer,
 
-    // Interactive exercises (ExerciseBlock for MDX authoring)
+    // Interactive exercises
+    // - Exercise: File-based (loads from content/exercises/{id}/) - PREFERRED
+    // - ExerciseBlock: Legacy inline files array
+    Exercise,
     SimpleExercise,
     ExerciseBlock,
 

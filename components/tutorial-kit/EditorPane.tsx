@@ -12,6 +12,7 @@ import {
   useTutorialActions,
   useTutorial,
 } from "@/lib/tutorial-kit/context"
+import { useTutorialKitContext } from "./TutorialKit"
 import { useSettings } from "@/lib/tutorial-kit/settings"
 
 // ============================================================================
@@ -96,15 +97,14 @@ interface EditorPaneProps {
   className?: string
   defaultSize?: number
   minSize?: number
-  onFileChange?: (path: string, content: string) => void
 }
 
 export function EditorPane({
   className,
   defaultSize = 50,
   minSize = 30,
-  onFileChange,
 }: EditorPaneProps) {
+  const { onFileChange } = useTutorialKitContext()
   const activeFile = useTutorialActiveFile()
   const files = useTutorialFiles()
   const openFiles = useTutorial((s) => s.editor.openFiles)
@@ -243,11 +243,10 @@ export function EditorPane({
   const handleChange = useCallback(
     (value: string | undefined) => {
       if (!activeFile || value === undefined) return
-      actions.updateFile(activeFile, value)
-      actions.markDirty(activeFile)
-      onFileChange?.(activeFile, value)
+      // onFileChange handles local state update + debounced write to WebContainer
+      onFileChange(activeFile, value)
     },
-    [activeFile, actions, onFileChange]
+    [activeFile, onFileChange]
   )
 
   const handleTabSelect = useCallback(

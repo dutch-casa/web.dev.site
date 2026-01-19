@@ -1,0 +1,3 @@
+title: Todo List App
+description: A complete todo app with add, toggle, and delete
+focus: /src/App.tsx

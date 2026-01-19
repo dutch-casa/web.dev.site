@@ -206,7 +206,16 @@
   }
 }
 
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
 @layer utilities {
+  .animate-gradient-shift {
+    animation: gradient-shift 4s ease infinite;
+  }
+
   .motion-enter {
     @apply animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-[120ms] ease-out;
   }

@@ -136,11 +136,17 @@ export async function mountFiles(files: Record<string, string>, options?: { clea
   await instance.mount(tree)
 }
 
+// Normalize path (remove leading slash for WebContainer FS)
+function normalizePath(path: string): string {
+  return path.startsWith("/") ? path.slice(1) : path
+}
+
 // Write single file
 export async function writeFile(path: string, content: string): Promise<void> {
   const instance = getWebContainer()
+  const normalizedPath = normalizePath(path)
   _ignoreNextEvent(path)
-  await instance.fs.writeFile(path, content)
+  await instance.fs.writeFile(normalizedPath, content)
 }
 
 // Write multiple files (batch operation)
@@ -152,26 +158,30 @@ export async function writeFiles(files: Record<string, string>): Promise<void> {
     _ignoreNextEvent(path)
   }
 
-  await Promise.all(Object.entries(files).map(([path, content]) => instance.fs.writeFile(path, content)))
+  await Promise.all(
+    Object.entries(files).map(([path, content]) =>
+      instance.fs.writeFile(normalizePath(path), content)
+    )
+  )
 }
 
 // Read single file
 export async function readFile(path: string): Promise<string> {
   const instance = getWebContainer()
-  return instance.fs.readFile(path, "utf-8")
+  return instance.fs.readFile(normalizePath(path), "utf-8")
 }
 
 // Delete file
 export async function deleteFile(path: string): Promise<void> {
   const instance = getWebContainer()
   _ignoreNextEvent(path)
-  await instance.fs.rm(path)
+  await instance.fs.rm(normalizePath(path))
 }
 
 // Create directory
 export async function createDirectory(path: string): Promise<void> {
   const instance = getWebContainer()
-  await instance.fs.mkdir(path, { recursive: true })
+  await instance.fs.mkdir(normalizePath(path), { recursive: true })
 }
 
 // Check if file exists
@@ -179,7 +189,7 @@ export async function fileExists(path: string): Promise<boolean> {
   try {
     const instance = getWebContainer()
     // @ts-expect-error stat exists on FileSystemAPI
-    await instance.fs.stat(path)
+    await instance.fs.stat(normalizePath(path))
     return true
   } catch {
     return false
@@ -189,7 +199,7 @@ export async function fileExists(path: string): Promise<boolean> {
 // List directory contents
 export async function listDirectory(path: string): Promise<string[]> {
   const instance = getWebContainer()
-  const entries = await instance.fs.readdir(path)
+  const entries = await instance.fs.readdir(normalizePath(path))
   return entries
 }
 

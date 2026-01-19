@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Figtree, Playfair_Display, JetBrains_Mono, EB_Garamond } from "next/font/google";
 import "./globals.css";
+import { SpeedDialNav } from "@/components/ui/speed-dial-nav";
 
 const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
 
@@ -50,6 +51,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${jetbrainsMono.variable} antialiased`}
       >
         {children}
+        <div className="fixed bottom-8 right-8 z-50">
+          <SpeedDialNav />
+        </div>
       </body>
     </html>
   );

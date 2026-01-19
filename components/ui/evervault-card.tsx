@@ -58,7 +58,7 @@ export const EvervaultCard = ({
             </p>
             <a
               href="/modules"
-              className="mt-4 px-6 py-2.5 bg-[#FF5500] hover:bg-[#FF6B00] text-white font-semibold rounded-full transition-all duration-150 hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/30"
+              className="mt-4 px-6 py-2.5 bg-[#0171E4] hover:bg-[#0090FF] text-white font-semibold rounded-full transition-all duration-150 hover:scale-105 active:scale-95 shadow-lg shadow-blue-500/30"
             >
               Let&apos;s go!
             </a>

@@ -25,7 +25,7 @@ export default async function ModulesPage() {
           <p className="text-sm text-muted-foreground">
             Course contributions are welcome!{" "}
             <Link
-              href="https://github.com/RobotCrookedMan/web.dev.site"
+              href="https://github.com/dutch-casa/web.dev.site"
               className="underline underline-offset-4 hover:text-foreground transition-colors"
               target="_blank"
               rel="noopener noreferrer"

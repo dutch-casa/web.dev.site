@@ -1,0 +1,4 @@
+title: Accessibility Audit and Fix
+description: Identify and fix accessibility issues in a music player component
+template: html
+focus: /src/index.html

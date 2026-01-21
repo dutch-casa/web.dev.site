@@ -1,0 +1,454 @@
+# Display and Positioning
+
+The `display` property controls how an element participates in layout. The `position` property removes elements from normal flow and places them relative to a reference point. Together, these properties form the foundation of CSS layout.
+
+## Display: Outer and Inner
+
+The `display` property has two components:
+
+- **Outer display:** How the element behaves in its parent's layout (`block` or `inline`)
+- **Inner display:** How the element's children are laid out (`flow`, `flex`, `grid`)
+
+The shorthand `display: flex` is actually `display: block flex`. The element is block-level externally but uses flexbox internally.
+
+## Outer Display Types
+
+**`block`** — Element takes full available width and starts on a new line:
+
+```css
+div, p, h1 { display: block; }
+```
+
+Block elements stack vertically. Width defaults to 100% of the parent.
+
+**`inline`** — Element takes only the width of its content and stays on the same line:
+
+```css
+span, a, strong { display: inline; }
+```
+
+Inline elements flow horizontally like text. They ignore `width`, `height`, and vertical `margin`.
+
+**`inline-block`** — Inline externally, block internally. Flows inline but respects block properties:
+
+```css
+.tag {
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  width: 80px; /* Works, unlike inline */
+}
+```
+
+Use `inline-block` for:
+- Buttons that should flow inline
+- Horizontal lists of sized items
+- Inline elements that need padding/dimensions
+
+## Inner Display Types
+
+**`flow`** — Normal block and inline layout (default):
+
+```css
+div { display: block flow; }
+/* Usually written as just: display: block; */
+```
+
+**`flex`** — Flexbox layout for children:
+
+```css
+.container {
+  display: flex;
+  gap: 1rem;
+}
+```
+
+**`grid`** — Grid layout for children:
+
+```css
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+```
+
+We'll explore flex and grid in later modules.
+
+## `display: contents`
+
+`display: contents` makes the element's box disappear. Its children are laid out as if the element doesn't exist:
+
+```html
+<div class="container">
+  <div class="wrapper">
+    <p>Child 1</p>
+    <p>Child 2</p>
+  </div>
+</div>
+```
+
+```css
+.container { display: flex; }
+.wrapper { display: contents; }
+/* Children of .wrapper become flex items of .container */
+```
+
+This is useful for:
+- Removing wrapper divs from layout without changing HTML
+- Making semantic elements layout-invisible
+- Flattening nested grid structures
+
+<Warning>
+`display: contents` removes the element from the accessibility tree in some browsers. Avoid using it on semantic elements like `<article>` or `<section>` that convey meaning to screen readers.
+</Warning>
+
+## Positioning: `static` (Default)
+
+`position: static` is the default. The element is in normal flow:
+
+```css
+div { position: static; }
+/* top, right, bottom, left have no effect */
+```
+
+## `position: relative`
+
+`position: relative` keeps the element in normal flow but allows offset:
+
+```css
+.nudge {
+  position: relative;
+  top: 10px;   /* Moves down 10px */
+  left: 5px;   /* Moves right 5px */
+}
+```
+
+The element's original space is preserved. Other elements don't move to fill the gap.
+
+Use cases:
+- Small adjustments for optical alignment
+- Creating a positioning context for `absolute` children
+- Animating position without disrupting layout
+
+## `position: absolute`
+
+`position: absolute` removes the element from flow. It's positioned relative to its nearest positioned ancestor (any ancestor with `position` other than `static`):
+
+```css
+.container {
+  position: relative; /* Positioning context */
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+```
+
+If no positioned ancestor exists, it's positioned relative to the initial containing block (usually the viewport).
+
+**Containing block**: The reference for positioning. For `absolute`, it's the nearest positioned ancestor. For `fixed`, it's the viewport.
+
+```html
+<div class="container"> <!-- position: relative -->
+  <div class="child"> <!-- position: absolute -->
+    <!-- Positioned relative to .container -->
+  </div>
+</div>
+```
+
+## `position: fixed`
+
+`position: fixed` is like `absolute`, but positioned relative to the viewport. It doesn't scroll:
+
+```css
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+}
+```
+
+Fixed elements are common for:
+- Sticky headers
+- Floating action buttons
+- Modal overlays
+
+<Tip>
+When you have a fixed header, content underneath scrolls beneath it. Use `scroll-margin-top` on anchor targets to account for the header height:
+
+```css
+.header {
+  position: fixed;
+  height: 60px;
+}
+
+h2[id], h3[id] {
+  scroll-margin-top: 60px; /* Offset for fixed header */
+}
+```
+
+Now when you navigate to `#section-2`, the browser scrolls to 60px above the heading, keeping it visible below the header.
+</Tip>
+
+## `position: sticky`
+
+`position: sticky` is a hybrid. The element is in flow until it reaches a threshold, then becomes fixed:
+
+```css
+.sidebar {
+  position: sticky;
+  top: 20px; /* Sticks 20px from top when scrolling */
+}
+```
+
+The element sticks within its parent's boundaries. Once the parent scrolls out of view, the sticky element scrolls with it.
+
+Requirements:
+- Must specify at least one threshold (`top`, `bottom`, `left`, or `right`)
+- Parent must have a scrollable height (not height-less)
+
+Use `sticky` for:
+- Table headers that stick while scrolling
+- Section headings in long pages
+- Floating sidebars
+
+## The `inset` Shorthand
+
+Instead of `top`, `right`, `bottom`, `left`, use `inset`:
+
+```css
+/* Old way */
+.overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/* New way */
+.overlay {
+  position: absolute;
+  inset: 0;
+}
+```
+
+`inset` follows the same syntax as `margin`:
+- `inset: 0` — All sides 0
+- `inset: 10px 20px` — Top/bottom 10px, left/right 20px
+- `inset: 10px 20px 30px 40px` — Top, right, bottom, left
+
+## Stacking Contexts
+
+Positioned elements can overlap. The `z-index` property controls stacking order, but only for positioned elements (`position` other than `static`):
+
+```css
+.background {
+  position: absolute;
+  z-index: 1;
+}
+
+.foreground {
+  position: absolute;
+  z-index: 2; /* Renders on top */
+}
+```
+
+Higher `z-index` renders on top. Negative values are allowed.
+
+A **stacking context** is a 3D layer. Elements inside a stacking context can't interleave with elements outside. Creating a stacking context isolates `z-index` to that context.
+
+Stacking contexts are created by:
+- `position: absolute|relative|fixed|sticky` with `z-index` other than `auto`
+- `position: fixed` or `position: sticky` (always creates context)
+- `opacity` less than 1
+- `transform`, `filter`, `perspective` (non-`none` values)
+- `isolation: isolate` (explicitly creates context)
+
+### Example: Stacking Context Isolation
+
+```html
+<div class="modal"> <!-- z-index: 200 -->
+  <div class="overlay"></div> <!-- z-index: 1 -->
+  <div class="content"></div> <!-- z-index: 2 -->
+</div>
+<div class="dropdown"> <!-- z-index: 100 -->
+  <div class="menu"></div> <!-- z-index: 9999 (ineffective) -->
+</div>
+```
+
+```css
+.modal {
+  position: fixed;
+  z-index: 200;
+}
+
+.dropdown {
+  position: absolute;
+  z-index: 100;
+}
+
+.menu {
+  z-index: 9999; /* Doesn't matter—still behind modal */
+}
+```
+
+The `.menu` can't escape `.dropdown`'s stacking context. Even with `z-index: 9999`, it renders behind `.modal` (which has `z-index: 200`).
+
+## Managing Z-Index
+
+Use a z-index scale instead of arbitrary numbers:
+
+```css
+:root {
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+  --z-tooltip: 500;
+}
+
+.dropdown { z-index: var(--z-dropdown); }
+.modal { z-index: var(--z-modal); }
+```
+
+This prevents z-index wars where you add 1 to beat the previous element.
+
+<Tip>
+To avoid z-index entirely, use `isolation: isolate` to create stacking contexts without positioning:
+
+```css
+.card {
+  isolation: isolate; /* Creates stacking context */
+}
+
+.card__background {
+  position: absolute;
+  inset: 0;
+  z-index: -1; /* Behind card content, but not behind page */
+}
+```
+
+The `-1` z-index only applies within `.card`'s stacking context, so it doesn't go behind unrelated elements.
+</Tip>
+
+## Safe Areas for Mobile
+
+On mobile devices with notches or rounded corners, fixed elements can be obscured. Use safe area insets:
+
+```css
+.footer {
+  position: fixed;
+  bottom: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+```
+
+`env(safe-area-inset-bottom)` is the distance from the screen edge to the safe area. On iPhone X, this is 34px at the bottom. On desktop, it's 0.
+
+Also available:
+- `env(safe-area-inset-top)`
+- `env(safe-area-inset-left)`
+- `env(safe-area-inset-right)`
+
+For full-screen elements:
+
+```css
+.fullscreen {
+  position: fixed;
+  inset: env(safe-area-inset-top)
+         env(safe-area-inset-right)
+         env(safe-area-inset-bottom)
+         env(safe-area-inset-left);
+}
+```
+
+## Stacking Context Visualization
+
+<MermaidDiagram chart={`
+graph TD
+    A[Root Stacking Context] --> B[Positioned Element z-index: 100]
+    A --> C[Positioned Element z-index: 200]
+    B --> D[Child z-index: 999]
+    B --> E[Child z-index: 1]
+    C --> F[Child z-index: 1]
+    C --> G[Child z-index: 2]
+
+    style A fill:#f9f9f9,stroke:#333
+    style B fill:#ffeaa7,stroke:#fdcb6e
+    style C fill:#74b9ff,stroke:#0984e3
+    style D fill:#ffeaa7,stroke:#fdcb6e
+    style E fill:#ffeaa7,stroke:#fdcb6e
+    style F fill:#74b9ff,stroke:#0984e3
+    style G fill:#74b9ff,stroke:#0984e3
+`} />
+
+In this diagram, even though D has `z-index: 999`, it can't render above C (which has `z-index: 200`) because D is isolated within B's stacking context.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="An inline element has `width: 200px` and `height: 100px` set. What happens?"
+  options={[
+    "The element becomes 200×100px",
+    "The width is ignored, height works",
+    "Both properties are ignored",
+    "The element becomes inline-block"
+  ]}
+  correct={2}
+/>
+
+<MultipleChoice
+  question="An element has `position: absolute`, and its parent has `position: static`. What is its containing block?"
+  options={[
+    "The parent element",
+    "The nearest positioned ancestor (or viewport if none)",
+    "The viewport",
+    "The document root"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="Use ___ to create a stacking context without positioning."
+  answer="isolation: isolate"
+  fuzzyThreshold={0.3}
+/>
+
+<MultipleChoice
+  question="Why use a z-index scale instead of arbitrary numbers?"
+  options={[
+    "It renders faster",
+    "It prevents z-index escalation wars",
+    "It's required by CSS specifications",
+    "It improves accessibility"
+  ]}
+  correct={1}
+/>
+
+## Practice
+
+<Exercise id="hc-sticky-header" />
+
+## Summary
+
+- **Outer display:** `block` (full width, new line), `inline` (content width, same line), `inline-block` (inline flow, block properties).
+- **Inner display:** `flow` (default), `flex` (flexbox), `grid` (grid).
+- **`display: contents`:** Element's box disappears; children laid out as if element doesn't exist.
+- **`position: relative`:** In flow, but offset. Creates positioning context for absolute children.
+- **`position: absolute`:** Out of flow, positioned relative to nearest positioned ancestor.
+- **`position: fixed`:** Positioned relative to viewport. Doesn't scroll.
+- **`position: sticky`:** In flow until threshold, then fixed within parent boundaries.
+- **`inset` shorthand:** Replaces top/right/bottom/left. Cleaner syntax.
+- **Stacking contexts:** Isolate z-index. Created by positioned elements with z-index, opacity, transforms, or `isolation: isolate`.
+- **Z-index scale:** Use CSS variables to prevent escalation wars.
+- **`isolation: isolate`:** Create stacking context without positioning.
+- **Safe areas:** Use `env(safe-area-inset-*)` for notched mobile devices.
+- **`scroll-margin-top`:** Offset anchor scroll targets for fixed headers.

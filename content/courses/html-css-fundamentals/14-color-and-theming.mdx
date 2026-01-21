@@ -1,0 +1,421 @@
+# Color and Theming
+
+Color does more than make things look good. It communicates hierarchy, state, and meaning. This lesson covers color formats, custom properties, and systematic theming approaches that scale across light and dark modes.
+
+## Color Formats
+
+CSS supports multiple color formats. Choose based on your workflow and requirements.
+
+### Hex Colors
+
+Hexadecimal notation is compact and familiar:
+
+```css
+.element {
+  color: #3b82f6; /* Blue */
+  background: #1e293b; /* Dark gray */
+}
+```
+
+Hex colors use 6 digits for RGB values (or 8 with alpha). They're concise but hard to adjust mentally. What's "slightly lighter than #3b82f6"? You need a color picker.
+
+### RGB and RGBA
+
+RGB separates red, green, and blue channels:
+
+```css
+.element {
+  color: rgb(59 130 246); /* Same blue as above */
+  background: rgb(30 41 59 / 0.5); /* 50% transparent */
+}
+```
+
+The modern syntax uses spaces and `/` for alpha. RGB is easier to adjust programmatically but still doesn't match human color perception.
+
+### HSL
+
+HSL (Hue, Saturation, Lightness) maps to how humans think about color:
+
+```css
+.element {
+  color: hsl(217 91% 60%); /* Blue */
+  background: hsl(217 33% 17%); /* Dark blue-gray */
+}
+```
+
+- **Hue:** Color wheel position (0–360°)
+- **Saturation:** Color intensity (0%–100%)
+- **Lightness:** Brightness (0%–100%)
+
+HSL makes it easy to create variations: "same hue, less saturation" or "same color, darker". But HSL has a problem: it doesn't account for how humans perceive lightness across different hues. HSL yellow looks brighter than HSL blue at the same lightness value.
+
+### OKLCH: Perceptually Uniform Color
+
+OKLCH (Lightness, Chroma, Hue) is designed for human perception:
+
+```css
+.element {
+  color: oklch(65% 0.2 250); /* Blue */
+  background: oklch(30% 0.05 250); /* Dark blue-gray */
+}
+```
+
+- **Lightness:** Perceived brightness (0%–100%)
+- **Chroma:** Color intensity (0–0.4)
+- **Hue:** Color angle (0–360°)
+
+OKLCH's key advantage: colors at the same lightness value **look** equally bright to humans. This makes it superior for generating color scales. When you create grays or accent colors with consistent lightness values, they'll have consistent visual weight.
+
+```css
+/* All these colors have equal perceived brightness */
+.red { color: oklch(60% 0.2 20); }
+.yellow { color: oklch(60% 0.2 90); }
+.blue { color: oklch(60% 0.2 250); }
+```
+
+In HSL, those same colors would look wildly different in brightness.
+
+<Tip>
+Use OKLCH for programmatic color generation and design systems. Use hex or RGB when you're working with specific brand colors from a design file.
+</Tip>
+
+### color-mix()
+
+Mix two colors in CSS:
+
+```css
+.element {
+  /* Mix 20% blue with 80% white */
+  background: color-mix(in oklch, blue 20%, white);
+}
+```
+
+This is useful for hover states, disabled colors, and generating variations from a base color. The `in oklch` part specifies which color space to mix in (OKLCH produces better results than RGB for mixing).
+
+## CSS Custom Properties
+
+Custom properties (CSS variables) store reusable values:
+
+```css
+:root {
+  --color-primary: oklch(60% 0.2 250);
+  --color-background: oklch(98% 0 0);
+  --spacing-base: 1rem;
+}
+
+.button {
+  background: var(--color-primary);
+  padding: var(--spacing-base);
+}
+```
+
+Custom properties cascade and inherit like any CSS property. You can redefine them in nested contexts:
+
+```css
+:root {
+  --color-text: black;
+}
+
+.dark-section {
+  --color-text: white;
+}
+
+p {
+  color: var(--color-text); /* Black by default, white inside .dark-section */
+}
+```
+
+### Fallback Values
+
+Provide fallbacks for custom properties:
+
+```css
+.element {
+  color: var(--color-primary, blue); /* Use blue if --color-primary isn't defined */
+}
+```
+
+### Scoping and Inheritance
+
+Custom properties follow normal CSS scoping:
+
+```css
+.card {
+  --card-padding: 1rem;
+}
+
+.card-body {
+  padding: var(--card-padding); /* Inherits from .card */
+}
+
+.special-card {
+  --card-padding: 2rem; /* Override for this card */
+}
+```
+
+This makes component-level theming straightforward. Define variables on the component root, use them in children, override them for variations.
+
+## Typed Custom Properties with @property
+
+The `@property` rule creates typed custom properties with default values:
+
+```css
+@property --color-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: blue;
+}
+
+@property --spacing-multiplier {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+```
+
+Typed properties enable:
+- **Transitions:** You can animate `--color-primary` because the browser knows it's a color
+- **Type checking:** Invalid values are rejected
+- **Initial values:** Always have a fallback
+
+```css
+.element {
+  background: var(--color-primary);
+  transition: background 0.2s;
+}
+
+.element:hover {
+  --color-primary: red; /* Animates smoothly */
+}
+```
+
+Without `@property`, custom properties are treated as strings. With it, they're strongly typed.
+
+## Color Scales
+
+Design systems use numerical color scales:
+
+```css
+:root {
+  --gray-1: oklch(99% 0 0);
+  --gray-2: oklch(97% 0 0);
+  --gray-3: oklch(93% 0 0);
+  --gray-4: oklch(88% 0 0);
+  --gray-5: oklch(82% 0 0);
+  --gray-6: oklch(74% 0 0);
+  --gray-7: oklch(62% 0 0);
+  --gray-8: oklch(52% 0 0);
+  --gray-9: oklch(43% 0 0);
+  --gray-10: oklch(35% 0 0);
+  --gray-11: oklch(27% 0 0);
+  --gray-12: oklch(15% 0 0);
+}
+```
+
+Numbers make relationships clear. `--gray-6` is lighter than `--gray-8`. This is better than naming like `--gray-light` or `--gray-medium` where relationships are ambiguous.
+
+Use semantic aliases for common use cases:
+
+```css
+:root {
+  --color-text: var(--gray-12);
+  --color-text-subtle: var(--gray-11);
+  --color-background: var(--gray-1);
+  --color-border: var(--gray-6);
+}
+```
+
+## Dark Mode
+
+Dark mode requires two approaches: detecting user preference and providing dark colors.
+
+### Detecting User Preference
+
+The `prefers-color-scheme` media query detects system preference:
+
+```css
+:root {
+  --color-background: white;
+  --color-text: black;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #1a1a1a;
+    --color-text: white;
+  }
+}
+```
+
+This automatically switches colors based on the user's system settings.
+
+### Variable Flipping vs Duplication
+
+**Don't duplicate every rule for dark mode.** Flip variables instead:
+
+```css
+/* Bad - duplicates every rule */
+.button {
+  background: white;
+  color: black;
+  border: 1px solid #ccc;
+}
+
+@media (prefers-color-scheme: dark) {
+  .button {
+    background: #1a1a1a;
+    color: white;
+    border: 1px solid #555;
+  }
+}
+```
+
+```css
+/* Good - flip variables once */
+:root {
+  --color-background: white;
+  --color-text: black;
+  --color-border: #ccc;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #1a1a1a;
+    --color-text: white;
+    --color-border: #555;
+  }
+}
+
+.button {
+  background: var(--color-background);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+```
+
+Define variables once, flip them once. Components use variables everywhere and get dark mode for free.
+
+### The light-dark() Function
+
+Modern CSS provides `light-dark()` for inline color switching:
+
+```css
+:root {
+  color-scheme: light dark;
+}
+
+.element {
+  background: light-dark(white, #1a1a1a);
+  color: light-dark(black, white);
+}
+```
+
+The `color-scheme` property tells the browser which modes are supported. Then `light-dark()` returns the first value in light mode, the second in dark mode.
+
+This is convenient for one-off colors, but variables are better for systematic theming.
+
+## Focus Outlines
+
+Focus indicators show keyboard users where they are. Default focus outlines are fine, but custom focus styles should use neutral colors:
+
+```css
+/* Good - neutral focus colors */
+.button:focus-visible {
+  outline: 2px solid black;
+  outline-offset: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .button:focus-visible {
+    outline-color: white;
+  }
+}
+```
+
+```css
+/* Bad - colored focus outlines */
+.button:focus-visible {
+  outline: 2px solid blue; /* Don't use accent colors */
+}
+```
+
+Use gray, black, or white for focus outlines. Colored outlines compete with the component's design and fail accessibility guidelines when they lack sufficient contrast.
+
+Use `:focus-visible` instead of `:focus`. `:focus-visible` only shows the outline for keyboard navigation, not mouse clicks.
+
+## Color Contrast
+
+Text must have sufficient contrast against its background:
+
+- **Normal text:** 4.5:1 contrast ratio
+- **Large text (18pt+):** 3:1 contrast ratio
+
+```css
+/* Good contrast */
+.text {
+  color: #1a1a1a; /* Dark gray */
+  background: white;
+  /* Contrast ratio: ~16:1 */
+}
+
+/* Poor contrast */
+.text {
+  color: #999; /* Light gray */
+  background: white;
+  /* Contrast ratio: ~2.8:1 - fails WCAG */
+}
+```
+
+Use a contrast checker when choosing text colors. Pure black on white (#000 on #fff) is harsh; slightly softened colors like `#1a1a1a` or `#0a0a0a` have better readability while still passing contrast requirements.
+
+<Warning>
+Don't rely on color alone to convey information. Use icons, text labels, or patterns in addition to color for users with color blindness.
+</Warning>
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="Why is OKLCH better than HSL for generating color scales?"
+  options={[
+    "OKLCH has smaller file sizes",
+    "OKLCH has better browser support",
+    "OKLCH colors at the same lightness value have equal perceived brightness",
+    "OKLCH can represent more colors than HSL"
+  ]}
+  correct={2}
+/>
+
+<MultipleChoice
+  question="What's the benefit of flipping CSS variables for dark mode instead of duplicating rules?"
+  options={[
+    "Better performance",
+    "Smaller file sizes",
+    "Change colors once instead of rewriting every rule",
+    "Faster load times"
+  ]}
+  correct={2}
+/>
+
+<FillBlank
+  question="To create a typed custom property that can be animated, use the ___ rule."
+  answer="@property"
+  fuzzyThreshold={0.1}
+/>
+
+## Practice
+
+<Exercise id="hc-theme-system" />
+
+## Summary
+
+- **Color formats:** Use OKLCH for perceptually uniform color scales, hex/RGB for specific brand colors
+- **OKLCH advantage:** Colors with the same lightness value look equally bright across different hues
+- **color-mix():** Programmatically mix colors in CSS for hover states and variations
+- **Custom properties:** Store reusable values with `--property-name` and use with `var(--property-name)`
+- **@property:** Create typed custom properties that can be animated and have default values
+- **Color scales:** Use numerical naming (--gray-1 through --gray-12) to make relationships clear
+- **Dark mode:** Detect with `prefers-color-scheme` media query or `light-dark()` function
+- **Variable flipping:** Define variables once, flip them for dark mode instead of duplicating rules
+- **Focus outlines:** Use neutral colors (gray, black, white) and `:focus-visible` for keyboard navigation
+- **Contrast:** Ensure text meets 4.5:1 ratio for accessibility, 3:1 for large text
+- **Color-only meaning:** Don't rely on color alone; pair with icons or labels for accessibility

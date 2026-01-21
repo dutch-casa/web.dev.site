@@ -1,0 +1,516 @@
+# CSS Grid
+
+Grid is a two-dimensional layout system. Define rows and columns, then place items into the resulting cells. Unlike flexbox, which flows in one direction, grid controls both axes simultaneously.
+
+Grid solves the layout problems that required complex float and positioning hacks: magazine layouts, asymmetric designs, overlapping content.
+
+## The Grid Container
+
+Apply `display: grid` to a parent element. Its direct children become grid items.
+
+```css
+.layout {
+  display: grid;
+}
+```
+
+Without further properties, items stack vertically in a single column. You need to define the grid structure.
+
+## Grid Template Columns and Rows
+
+Define column widths with `grid-template-columns` and row heights with `grid-template-rows`.
+
+```css
+.layout {
+  display: grid;
+  grid-template-columns: 200px 1fr 200px;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+```
+
+This creates a three-column layout: fixed sidebars with a flexible center.
+
+<MermaidDiagram chart={`
+graph TD
+    subgraph "Grid Structure"
+        A["200px"]
+        B["1fr (flexible)"]
+        C["200px"]
+    end
+
+    subgraph "Grid Items"
+        D[Sidebar Left]
+        E[Main Content]
+        F[Sidebar Right]
+    end
+
+    D -.-> A
+    E -.-> B
+    F -.-> C
+
+    style D fill:#e3f2fd
+    style E fill:#c8e6c9
+    style F fill:#e3f2fd
+`} />
+
+## The Fr Unit
+
+The `fr` unit represents a fraction of available space. Use it instead of percentages.
+
+```css
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+}
+```
+
+The middle column is twice as wide as the sides. Grid calculates sizes after fixed and minimum constraints.
+
+Why not percentages?
+
+```css
+/* Percentages don't account for gaps */
+.bad {
+  grid-template-columns: 33.333% 33.333% 33.333%;
+  gap: 1rem; /* now columns overflow */
+}
+
+/* Fr units handle gaps correctly */
+.good {
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem; /* columns fit perfectly */
+}
+```
+
+## Repeat Function
+
+Don't type the same value repeatedly.
+
+```css
+/* Repetitive */
+.grid {
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+}
+
+/* Clean */
+.grid {
+  grid-template-columns: repeat(5, 1fr);
+}
+```
+
+Mix repeat with other values:
+
+```css
+.layout {
+  grid-template-columns: 250px repeat(3, 1fr) 250px;
+}
+```
+
+## Auto-Fill and Auto-Fit
+
+Create responsive grids without media queries.
+
+```css
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+```
+
+- **auto-fill:** Creates as many columns as fit, even if empty
+- **auto-fit:** Creates columns only for content, collapses empty ones
+
+Use `auto-fit` for cards and galleries. Items expand to fill available space.
+
+```css
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+```
+
+## Minmax Function
+
+Set minimum and maximum sizes for tracks.
+
+```css
+.grid {
+  grid-template-columns: minmax(200px, 300px) 1fr;
+}
+```
+
+The first column is never smaller than 200px or larger than 300px.
+
+Common pattern for responsive content:
+
+```css
+.container {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+```
+
+The `minmax(0, 1fr)` prevents grid items from overflowing. By default, grid items won't shrink below their content size. Setting minimum to 0 allows shrinking.
+
+## Grid Lines and Placement
+
+Grid creates numbered lines between tracks. Use them to place items.
+
+<MermaidDiagram chart={`
+graph LR
+    subgraph "Grid Lines (3 columns)"
+        A["Line 1"]
+        B[Column 1]
+        C["Line 2"]
+        D[Column 2]
+        E["Line 3"]
+        F[Column 3]
+        G["Line 4"]
+    end
+
+    style A fill:#ffebee
+    style C fill:#ffebee
+    style E fill:#ffebee
+    style G fill:#ffebee
+    style B fill:#e3f2fd
+    style D fill:#e3f2fd
+    style F fill:#e3f2fd
+`} />
+
+```css
+.item {
+  grid-column: 1 / 3; /* spans from line 1 to line 3 */
+  grid-row: 1 / 2;
+}
+```
+
+Shorthand with `span`:
+
+```css
+.item {
+  grid-column: span 2; /* spans 2 columns */
+}
+```
+
+Negative numbers count from the end:
+
+```css
+.full-width {
+  grid-column: 1 / -1; /* start to end */
+}
+```
+
+## Grid Template Areas
+
+Name regions of your grid for semantic placement.
+
+```css
+.layout {
+  display: grid;
+  grid-template-columns: 200px 1fr 200px;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "header header header"
+    "sidebar main aside"
+    "footer footer footer";
+  min-height: 100vh;
+}
+
+.header {
+  grid-area: header;
+}
+
+.sidebar {
+  grid-area: sidebar;
+}
+
+.main {
+  grid-area: main;
+}
+
+.aside {
+  grid-area: aside;
+}
+
+.footer {
+  grid-area: footer;
+}
+```
+
+The ASCII-art structure makes the layout obvious. Change it at a breakpoint:
+
+```css
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "header"
+      "main"
+      "sidebar"
+      "aside"
+      "footer";
+  }
+}
+```
+
+## Implicit Grid
+
+When items exceed defined rows/columns, grid creates implicit tracks.
+
+```css
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  /* only defined columns, no rows */
+}
+```
+
+If you add 10 items, grid creates rows automatically. Control their size:
+
+```css
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 200px; /* implicit rows are 200px */
+}
+```
+
+Use `minmax` for flexible implicit rows:
+
+```css
+.grid {
+  grid-auto-rows: minmax(150px, auto);
+}
+```
+
+## Alignment
+
+Grid has alignment properties similar to flexbox.
+
+```css
+.grid {
+  display: grid;
+  justify-items: center; /* align items horizontally */
+  align-items: center; /* align items vertically */
+}
+```
+
+Align the entire grid within its container:
+
+```css
+.container {
+  display: grid;
+  grid-template-columns: repeat(3, 200px);
+  justify-content: center; /* center the grid horizontally */
+  gap: 1rem;
+}
+```
+
+Individual items override with `justify-self` and `align-self`:
+
+```css
+.special {
+  justify-self: end;
+  align-self: start;
+}
+```
+
+## Gap
+
+Space between grid cells. Works like flexbox gap.
+
+```css
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+```
+
+Different row and column gaps:
+
+```css
+.grid {
+  row-gap: 2rem;
+  column-gap: 1rem;
+}
+```
+
+<Tip>
+Always use `gap` instead of margins on grid items. Gap only appears between items, not at edges.
+</Tip>
+
+## Subgrid
+
+A grid item can inherit column or row tracks from its parent grid.
+
+```css
+.parent {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.child {
+  display: grid;
+  grid-column: span 4;
+  grid-template-columns: subgrid; /* inherit parent's 4 columns */
+}
+```
+
+Useful for aligning nested content to the parent grid structure.
+
+<Warning>
+Subgrid browser support is recent. Check compatibility before using in production.
+</Warning>
+
+## Grid vs Flexbox Decision Framework
+
+Use **Grid** when:
+- You need precise 2D control (rows AND columns)
+- Layout is container-defined (you decide structure)
+- Items need to align across rows/columns
+- Overlapping content
+- Complex page layouts
+
+Use **Flexbox** when:
+- One-dimensional arrangement
+- Content size determines layout
+- Navigation, button groups, toolbars
+- Centering, space distribution
+- Flexible ordering
+
+Sometimes you'll use both:
+
+```css
+/* Grid for page layout */
+.page {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "header header"
+    "sidebar main"
+    "footer footer";
+}
+
+/* Flexbox for header content */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+```
+
+## Practical Example: Card Grid
+
+```css
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.card {
+  display: grid;
+  grid-template-rows: 200px auto 1fr auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-title {
+  padding: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.card-content {
+  padding: 0 1rem;
+}
+
+.card-actions {
+  padding: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+```
+
+```html
+<div class="cards">
+  <article class="card">
+    <img src="image1.jpg" class="card-image" alt="">
+    <h3 class="card-title">Card Title</h3>
+    <div class="card-content">
+      <p>Card description goes here.</p>
+    </div>
+    <div class="card-actions">
+      <button>Read More</button>
+    </div>
+  </article>
+  <!-- more cards -->
+</div>
+```
+
+The outer grid creates responsive columns. Each card uses grid internally to ensure consistent heights and button alignment.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What's the difference between auto-fit and auto-fill in repeat()?"
+  options={[
+    "auto-fit creates more columns, auto-fill creates fewer",
+    "auto-fit collapses empty tracks, auto-fill keeps them",
+    "auto-fit uses pixels, auto-fill uses fr units",
+    "They're the same, just different syntax"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="Which unit automatically accounts for gap spacing?"
+  options={[
+    "Percentages (%)",
+    "Pixels (px)",
+    "Fractions (fr)",
+    "Viewport units (vw)"
+  ]}
+  correct={2}
+/>
+
+<FillBlank
+  question="To make a grid item span from the first to the last column, use grid-column: 1 / ___"
+  answer="-1"
+  fuzzyThreshold={0.9}
+/>
+
+## Practice
+
+<Exercise id="hc-dashboard-grid" />
+
+## Summary
+
+- **Two-dimensional:** Control rows and columns simultaneously
+- **Grid container:** `display: grid` makes direct children grid items
+- **Fr unit:** Represents fraction of available space, handles gaps correctly
+- **Repeat:** `repeat(count, size)` avoids repetition
+- **Auto-fit/auto-fill:** Responsive columns without media queries
+- **Minmax:** Set minimum and maximum track sizes
+- **Grid lines:** Numbered lines between tracks for precise placement
+- **Template areas:** Named regions for semantic layout
+- **Implicit grid:** Auto-created rows/columns for overflow content
+- **Gap:** Spacing between cells, cleaner than margins
+- **Subgrid:** Inherit parent grid tracks for nested alignment
+- **Use grid for:** 2D layouts, galleries, page structure, overlapping content
+- **Use flexbox for:** 1D layouts, navigation, button groups, content flow

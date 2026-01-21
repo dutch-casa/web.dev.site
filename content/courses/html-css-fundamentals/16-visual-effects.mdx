@@ -1,0 +1,556 @@
+# Visual Effects
+
+Visual effects add depth and polish to interfaces. Transforms create smooth interactive feedback, filters add atmosphere, masks shape content elegantly. This lesson covers CSS effects that enhance design without compromising performance.
+
+## Transforms
+
+Transforms move, rotate, scale, and skew elements without affecting document flow:
+
+```css
+.element {
+  transform: translateX(100px);
+}
+```
+
+Unlike changing `left` or `margin`, transforms run on the GPU and don't trigger layout recalculation. This makes them ideal for animation and interactive effects.
+
+### Transform Functions
+
+**translate:** Move elements
+
+```css
+.element {
+  transform: translateX(100px); /* Move right 100px */
+  transform: translateY(-50px); /* Move up 50px */
+  transform: translate(100px, -50px); /* Move right and up */
+}
+```
+
+Use `translate` instead of `position: relative` with `top`/`left` for better performance.
+
+**scale:** Resize elements
+
+```css
+.element {
+  transform: scale(1.5); /* 150% size */
+  transform: scale(0.5); /* 50% size */
+  transform: scale(1.2, 0.8); /* 120% width, 80% height */
+}
+```
+
+Scaling doesn't affect layout. Other elements stay in place as if the element hasn't changed size.
+
+**rotate:** Rotate elements
+
+```css
+.element {
+  transform: rotate(45deg); /* 45 degrees clockwise */
+  transform: rotate(-90deg); /* 90 degrees counterclockwise */
+}
+```
+
+**skew:** Slant elements
+
+```css
+.element {
+  transform: skewX(10deg); /* Slant horizontally */
+  transform: skewY(10deg); /* Slant vertically */
+}
+```
+
+Skew is less common but useful for perspective effects and decorative elements.
+
+### Combining Transforms
+
+Chain multiple transforms in one property:
+
+```css
+.element {
+  transform: translate(100px, 50px) rotate(45deg) scale(1.2);
+}
+```
+
+Order matters. `translate` then `rotate` produces different results than `rotate` then `translate`. Transforms apply right-to-left in the declaration.
+
+### Transform Origin
+
+`transform-origin` sets the pivot point for transforms:
+
+```css
+.element {
+  transform: rotate(45deg);
+  transform-origin: top left; /* Rotate around top-left corner */
+}
+```
+
+Default is `center center`. Changing origin affects how scale and rotate behave:
+
+```css
+/* Card flip effect */
+.card {
+  transform-origin: center;
+  transition: transform 0.6s;
+}
+
+.card:hover {
+  transform: rotateY(180deg);
+}
+```
+
+The card rotates around its center point. If origin were `left`, it would rotate around its left edge instead.
+
+## Filters
+
+Filters apply visual effects like blur, brightness, and shadows.
+
+### Common Filters
+
+**blur:** Blur the element
+
+```css
+.element {
+  filter: blur(5px);
+}
+```
+
+**brightness:** Adjust brightness
+
+```css
+.element {
+  filter: brightness(1.2); /* 120% brightness */
+}
+
+.element:hover {
+  filter: brightness(0.8); /* Darken on hover */
+}
+```
+
+**contrast:** Adjust contrast
+
+```css
+.element {
+  filter: contrast(1.5); /* Increase contrast */
+}
+```
+
+**grayscale:** Remove color
+
+```css
+.element {
+  filter: grayscale(100%); /* Fully grayscale */
+}
+
+.element:hover {
+  filter: grayscale(0%); /* Color on hover */
+}
+```
+
+**hue-rotate:** Shift colors
+
+```css
+.element {
+  filter: hue-rotate(90deg); /* Shift hue by 90 degrees */
+}
+```
+
+**drop-shadow:** Add shadows
+
+```css
+.element {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+```
+
+Unlike `box-shadow`, `drop-shadow` follows the alpha channel. It creates shadows around transparent PNGs instead of around the rectangular box.
+
+### Combining Filters
+
+Chain multiple filters:
+
+```css
+.element {
+  filter: brightness(1.1) contrast(1.2) saturate(1.3);
+}
+```
+
+Filters apply in order, so results can vary based on sequence.
+
+<Warning>
+Blur filters above 20px are expensive, especially in Safari. Large blur values cause significant performance issues. Use blur sparingly and test on mobile devices.
+</Warning>
+
+## Backdrop Filter
+
+`backdrop-filter` applies filters to content behind an element, creating frosted glass effects:
+
+```css
+.glass-panel {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+```
+
+This blurs the content behind the panel while keeping the panel's content sharp. It's commonly used for overlays, navigation bars, and modals.
+
+```css
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+}
+```
+
+`backdrop-filter` is more expensive than regular filters because it processes the entire background. Use conservative blur values and test performance.
+
+## Clip Path
+
+`clip-path` creates custom shapes by clipping elements:
+
+```css
+.element {
+  clip-path: circle(50%); /* Circular crop */
+}
+
+.element {
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%); /* Triangle */
+}
+
+.element {
+  clip-path: inset(10px 20px 30px 40px); /* Rectangular inset */
+}
+```
+
+`clip-path` is useful for:
+- Custom shaped avatars
+- Geometric design elements
+- Reveal animations
+
+```css
+.reveal {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.5s;
+}
+
+.reveal.active {
+  clip-path: inset(0 0 0 0); /* Reveal from left */
+}
+```
+
+## Masks
+
+Masks hide parts of elements using images or gradients.
+
+### Mask Image
+
+Use images as masks:
+
+```css
+.element {
+  mask-image: url('mask.png');
+}
+```
+
+Black areas of the mask image are opaque, white areas are transparent, gray areas are semi-transparent.
+
+### Gradient Masks
+
+Gradients create smooth fades:
+
+```css
+.element {
+  mask-image: linear-gradient(to bottom, black 70%, transparent);
+}
+```
+
+This fades out the bottom 30% of the element. **Use `mask-image` over gradients for fades because masks work with any content.** A gradient overlay requires knowing the background color; a mask works regardless.
+
+```css
+/* Good - works with any background */
+.scrollable-list {
+  mask-image: linear-gradient(to bottom, black 90%, transparent);
+}
+
+/* Bad - only works on white backgrounds */
+.scrollable-list::after {
+  content: '';
+  background: linear-gradient(to bottom, transparent, white);
+}
+```
+
+<Warning>
+Don't use fade masks on scrollable content. Users need to see what's being cut off. Fades work for static content or decorative overflows, not interactive scrollable areas.
+</Warning>
+
+### Decorative Elements
+
+When adding decorative elements that shouldn't interfere with interaction:
+
+```css
+.decorative {
+  pointer-events: none; /* Ignore clicks */
+  user-select: none; /* Prevent text selection */
+}
+```
+
+This ensures decorative overlays don't block buttons or prevent text selection.
+
+## Blend Modes
+
+Blend modes control how elements mix with backgrounds:
+
+```css
+.element {
+  background: blue;
+  mix-blend-mode: multiply;
+}
+```
+
+Common blend modes:
+- `multiply` - Darker, like overlapping physical filters
+- `screen` - Lighter, like overlapping lights
+- `overlay` - Contrast boost, combines multiply and screen
+- `difference` - Inverts colors based on brightness difference
+
+Blend modes are useful for creative effects but should be used sparingly in UI. They can cause readability issues and unexpected color interactions.
+
+## Gradients
+
+Gradients create smooth color transitions.
+
+### Linear Gradients
+
+```css
+.element {
+  background: linear-gradient(to right, blue, red);
+}
+```
+
+Control direction:
+
+```css
+background: linear-gradient(to bottom, blue, red);
+background: linear-gradient(to top right, blue, red);
+background: linear-gradient(45deg, blue, red);
+```
+
+Add color stops:
+
+```css
+background: linear-gradient(to right, blue 0%, purple 50%, red 100%);
+```
+
+### Radial Gradients
+
+```css
+.element {
+  background: radial-gradient(circle, blue, red);
+}
+```
+
+Control shape and position:
+
+```css
+background: radial-gradient(circle at top left, blue, red);
+background: radial-gradient(ellipse at center, blue, red);
+```
+
+### Conic Gradients
+
+Conic gradients rotate around a center point:
+
+```css
+.element {
+  background: conic-gradient(from 0deg, red, yellow, green, blue, red);
+}
+```
+
+Useful for pie charts, color wheels, and loading spinners.
+
+### Eased Gradients
+
+Linear color interpolation creates banding in gradients. **Use eased gradients for smoother results:**
+
+```css
+/* Linear - visible banding */
+background: linear-gradient(to right, blue, red);
+
+/* Eased - smoother transition */
+background: linear-gradient(
+  to right,
+  blue 0%,
+  color-mix(in oklch, blue 90%, red 10%) 20%,
+  color-mix(in oklch, blue 50%, red 50%) 50%,
+  color-mix(in oklch, blue 10%, red 90%) 80%,
+  red 100%
+);
+```
+
+Tools like larsenwork.com/easing-gradients generate eased gradients automatically. The improvement is subtle but noticeable in large gradients.
+
+## Multiple Backgrounds
+
+Stack multiple background layers:
+
+```css
+.element {
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
+    url('image.jpg');
+  background-size: cover, cover;
+  background-position: center, center;
+}
+```
+
+Layers stack front-to-back. The first gradient overlays the image. This is useful for darkening images to improve text contrast.
+
+## Shadows
+
+Shadows add depth but should be subtle.
+
+### Box Shadow
+
+```css
+.element {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+```
+
+The four values are:
+1. Horizontal offset
+2. Vertical offset
+3. Blur radius
+4. Color
+
+Multiple shadows create layered depth:
+
+```css
+.card {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.24);
+}
+```
+
+Shadows should be directional. `0 4px` (shadow below) suggests a light source above. Inconsistent shadow directions look wrong.
+
+### Text Shadow
+
+```css
+.element {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+```
+
+Text shadows improve readability on images:
+
+```css
+.hero-text {
+  color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+```
+
+But use them sparingly. Heavy text shadows look dated.
+
+## Scroll Snap
+
+`scroll-snap` creates snapping scroll behavior:
+
+```css
+.container {
+  scroll-snap-type: x mandatory;
+  overflow-x: scroll;
+}
+
+.item {
+  scroll-snap-align: start;
+}
+```
+
+This creates a carousel-like scroll where items snap into position. Types:
+- `mandatory` - Always snap to an item
+- `proximity` - Snap only if close to an item
+
+Align options:
+- `start` - Snap to start of container
+- `center` - Snap to center
+- `end` - Snap to end
+
+```css
+/* Image carousel */
+.carousel {
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 20px;
+}
+
+.carousel-item {
+  scroll-snap-align: center;
+  flex-shrink: 0;
+}
+```
+
+`scroll-padding` adds space before the snap point, useful for centering items with surrounding padding.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="Why should you use transform: translate() instead of changing left or margin?"
+  options={[
+    "It has better browser support",
+    "It runs on the GPU and doesn't trigger layout recalculation",
+    "It produces smoother visual results",
+    "It's easier to write"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What's the advantage of mask-image over gradient overlays for fades?"
+  options={[
+    "Better performance",
+    "Works with varying content and backgrounds",
+    "Smoother transitions",
+    "Better browser support"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What's the maximum safe blur filter value before performance degrades?"
+  options={[
+    "10px",
+    "20px",
+    "50px",
+    "100px"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="To make a decorative element ignore click events, use: pointer-events: ___;"
+  answer="none"
+  fuzzyThreshold={0.1}
+/>
+
+## Practice
+
+<Exercise id="hc-glassmorphism-card" />
+
+## Summary
+
+- **Transforms:** Use `translate`, `rotate`, `scale`, and `skew` for GPU-accelerated effects that don't affect layout
+- **Transform origin:** Set pivot point with `transform-origin` to control rotation and scale behavior
+- **Filters:** Apply effects like `blur`, `brightness`, `contrast`, `grayscale`, and `drop-shadow`
+- **Blur performance:** Blur above 20px is expensive, especially in Safari—use sparingly
+- **Backdrop filter:** Apply filters to content behind an element for frosted glass effects
+- **Clip path:** Create custom shapes with `circle()`, `polygon()`, and `inset()`
+- **Mask image:** Use gradients as masks for fades that work with any content
+- **Don't fade scrollable lists:** Users need to see content that's cut off
+- **Decorative elements:** Use `pointer-events: none` and `user-select: none`
+- **Blend modes:** Control element mixing with `multiply`, `screen`, `overlay`, and `difference`
+- **Gradients:** Create linear, radial, and conic gradients; use eased gradients for smoother results
+- **Eased gradients:** Prefer eased color stops over linear interpolation to avoid banding
+- **Multiple backgrounds:** Stack layers front-to-back for overlays and effects
+- **Shadows:** Use subtle, directional shadows for depth; layer multiple shadows for realism
+- **Scroll snap:** Create carousel-like scroll behavior with `scroll-snap-type` and `scroll-snap-align`

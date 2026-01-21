@@ -38,7 +38,7 @@ const EXCLUDED_FILES = new Set(["meta.yaml", "meta.json", ".DS_Store", "node_mod
 // Meta Schema
 // ----------------------------------------------------------------------------
 
-type ExerciseTemplate = "simple" | "react"
+type ExerciseTemplate = "simple" | "react" | "html"
 
 interface ExerciseMeta {
   title: string
@@ -165,6 +165,30 @@ export async function loadExercise(id: string): Promise<ExerciseConfig> {
     }
   }
 
+  if (template === "html") {
+    // Static HTML/CSS exercises - served with Vite, no React
+    const htmlScaffoldFiles = getHtmlScaffoldFiles(meta)
+    const htmlUserFilePaths = new Set(files.map((f) => f.path))
+    const htmlMergedFiles: ExerciseFile[] = [
+      ...htmlScaffoldFiles.filter((f: ExerciseFile) => !htmlUserFilePaths.has(f.path)),
+      ...files,
+    ]
+
+    return {
+      id,
+      title: meta.title,
+      description: meta.description,
+      files: htmlMergedFiles,
+      solution,
+      dependencies: meta.dependencies,
+      devDependencies: meta.devDependencies ?? { vite: "^5.0.0" },
+      scripts: meta.scripts ?? { dev: "vite", build: "vite build" },
+      devCommand: meta.devCommand ?? "npm run dev",
+      previewPort: meta.previewPort ?? 5173,
+      focus: meta.focus ?? firstVisibleFile,
+    }
+  }
+
   // React template (default) - merge with scaffold files
   const scaffoldFiles = getScaffoldFiles(meta)
   const userFilePaths = new Set(files.map((f) => f.path))
@@ -254,6 +278,42 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
   </React.StrictMode>
 )`,
+      },
+      hidden: true,
+    },
+  ]
+}
+
+// ----------------------------------------------------------------------------
+// Scaffold Files (HTML + Vite - no React)
+// ----------------------------------------------------------------------------
+
+function getHtmlScaffoldFiles(meta: ExerciseMeta): ExerciseFile[] {
+  const packageJson = {
+    name: "exercise",
+    version: "1.0.0",
+    type: "module",
+    scripts: meta.scripts ?? { dev: "vite", build: "vite build" },
+    devDependencies: meta.devDependencies ?? { vite: "^5.0.0" },
+  }
+
+  return [
+    {
+      path: "/package.json",
+      content: { kind: "inline", content: JSON.stringify(packageJson, null, 2) },
+      hidden: true,
+    },
+    {
+      path: "/vite.config.js",
+      content: {
+        kind: "inline",
+        content: `import { defineConfig } from 'vite'
+
+export default defineConfig({
+  server: { port: 5173, host: true },
+  root: 'src',
+  publicDir: '../public'
+})`,
       },
       hidden: true,
     },

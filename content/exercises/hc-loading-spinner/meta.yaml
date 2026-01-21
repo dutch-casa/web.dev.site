@@ -1,0 +1,4 @@
+title: Loading Spinner
+description: Create an animated loading spinner that respects user motion preferences
+template: html
+focus: /src/styles.css

@@ -1,0 +1,4 @@
+title: From Div Soup to Semantic HTML
+description: Convert a page built entirely with divs and classes into proper semantic HTML elements
+template: html
+focus: /src/index.html

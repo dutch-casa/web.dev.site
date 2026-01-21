@@ -1,0 +1,96 @@
+:root {
+  color-scheme: light dark;
+
+  /* Theme colors using light-dark() function and oklch */
+  --color-bg: light-dark(oklch(98% 0.01 264), oklch(18% 0.02 264));
+  --color-card-bg: light-dark(oklch(100% 0 0), oklch(22% 0.02 264));
+  --color-text: light-dark(oklch(25% 0.02 264), oklch(95% 0.01 264));
+  --color-text-secondary: light-dark(oklch(45% 0.02 264), oklch(75% 0.01 264));
+  --color-accent: oklch(60% 0.15 264);
+  --color-border: light-dark(oklch(90% 0.01 264), oklch(30% 0.02 264));
+  --color-button-bg: oklch(60% 0.15 264);
+  --color-button-text: oklch(100% 0 0);
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.container {
+  padding: 2rem;
+}
+
+.card {
+  background-color: var(--color-card-bg);
+  padding: 2rem;
+  border-radius: 1rem;
+  max-width: 400px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 6px light-dark(oklch(0% 0 0 / 0.1), oklch(0% 0 0 / 0.3));
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+h2 {
+  margin-top: 0;
+  color: var(--color-text);
+}
+
+p {
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.stats {
+  display: flex;
+  gap: 2rem;
+  margin: 2rem 0;
+  justify-content: space-around;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.button {
+  background-color: var(--color-button-bg);
+  color: var(--color-button-text);
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.2s ease;
+}
+
+.button:hover {
+  opacity: 0.9;
+}
+
+.button:active {
+  opacity: 0.8;
+}

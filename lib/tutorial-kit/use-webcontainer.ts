@@ -73,8 +73,10 @@ export function useWebContainer({
       // Mount initial files
       await mountFiles(files)
 
-      // Install dependencies if needed
-      if (config.dependencies && Object.keys(config.dependencies).length > 0) {
+      // Install dependencies if needed (check both dependencies and devDependencies)
+      const hasDeps = config.dependencies && Object.keys(config.dependencies).length > 0
+      const hasDevDeps = config.devDependencies && Object.keys(config.devDependencies).length > 0
+      if (hasDeps || hasDevDeps) {
         actions.setBootState({ status: "installing" })
         actions.appendTerminal({ text: "$ npm install", stream: "stdout" })
         actions.setTerminalRunning(true)

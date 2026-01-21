@@ -1,0 +1,4 @@
+title: CSS-Only Accordion
+description: Build an accordion using details/summary and the :has() selector
+template: html
+focus: /src/styles.css

@@ -1,0 +1,375 @@
+# Flexbox
+
+Flexbox solves the layout problems CSS struggled with for decades: vertical centering, equal-height columns, spacing distribution. It's a one-dimensional layout system—arrange items along a single axis, either horizontal or vertical.
+
+Before flexbox, developers used floats, inline-block, and table display hacks. Flexbox makes these patterns trivial.
+
+## The Flex Container
+
+Apply `display: flex` to a parent element. Its direct children become flex items.
+
+```css
+.nav {
+  display: flex;
+}
+```
+
+```html
+<nav class="nav">
+  <a href="/">Home</a>
+  <a href="/about">About</a>
+  <a href="/contact">Contact</a>
+</nav>
+```
+
+The links now sit side-by-side. That's flexbox's default: arrange children in a row.
+
+## Main Axis vs Cross Axis
+
+Flexbox has two axes. The **main axis** runs in the direction items flow. The **cross axis** runs perpendicular to it.
+
+<MermaidDiagram chart={`
+graph LR
+    subgraph "flex-direction: row (default)"
+        A[Item 1] --> B[Item 2]
+        B --> C[Item 3]
+    end
+
+    style A fill:#e3f2fd
+    style B fill:#e3f2fd
+    style C fill:#e3f2fd
+
+    classDef axisLabel fill:#fff3e0,stroke:#ff6f00
+
+    D["Main Axis →"]:::axisLabel
+    E["Cross Axis ↓"]:::axisLabel
+`} />
+
+<MermaidDiagram chart={`
+graph TD
+    subgraph "flex-direction: column"
+        F[Item 1]
+        G[Item 2]
+        H[Item 3]
+    end
+
+    style F fill:#e3f2fd
+    style G fill:#e3f2fd
+    style H fill:#e3f2fd
+
+    classDef axisLabel fill:#fff3e0,stroke:#ff6f00
+
+    I["Main Axis ↓"]:::axisLabel
+    J["Cross Axis →"]:::axisLabel
+`} />
+
+When `flex-direction` changes, the axes swap. This matters because different properties control each axis.
+
+## Flex Direction
+
+```css
+.container {
+  display: flex;
+  flex-direction: row; /* default: left to right */
+}
+```
+
+Options:
+- `row`: horizontal, left to right
+- `row-reverse`: horizontal, right to left
+- `column`: vertical, top to bottom
+- `column-reverse`: vertical, bottom to top
+
+```css
+.vertical-nav {
+  display: flex;
+  flex-direction: column;
+}
+```
+
+## Justify Content (Main Axis)
+
+Control how items distribute along the main axis with `justify-content`.
+
+```css
+.nav {
+  display: flex;
+  justify-content: space-between;
+}
+```
+
+Values:
+- `flex-start`: pack items at start (default)
+- `flex-end`: pack items at end
+- `center`: pack items in center
+- `space-between`: distribute items, first/last at edges
+- `space-around`: distribute items with equal space around each
+- `space-evenly`: distribute items with equal space between
+
+```css
+.header {
+  display: flex;
+  justify-content: space-between;
+}
+```
+
+```html
+<header class="header">
+  <div class="logo">Brand</div>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/about">About</a>
+  </nav>
+</header>
+```
+
+Logo on the left, navigation on the right. No floats, no positioning hacks.
+
+## Align Items (Cross Axis)
+
+Control how items align along the cross axis with `align-items`.
+
+```css
+.nav {
+  display: flex;
+  align-items: center;
+  min-height: 60px;
+}
+```
+
+Values:
+- `stretch`: stretch to fill container (default)
+- `flex-start`: align to start of cross axis
+- `flex-end`: align to end of cross axis
+- `center`: center along cross axis
+- `baseline`: align baselines of text
+
+Vertical centering, finally solved:
+
+```css
+.center-me {
+  display: flex;
+  justify-content: center; /* horizontal */
+  align-items: center; /* vertical */
+  min-height: 100vh;
+}
+```
+
+Individual items can override with `align-self`:
+
+```css
+.special-item {
+  align-self: flex-end;
+}
+```
+
+## Flex Wrap
+
+By default, flex items stay on one line, shrinking if needed. Use `flex-wrap` to allow wrapping.
+
+```css
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+```
+
+Values:
+- `nowrap`: single line (default)
+- `wrap`: wrap to multiple lines
+- `wrap-reverse`: wrap in reverse order
+
+## Gap
+
+Space between flex items. Much cleaner than margins.
+
+```css
+.nav {
+  display: flex;
+  gap: 2rem;
+}
+```
+
+Use `row-gap` and `column-gap` for different horizontal/vertical spacing:
+
+```css
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 2rem;
+  column-gap: 1rem;
+}
+```
+
+## The Flex Shorthand
+
+The `flex` property controls how items grow, shrink, and size themselves. It's shorthand for three properties:
+
+```css
+.item {
+  flex: 1 1 0%; /* grow shrink basis */
+}
+```
+
+1. **flex-grow**: how much item grows relative to siblings (default 0)
+2. **flex-shrink**: how much item shrinks relative to siblings (default 1)
+3. **flex-basis**: initial size before growing/shrinking (default auto)
+
+Common patterns:
+
+```css
+/* Equal width items that grow to fill space */
+.item {
+  flex: 1;
+}
+
+/* Fixed width item that doesn't grow or shrink */
+.sidebar {
+  flex: 0 0 250px;
+}
+
+/* Item grows but doesn't shrink below content size */
+.main {
+  flex: 1 0 auto;
+}
+```
+
+<Tip>
+Use `flex: 1` for equal-width items. The browser calculates everything else.
+</Tip>
+
+## Practical Navigation Bar
+
+Here's a complete navigation pattern:
+
+```css
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-link:hover {
+    color: #0066cc;
+  }
+}
+```
+
+```html
+<nav class="nav">
+  <div class="logo">Brand</div>
+  <ul class="nav-links">
+    <li><a href="/" class="nav-link">Home</a></li>
+    <li><a href="/about" class="nav-link">About</a></li>
+    <li><a href="/contact" class="nav-link">Contact</a></li>
+  </ul>
+</nav>
+```
+
+The hover media query prevents false positives on touch devices, where tap triggers hover state.
+
+## When NOT to Use Flexbox
+
+Flexbox is one-dimensional. If you need both rows AND columns with alignment control, use grid.
+
+Wrong tool:
+```css
+/* Fighting flexbox for 2D layout */
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.gallery img {
+  flex: 0 0 calc(33.333% - 1rem); /* brittle */
+}
+```
+
+Right tool:
+```css
+/* Grid handles 2D naturally */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+```
+
+Use flexbox for:
+- Navigation bars
+- Button groups
+- Single-row/column layouts
+- Centering content
+- Distributing space
+
+Use grid for:
+- Page layouts
+- Image galleries
+- Card grids
+- Anything with rows AND columns
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="Which property controls spacing along the main axis in flexbox?"
+  options={[
+    "align-items",
+    "justify-content",
+    "align-content",
+    "flex-align"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What does flex: 1 1 0% mean?"
+  options={[
+    "Item can't grow or shrink, fixed at 0%",
+    "Item grows equally, can shrink, starts at 0% of parent",
+    "Item grows equally, can shrink, starts at 0% of content",
+    "Item is hidden"
+  ]}
+  correct={2}
+/>
+
+<FillBlank
+  question="To center content both horizontally and vertically, use justify-content: center and ___: center."
+  answer="align-items"
+  fuzzyThreshold={0.8}
+/>
+
+## Practice
+
+<Exercise id="hc-nav-flexbox" />
+
+## Summary
+
+- **Flex container:** `display: flex` makes direct children flex items
+- **One-dimensional:** Arrange items along a single axis (row or column)
+- **Main axis:** Direction items flow, controlled by `justify-content`
+- **Cross axis:** Perpendicular to main axis, controlled by `align-items`
+- **Flex direction:** Changes which axis is main (`row`, `column`, and reverse variants)
+- **Wrapping:** `flex-wrap: wrap` allows items to wrap to new lines
+- **Gap:** Modern spacing between items without margin hacks
+- **Flex shorthand:** `flex: grow shrink basis` controls item sizing
+- **Use for:** Navigation, button groups, single-row/column layouts
+- **Don't use for:** 2D layouts (use grid instead)

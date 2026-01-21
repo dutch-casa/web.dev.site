@@ -1,0 +1,164 @@
+# Documents, Not Applications
+
+The web began as a document delivery system. Tim Berners-Lee designed HTML to share physics papers at CERN—structured text with hyperlinks. That origin still shapes how browsers work today.
+
+When you write HTML, you're not giving visual instructions. You're describing the structure and meaning of content. The browser takes that description and renders it according to user preferences: their font size, color scheme, screen width, or assistive technology.
+
+This separation between structure and presentation is foundational. HTML defines what something is. CSS defines how it looks. JavaScript defines how it behaves.
+
+## The DOM Tree
+
+Every HTML document becomes a tree structure in memory called the Document Object Model (DOM). The browser parses your HTML markup and builds this tree, where every element becomes a node with a parent, siblings, and children.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document Structure</title>
+</head>
+<body>
+  <header>
+    <h1>Welcome</h1>
+  </header>
+  <main>
+    <p>This is <strong>important</strong> content.</p>
+  </main>
+</body>
+</html>
+```
+
+<MermaidDiagram chart={`graph TD
+    A[html] --> B[head]
+    A --> C[body]
+    B --> D[meta]
+    B --> E[title]
+    C --> F[header]
+    C --> G[main]
+    F --> H[h1]
+    G --> I[p]
+    I --> J["This is "]
+    I --> K[strong]
+    I --> L[" content."]
+    K --> M["important"]`} />
+
+This tree structure determines how CSS inheritance works, how events bubble up through elements, and how assistive technologies navigate your content.
+
+## DOCTYPE and Rendering Modes
+
+The `<!DOCTYPE html>` declaration at the start of every document is not technically HTML—it's an instruction to the browser about which parsing rules to use.
+
+```html
+<!DOCTYPE html>
+```
+
+Without it, browsers fall back to "quirks mode," a compatibility layer for 1990s-era pages. In quirks mode, CSS box models behave differently, heights cascade strangely, and form elements refuse to inherit fonts. The DOCTYPE ensures "standards mode."
+
+The modern HTML5 DOCTYPE is deliberately short. Older DOCTYPEs were verbose XML declarations that nobody could remember. All you need is `<!DOCTYPE html>`.
+
+<Tip>
+Always place the DOCTYPE as the first line of your file. Even whitespace before it can trigger quirks mode in some browsers.
+</Tip>
+
+## Semantic Markup
+
+HTML elements carry meaning beyond their visual appearance. A `<button>` is not just styled text—it's a focusable, clickable control that triggers actions. A `<nav>` is not just a container—it tells screen readers "this is site navigation."
+
+```html
+<!-- Meaningless markup -->
+<div class="heading">About Us</div>
+<div class="paragraph">We build things.</div>
+
+<!-- Semantic markup -->
+<h2>About Us</h2>
+<p>We build things.</p>
+```
+
+The semantic version works without CSS. Screen readers announce heading levels. Browser reader modes extract the content correctly. Search engines understand the hierarchy.
+
+When you choose HTML elements, ask: "What is this, structurally?" Not "How should this look?"
+
+## Separation of Concerns
+
+HTML describes structure. CSS handles presentation. JavaScript adds behavior. This separation is not just aesthetic—it's practical.
+
+A well-structured HTML document:
+- Works without CSS (unstyled but usable)
+- Works without JavaScript (functional, not dynamic)
+- Adapts to different contexts (screen readers, print, mobile)
+- Survives technology changes (CSS frameworks come and go)
+
+```html
+<!-- Structure (HTML) -->
+<article>
+  <h1>Breaking News</h1>
+  <p class="timestamp">Published 2 hours ago</p>
+</article>
+
+<!-- Presentation (CSS) -->
+<style>
+.timestamp { color: #666; font-size: 0.875rem; }
+</style>
+
+<!-- Behavior (JS) -->
+<script>
+document.querySelector('.timestamp').textContent =
+  formatRelativeTime(publishDate);
+</script>
+```
+
+Each layer enhances the previous one. If CSS fails to load, the content remains readable. If JavaScript is blocked, the absolute timestamp displays instead of the relative one.
+
+## The Document Metaphor Endures
+
+Modern web applications often obscure the document metaphor. Single-page apps render everything with JavaScript, treating the browser as a runtime rather than a document viewer.
+
+But the document model persists beneath the abstractions. React components ultimately render DOM nodes. Screen readers traverse the accessibility tree derived from HTML semantics. Browser history still expects URLs that represent documents or document-like states.
+
+Understanding the web as documents first—before applications—gives you the foundation to build interfaces that work for everyone, regardless of how they access your content.
+
+<Warning>
+Treating HTML as a canvas for JavaScript-rendered UI works until it doesn't. Users with slow connections see blank screens. Search engines struggle to index content. Screen readers encounter empty landmarks. Start with semantic HTML that works without JavaScript. Enhance from there.
+</Warning>
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What is the primary purpose of HTML?"
+  options={[
+    "To specify how content should look visually",
+    "To describe the structure and meaning of content",
+    "To add interactive behavior to web pages",
+    "To define styling and layout rules"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What happens if you omit the DOCTYPE declaration?"
+  options={[
+    "The page will not load at all",
+    "The browser renders in standards mode by default",
+    "The browser falls back to quirks mode with legacy CSS behavior",
+    "CSS stops working but HTML still renders normally"
+  ]}
+  correct={2}
+/>
+
+<FillBlank
+  question="The in-memory tree structure that browsers create from HTML markup is called the ___."
+  answer="DOM"
+  fuzzyThreshold={0}
+/>
+
+## Practice
+
+<Exercise id="hc-semantic-structure" />
+
+## Summary
+
+- **Documents First:** The web was designed as a document delivery system where HTML describes structure, not appearance.
+- **DOM Tree:** Browsers parse HTML into a tree structure that determines inheritance, event flow, and assistive technology navigation.
+- **DOCTYPE Matters:** The `<!DOCTYPE html>` declaration ensures standards mode rendering and predictable CSS behavior.
+- **Semantic Markup:** Choose HTML elements based on what content *is*, not how it should look—meaning works across contexts.
+- **Separation of Concerns:** HTML (structure), CSS (presentation), and JavaScript (behavior) form independent layers that enhance each other without hard dependencies.

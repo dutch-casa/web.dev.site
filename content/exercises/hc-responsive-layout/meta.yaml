@@ -1,0 +1,4 @@
+title: Responsive Layout with Container Queries
+description: Convert a fixed-width layout to responsive using container queries
+template: html
+focus: /src/styles.css

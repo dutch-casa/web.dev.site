@@ -1,0 +1,757 @@
+# Advanced Selectors
+
+CSS selectors determine which elements your styles target. Basic selectors (class, id, element) cover most cases. Advanced selectors let you target elements based on attributes, position, state, and relationships.
+
+These selectors reduce the need for extra classes and JavaScript.
+
+## Attribute Selectors
+
+Target elements by HTML attributes and their values.
+
+### Presence
+
+```css
+/* Any element with title attribute */
+[title] {
+  cursor: help;
+}
+
+/* Links with download attribute */
+a[download] {
+  color: green;
+}
+```
+
+### Exact Match
+
+```css
+/* Input with type="text" */
+input[type="text"] {
+  border: 1px solid #ccc;
+}
+
+/* Links to PDF files */
+a[href="document.pdf"] {
+  background: url('pdf-icon.svg') no-repeat left center;
+  padding-left: 20px;
+}
+```
+
+### Starts With
+
+```css
+/* Links starting with https:// */
+a[href^="https://"] {
+  color: green;
+}
+
+/* Links to external sites */
+a[href^="http"] {
+  /* external link styles */
+}
+```
+
+### Ends With
+
+```css
+/* PDF links */
+a[href$=".pdf"] {
+  background: url('pdf-icon.svg');
+}
+
+/* Image files */
+img[src$=".jpg"],
+img[src$=".png"] {
+  /* image-specific styles */
+}
+```
+
+### Contains
+
+```css
+/* Links containing "docs" */
+a[href*="docs"] {
+  font-weight: 600;
+}
+
+/* Classes containing "btn" */
+[class*="btn"] {
+  cursor: pointer;
+}
+```
+
+### Case Insensitive
+
+```css
+/* Case-insensitive match */
+a[href$=".PDF" i] {
+  /* matches .pdf, .PDF, .Pdf, etc. */
+}
+```
+
+## The :has() Selector
+
+The parent selector CSS developers wanted for decades. Target elements based on their descendants.
+
+```css
+/* Form with error */
+form:has(.error) {
+  border-color: red;
+}
+
+/* Card with image */
+.card:has(img) {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+/* Section without headings */
+section:not(:has(h2)) {
+  /* styles for sections lacking headings */
+}
+```
+
+Practical example—style a container differently based on content:
+
+```css
+/* Article with code blocks needs wider layout */
+.article:has(pre) {
+  max-width: 1200px;
+}
+
+/* Article without code can be narrower */
+.article:not(:has(pre)) {
+  max-width: 700px;
+}
+```
+
+### CSS-Only Accordion with :has()
+
+```css
+details {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+  user-select: none;
+}
+
+summary::marker {
+  content: '▶ ';
+}
+
+details[open] summary::marker {
+  content: '▼ ';
+}
+
+/* Style container when any details is open */
+.faq:has(details[open]) {
+  background: #f9f9f9;
+}
+
+/* Style summary when sibling details is open */
+details:has(+ details[open]) summary {
+  color: #666;
+}
+```
+
+```html
+<div class="faq">
+  <details>
+    <summary>What is CSS?</summary>
+    <p>CSS stands for Cascading Style Sheets...</p>
+  </details>
+  <details>
+    <summary>What are selectors?</summary>
+    <p>Selectors target HTML elements...</p>
+  </details>
+</div>
+```
+
+No JavaScript needed. Pure CSS accordion with state awareness.
+
+## :is() and :where()
+
+Group selectors with shared styles. Both accept a list of selectors.
+
+```css
+/* Without :is() */
+article h1,
+article h2,
+article h3 {
+  line-height: 1.2;
+}
+
+/* With :is() */
+article :is(h1, h2, h3) {
+  line-height: 1.2;
+}
+```
+
+The difference between them:
+
+**:is()** takes the specificity of its most specific argument.
+
+```css
+:is(#id, .class) {
+  /* specificity of #id */
+}
+```
+
+**:where()** has zero specificity.
+
+```css
+:where(#id, .class) {
+  /* specificity of 0 */
+}
+```
+
+Use `:where()` for default styles you want easily overridden:
+
+```css
+/* Default button styles with zero specificity */
+:where(button, .btn) {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+}
+
+/* Easily override */
+.btn-primary {
+  background: blue;
+}
+```
+
+## :not()
+
+Exclude elements from selection.
+
+```css
+/* All links except external */
+a:not([href^="http"]) {
+  color: blue;
+}
+
+/* All paragraphs except first */
+p:not(:first-child) {
+  margin-top: 1rem;
+}
+
+/* Inputs except checkboxes and radios */
+input:not([type="checkbox"]):not([type="radio"]) {
+  display: block;
+  width: 100%;
+}
+```
+
+Combine with `:is()` for complex exclusions:
+
+```css
+/* All buttons except primary and secondary */
+button:not(:is(.btn-primary, .btn-secondary)) {
+  background: #ddd;
+}
+```
+
+## Structural Pseudo-Classes
+
+Target elements based on position.
+
+### :nth-child()
+
+```css
+/* Every other row */
+tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+
+tr:nth-child(even) {
+  background: white;
+}
+
+/* Every third item */
+li:nth-child(3n) {
+  color: blue;
+}
+
+/* First 3 items */
+li:nth-child(-n + 3) {
+  font-weight: bold;
+}
+
+/* Everything except first 3 */
+li:nth-child(n + 4) {
+  opacity: 0.7;
+}
+```
+
+### :nth-of-type()
+
+Like `:nth-child()` but only counts elements of the same type.
+
+```css
+/* Every other paragraph */
+p:nth-of-type(odd) {
+  background: #f9f9f9;
+}
+
+/* Third heading of any level */
+:is(h1, h2, h3):nth-of-type(3) {
+  margin-top: 3rem;
+}
+```
+
+### :first-child and :last-child
+
+```css
+/* First paragraph in container */
+.container p:first-child {
+  font-size: 1.25rem;
+}
+
+/* Last item in list */
+li:last-child {
+  border-bottom: none;
+}
+```
+
+### :only-child
+
+```css
+/* Paragraph that's the only child */
+p:only-child {
+  text-align: center;
+}
+```
+
+## Form State Pseudo-Classes
+
+Target form elements based on state.
+
+### :valid and :invalid
+
+```css
+input:valid {
+  border-color: green;
+}
+
+input:invalid {
+  border-color: red;
+}
+
+/* Only show invalid state after interaction */
+input:invalid:not(:focus):not(:placeholder-shown) {
+  border-color: red;
+}
+```
+
+### :checked
+
+```css
+/* Checked checkbox/radio */
+input[type="checkbox"]:checked {
+  accent-color: blue;
+}
+
+/* Style label when checkbox is checked */
+input[type="checkbox"]:checked + label {
+  font-weight: bold;
+  color: blue;
+}
+```
+
+Custom checkbox with `:checked`:
+
+```css
+input[type="checkbox"] {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+input[type="checkbox"]:checked {
+  background: blue;
+  border-color: blue;
+}
+
+input[type="checkbox"]:checked::after {
+  content: '✓';
+  display: block;
+  text-align: center;
+  color: white;
+  font-weight: bold;
+}
+```
+
+### :disabled and :enabled
+
+```css
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input:disabled {
+  background: #f5f5f5;
+}
+```
+
+### :focus-visible
+
+Show focus styles only when keyboard navigation is used, not on click.
+
+```css
+/* Bad: shows focus ring on click */
+button:focus {
+  outline: 2px solid blue;
+}
+
+/* Good: shows focus ring only for keyboard */
+button:focus-visible {
+  outline: 2px solid blue;
+}
+
+/* Remove default focus for mouse users */
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+```
+
+This prevents ugly focus rings when clicking buttons but preserves them for keyboard accessibility.
+
+### :required and :optional
+
+```css
+input:required {
+  border-left: 3px solid blue;
+}
+
+input:optional {
+  border-left: 3px solid #ddd;
+}
+```
+
+## Pseudo-Elements
+
+Style specific parts of elements. Use `::` (double colon) to distinguish from pseudo-classes.
+
+### ::before and ::after
+
+Insert content before or after an element.
+
+```css
+.badge::before {
+  content: '★ ';
+  color: gold;
+}
+
+.external-link::after {
+  content: ' ↗';
+  font-size: 0.8em;
+}
+```
+
+Create decorative elements without extra markup:
+
+```css
+.quote {
+  position: relative;
+  padding: 2rem;
+}
+
+.quote::before {
+  content: '"';
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 4rem;
+  color: #ddd;
+  line-height: 1;
+}
+```
+
+Required content property (can be empty):
+
+```css
+.icon::before {
+  content: ''; /* required even if empty */
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background: url('icon.svg');
+}
+```
+
+### ::marker
+
+Style list markers.
+
+```css
+li::marker {
+  color: blue;
+  font-size: 1.5em;
+}
+
+/* Custom marker content */
+li::marker {
+  content: '→ ';
+}
+```
+
+### ::placeholder
+
+Style placeholder text in inputs.
+
+```css
+input::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+/* Placeholder disappears on focus */
+input:focus::placeholder {
+  opacity: 0;
+}
+```
+
+### ::selection
+
+Style highlighted text.
+
+```css
+::selection {
+  background: yellow;
+  color: black;
+}
+
+/* Different selection style for code */
+code::selection {
+  background: #e3f2fd;
+}
+```
+
+### ::first-letter and ::first-line
+
+```css
+p::first-letter {
+  font-size: 2em;
+  font-weight: bold;
+  float: left;
+  margin-right: 0.1em;
+  line-height: 1;
+}
+
+p::first-line {
+  font-variant: small-caps;
+}
+```
+
+## Combinators
+
+Define relationships between selectors.
+
+### Descendant (space)
+
+```css
+/* Any paragraph inside article */
+article p {
+  line-height: 1.6;
+}
+```
+
+### Child (>)
+
+```css
+/* Direct child paragraphs only */
+article > p {
+  margin-top: 1rem;
+}
+```
+
+### Next Sibling (+)
+
+```css
+/* Paragraph immediately after h2 */
+h2 + p {
+  font-size: 1.125rem;
+}
+```
+
+### Subsequent Siblings (~)
+
+```css
+/* All paragraphs after h2 */
+h2 ~ p {
+  color: #333;
+}
+```
+
+## Practical Examples
+
+### Form Validation Feedback
+
+```css
+/* Hide error message by default */
+.error-message {
+  display: none;
+  color: red;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Show error when input is invalid and touched */
+input:invalid:not(:focus):not(:placeholder-shown) {
+  border-color: red;
+}
+
+input:invalid:not(:focus):not(:placeholder-shown) ~ .error-message {
+  display: block;
+}
+
+/* Success state */
+input:valid:not(:placeholder-shown) {
+  border-color: green;
+}
+```
+
+### Zebra Striping with Exceptions
+
+```css
+/* Striped rows */
+tr:nth-child(odd) {
+  background: #f9f9f9;
+}
+
+/* Except header and footer rows */
+tr:is(:first-child, :last-child) {
+  background: transparent;
+  font-weight: bold;
+}
+```
+
+### Smart Link Indicators
+
+```css
+/* External links */
+a[href^="http"]:not([href*="yourdomain.com"])::after {
+  content: ' ↗';
+  font-size: 0.8em;
+}
+
+/* PDF links */
+a[href$=".pdf"]::before {
+  content: '📄 ';
+}
+
+/* Email links */
+a[href^="mailto:"]::before {
+  content: '✉ ';
+}
+```
+
+### CSS-Only Toggle
+
+```css
+.toggle {
+  display: none;
+}
+
+.toggle + label {
+  cursor: pointer;
+  padding: 1rem;
+  background: #ddd;
+  display: block;
+}
+
+.toggle:checked + label {
+  background: blue;
+  color: white;
+}
+
+.content {
+  display: none;
+  padding: 1rem;
+}
+
+.toggle:checked ~ .content {
+  display: block;
+}
+```
+
+```html
+<input type="checkbox" id="toggle" class="toggle">
+<label for="toggle">Toggle Content</label>
+<div class="content">
+  This content appears when checkbox is checked.
+</div>
+```
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="Which selector targets links ending with .pdf?"
+  options={[
+    "a[href*='.pdf']",
+    "a[href^='.pdf']",
+    "a[href$='.pdf']",
+    "a[href~='.pdf']"
+  ]}
+  correct={2}
+/>
+
+<MultipleChoice
+  question="What's the difference between :is() and :where()?"
+  options={[
+    ":is() is newer, :where() is deprecated",
+    ":is() has specificity, :where() has zero specificity",
+    ":is() works on classes, :where() works on IDs",
+    "They're identical"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="To style an element when it contains a specific child, use the ___ pseudo-class."
+  answer=":has()"
+  fuzzyThreshold={0.7}
+/>
+
+<MultipleChoice
+  question="When should you use :focus-visible instead of :focus?"
+  options={[
+    "Always, it's newer",
+    "To show focus only for keyboard navigation, not clicks",
+    "For better browser compatibility",
+    "To style disabled elements"
+  ]}
+  correct={1}
+/>
+
+## Practice
+
+<Exercise id="hc-css-accordion" />
+
+## Summary
+
+- **Attribute selectors:** Target elements by attributes with `[attr]`, `[attr=value]`, `[attr^=start]`, `[attr$=end]`, `[attr*=contains]`
+- **:has():** Parent selector—style elements based on their descendants
+- **:is():** Group selectors, takes highest specificity of arguments
+- **:where():** Group selectors with zero specificity, easily overridden
+- **:not():** Exclude elements from selection
+- **Structural pseudo-classes:** Target by position with `:nth-child()`, `:first-child`, `:last-child`, `:only-child`
+- **Form states:** Style based on validation (`:valid`, `:invalid`), interaction (`:checked`, `:disabled`), and focus (`:focus-visible`)
+- **::before/::after:** Insert generated content, requires `content` property
+- **::marker:** Style list markers
+- **::placeholder:** Style input placeholder text
+- **::selection:** Style highlighted text
+- **:focus-visible:** Show focus only for keyboard, not mouse clicks
+- **Combinators:** Define relationships—descendant (space), child (`>`), next sibling (`+`), subsequent siblings (`~`)
+- **CSS-only patterns:** Accordions, toggles, and form validation without JavaScript

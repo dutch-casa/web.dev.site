@@ -1,0 +1,372 @@
+# Typography
+
+Typography is the foundation of readable interfaces. Most web content is text, so getting typography right means getting 90% of your design right. This lesson covers web fonts, sizing systems, and typographic tools that improve readability and visual hierarchy.
+
+## Web Fonts
+
+System fonts are fast but limited. Web fonts give you precise control over typography, but they require careful loading to avoid invisible text or layout shifts.
+
+### Loading Fonts with @font-face
+
+The `@font-face` rule loads custom fonts:
+
+```css
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter-variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+body {
+  font-family: Inter, system-ui, sans-serif;
+}
+```
+
+The `font-display` property controls how text renders while the font loads:
+
+- `swap` - Show fallback text immediately, swap to web font when loaded (best default)
+- `block` - Hide text briefly, then show web font (causes flash of invisible text)
+- `fallback` - Show fallback text, swap if font loads within 3 seconds, otherwise stay with fallback
+- `optional` - Use web font only if already cached, otherwise use fallback
+
+Use `swap` for most cases. Users see content immediately even if fonts load slowly.
+
+### Variable Fonts
+
+Variable fonts contain multiple weights and styles in a single file:
+
+```css
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter-variable.woff2') format('woff2');
+  font-weight: 100 900; /* Entire range in one file */
+}
+
+h1 {
+  font-weight: 700;
+}
+
+p {
+  font-weight: 400;
+}
+```
+
+One variable font file replaces multiple static font files, reducing HTTP requests and total file size. Variable fonts also enable precise weight adjustments (like `font-weight: 550`) instead of being limited to preset values.
+
+<Tip>
+Always apply `-webkit-font-smoothing: antialiased` to body text for crisper rendering on macOS and iOS.
+</Tip>
+
+### Font Stacks and Fallbacks
+
+Fonts fail to load. Networks are slow. Always provide fallback fonts:
+
+```css
+body {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, sans-serif;
+}
+```
+
+The browser tries each font in order until it finds one that's available. `system-ui` uses the platform's default UI font, which loads instantly and matches the operating system.
+
+Match fallback fonts to your web font's metrics to minimize layout shift:
+
+```css
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter-variable.woff2') format('woff2');
+  /* Adjust line height and letter spacing to match fallback */
+}
+
+body {
+  font-family: Inter, Arial, sans-serif;
+  /* Arial has similar metrics to Inter */
+}
+```
+
+## Sizing Text: rem, em, and px
+
+CSS has three main units for text sizing:
+
+- `px` - Absolute pixels
+- `em` - Relative to parent element's font size
+- `rem` - Relative to root element's font size
+
+**Prefer `rem` for font sizes.** It respects user browser preferences and scales consistently:
+
+```css
+:root {
+  font-size: 16px; /* Base size */
+}
+
+h1 {
+  font-size: 2rem; /* 32px, scales if user increases base size */
+}
+
+p {
+  font-size: 1rem; /* 16px */
+}
+
+small {
+  font-size: 0.875rem; /* 14px */
+}
+```
+
+Use `em` for spacing that should scale with text size:
+
+```css
+.button {
+  font-size: 1rem;
+  padding: 0.5em 1em; /* Scales with button text size */
+}
+```
+
+Avoid `px` for font sizes. It ignores user accessibility settings. Users who increase their browser's default font size expect all text to scale proportionally.
+
+## Line Height
+
+Line height controls vertical space between lines of text. Too tight is cramped, too loose is disjointed.
+
+**Always use unitless line height values:**
+
+```css
+p {
+  line-height: 1.5; /* Good - scales with font size */
+}
+
+h1 {
+  line-height: 1.2; /* Tighter for large headings */
+}
+```
+
+Avoid units on line height:
+
+```css
+/* Bad - doesn't scale properly */
+p {
+  font-size: 1rem;
+  line-height: 24px; /* Fixed, breaks at different font sizes */
+}
+
+/* Good - scales proportionally */
+p {
+  font-size: 1rem;
+  line-height: 1.5; /* Always 1.5× the font size */
+}
+```
+
+Guidelines:
+- Body text: `1.5` to `1.7`
+- Headings: `1.1` to `1.3` (larger text needs less line height)
+- UI elements: `1` to `1.2`
+
+## Text Wrapping
+
+Modern CSS provides controls for better text wrapping.
+
+### Balanced Headings
+
+`text-wrap: balance` distributes words evenly across lines, preventing awkward single-word last lines:
+
+```css
+h1 {
+  text-wrap: balance;
+  max-inline-size: 20ch; /* Limit width for better balance */
+}
+```
+
+Before: "The Quick Brown Fox Jumps Over the
+Lazy"
+
+After: "The Quick Brown Fox
+Jumps Over the Lazy"
+
+<Warning>
+`text-wrap: balance` is expensive for large blocks. Use it only on headings and short paragraphs (6 lines or fewer).
+</Warning>
+
+### Pretty Paragraph Breaks
+
+`text-wrap: pretty` prevents orphans (single words on the last line):
+
+```css
+p {
+  text-wrap: pretty;
+}
+```
+
+The browser adjusts line breaks to avoid isolated words, improving paragraph aesthetics.
+
+## Multi-Column Layout
+
+The `columns` property splits text into newspaper-style columns:
+
+```css
+.article {
+  columns: 2;
+  column-gap: 2rem;
+}
+```
+
+For responsive columns with a minimum width:
+
+```css
+.article {
+  columns: 300px 3; /* Minimum 300px per column, max 3 columns */
+  column-gap: 2rem;
+}
+```
+
+The browser creates as many columns as fit, ensuring each is at least 300px wide.
+
+<Tip>
+Use `break-inside: avoid` on child elements like images or code blocks to prevent them from splitting across columns.
+</Tip>
+
+## Text Truncation
+
+### Single Line Truncation
+
+Truncate overflowing text with an ellipsis:
+
+```css
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+```
+
+All three properties are required:
+- `white-space: nowrap` prevents line wrapping
+- `overflow: hidden` clips overflowing text
+- `text-overflow: ellipsis` adds "..."
+
+### Multi-Line Truncation
+
+The `line-clamp` property truncates after a specific number of lines:
+
+```css
+.preview {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+```
+
+Text longer than 3 lines is cut off with an ellipsis. This requires the `-webkit-` prefix and `display: -webkit-box`, even though it's widely supported.
+
+## The ch Unit
+
+The `ch` unit represents the width of the "0" character in the current font. It's useful for limiting line length:
+
+```css
+p {
+  max-inline-size: 65ch;
+}
+```
+
+This limits paragraphs to roughly 65 characters per line, an optimal length for readability. Lines that are too wide tire readers; lines that are too narrow feel choppy.
+
+Use `ch` for content containers and `rem` for UI spacing. The `ch` unit ensures text remains readable regardless of font choice.
+
+## Tabular Numbers
+
+When displaying numbers that change (timers, prices, metrics), use tabular numbers to prevent layout shift:
+
+```css
+.timer {
+  font-variant-numeric: tabular-nums;
+}
+```
+
+Tabular numbers have fixed width, so "1" takes the same space as "9". Without this, changing numbers cause the layout to jump as digit widths vary.
+
+## Proper Typographic Characters
+
+Use proper Unicode characters for better typography:
+
+- Ellipsis: `…` not `...`
+- Em dash: `—` not `--`
+- En dash: `–` not `-` (for ranges like "10–20")
+- Curly quotes: `"text"` and `'text'` not `"text"` and `'text'`
+
+HTML entities work in HTML but not CSS:
+- `&hellip;` → …
+- `&mdash;` → —
+- `&ndash;` → –
+- `&ldquo;` / `&rdquo;` → " "
+- `&lsquo;` / `&rsquo;` → ' '
+
+## Letter Spacing
+
+Letter spacing should scale with font size:
+
+```css
+h1 {
+  font-size: 3rem;
+  letter-spacing: -0.02em; /* Tighten spacing on large text */
+}
+
+.all-caps {
+  text-transform: uppercase;
+  letter-spacing: 0.05em; /* Loosen spacing on caps */
+}
+```
+
+Large text often benefits from slightly tighter spacing (negative values). All-caps text needs looser spacing for readability.
+
+<Warning>
+Never change `font-weight` on hover. It causes layout shift because bold text takes more space than regular text. Use `color` or `text-decoration` instead.
+</Warning>
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="Why should you use unitless values for line-height?"
+  options={[
+    "They load faster than values with units",
+    "They scale proportionally when font size changes",
+    "They work better with variable fonts",
+    "They improve text rendering quality"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What is the best font-display value for most web fonts?"
+  options={[
+    "block",
+    "swap",
+    "fallback",
+    "optional"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="To limit a paragraph to approximately 65 characters per line for optimal readability, use: max-inline-size: 65___;"
+  answer="ch"
+  fuzzyThreshold={0.1}
+/>
+
+## Practice
+
+<Exercise id="hc-typographic-scale" />
+
+## Summary
+
+- **Web fonts:** Use `@font-face` with `font-display: swap` to load custom fonts without blocking text rendering
+- **Variable fonts:** Contain multiple weights in one file, reducing requests and enabling precise weight control
+- **Font stacks:** Always provide fallback fonts with similar metrics to minimize layout shift
+- **Sizing:** Prefer `rem` for font sizes (respects user preferences), use `em` for spacing that scales with text
+- **Line height:** Use unitless values (like `1.5`) so line height scales proportionally with font size
+- **Text wrapping:** Use `text-wrap: balance` on headings and `text-wrap: pretty` on paragraphs
+- **Truncation:** Combine `text-overflow: ellipsis` with `white-space: nowrap` and `overflow: hidden`
+- **Line clamping:** Use `-webkit-line-clamp` with `-webkit-box` for multi-line truncation
+- **Line length:** Limit paragraphs to `65ch` for optimal readability
+- **Tabular numbers:** Use `font-variant-numeric: tabular-nums` for changing numbers to prevent layout shift
+- **Letter spacing:** Scale with font size using `em` units, tighten for large text, loosen for all-caps

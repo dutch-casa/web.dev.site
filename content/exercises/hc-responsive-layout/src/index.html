@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Container Queries Exercise</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page">
+    <aside class="sidebar">
+      <h3>Sidebar</h3>
+      <p>This sidebar can be toggled to show different widths.</p>
+      <button onclick="document.querySelector('.page').classList.toggle('wide-sidebar')">
+        Toggle Sidebar Width
+      </button>
+    </aside>
+
+    <main class="content">
+      <h1>Container Queries Demo</h1>
+      <p>Click the button in the sidebar to toggle its width. Notice how the cards adapt based on their container, not the viewport!</p>
+
+      <div class="card-container">
+        <div class="card">
+          <h2>Card 1</h2>
+          <p>This card should adapt based on the width of its container, not the viewport.</p>
+        </div>
+      </div>
+
+      <div class="card-container">
+        <div class="card">
+          <h2>Card 2</h2>
+          <p>When the sidebar is narrow, these cards have more space and should display horizontally.</p>
+        </div>
+      </div>
+
+      <div class="card-container">
+        <div class="card">
+          <h2>Card 3</h2>
+          <p>When the sidebar is wide, these cards have less space and should stack vertically.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo List</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>My Todo List</h1>
+
+    <form id="todo-form" class="todo-form">
+      <input
+        type="text"
+        id="todo-input"
+        class="todo-input"
+        placeholder="Add a new task..."
+        required
+      >
+      <button type="submit" class="add-button">Add</button>
+    </form>
+
+    <ul id="todo-list" class="todo-list">
+      <!-- Todo items will be added here dynamically -->
+    </ul>
+
+    <div class="stats">
+      <span id="todo-count">0 tasks</span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+title: Theme System
+description: Build a theme system with light and dark modes using CSS custom properties and prefers-color-scheme
+template: html
+focus: /src/styles.css

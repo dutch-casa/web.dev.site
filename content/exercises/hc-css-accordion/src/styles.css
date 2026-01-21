@@ -1,0 +1,78 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+  background: #f0f2f5;
+  padding: 2rem;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.container h1 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.container > p {
+  color: #7f8c8d;
+  margin-bottom: 2rem;
+}
+
+.accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.accordion-item {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  /* TODO: Add border styling (2px solid #e0e0e0) */
+  /* TODO: Add transition for smooth border color change */
+}
+
+/* TODO: Style the accordion-item when it's open using :has([open]) */
+/* When open, change border-color to #3498db */
+
+summary {
+  padding: 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #2c3e50;
+  list-style: none;
+  /* TODO: Add transition for background color */
+}
+
+/* TODO: Remove the default disclosure triangle */
+summary::-webkit-details-marker {
+  /* Add: display: none */
+}
+
+/* TODO: Add a custom arrow using ::before or ::after pseudo-element */
+/* Position it on the right side and rotate it when open */
+
+summary:hover {
+  background: #f8f9fa;
+}
+
+/* TODO: Use :has([open]) to style summary when details is open */
+/* Change background color to #e8f4f8 */
+
+.accordion-content {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  color: #555;
+}
+
+/* TODO: Add an arrow indicator that rotates when open
+   Hint: Use summary::after with content: "▶"
+   and rotate it 90deg when details[open]
+*/

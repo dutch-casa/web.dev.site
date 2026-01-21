@@ -11,6 +11,7 @@ export type Course = {
   readonly author: string
   readonly description: string
   readonly modules: readonly CourseModule[]
+  readonly order?: number
 }
 
 // Derived types for runtime use

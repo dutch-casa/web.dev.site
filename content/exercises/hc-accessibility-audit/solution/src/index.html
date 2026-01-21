@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Player</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    .player {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .controls button {
+      width: 48px;
+      height: 48px;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 4px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .sidebar {
+      margin-top: 40px;
+      padding: 20px;
+      background: #e9ecef;
+      border-radius: 8px;
+    }
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+    }
+    .skip-link:focus {
+      left: 0;
+      top: 0;
+      background: #007bff;
+      color: white;
+      padding: 8px;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <a href="#content" class="skip-link">Skip to main content</a>
+
+  <div class="player">
+    <h1>Now Playing</h1>
+    <p>Summer Breeze - The Jazz Collective</p>
+
+    <div class="controls">
+      <button aria-label="Previous track">⏮</button>
+      <button aria-label="Play">▶</button>
+      <button aria-label="Next track">⏭</button>
+      <button aria-label="Shuffle">🔀</button>
+    </div>
+  </div>
+
+  <main id="content">
+    <h2>About This Song</h2>
+    <p>
+      "Summer Breeze" is a classic jazz composition featuring smooth saxophone
+      melodies and a relaxed rhythm section. Perfect for unwinding after a long day.
+    </p>
+  </main>
+
+  <aside class="sidebar" tabindex="-1">
+    <h2>Quick Links</h2>
+    <ul>
+      <li><a href="#playlist">View Playlist</a></li>
+      <li><a href="#favorites">My Favorites</a></li>
+    </ul>
+  </aside>
+</body>
+</html>

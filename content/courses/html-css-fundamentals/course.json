@@ -1,0 +1,52 @@
+{
+  "id": "html-css-fundamentals",
+  "title": "HTML & CSS: The Document Model",
+  "author": "Dutch Casadaban",
+  "description": "Learn to build web documents correctly. This course teaches HTML as semantic structure and CSS as a declarative styling system. You will understand why browsers work the way they do and master modern layout systems.",
+  "order": 2,
+  "modules": [
+    {
+      "title": "The Document",
+      "lessons": [
+        "01-documents-not-applications",
+        "02-semantic-html",
+        "03-forms-and-inputs",
+        "04-accessibility-fundamentals"
+      ]
+    },
+    {
+      "title": "The Cascade",
+      "lessons": [
+        "05-how-the-cascade-works",
+        "06-specificity",
+        "07-the-box-model",
+        "08-display-and-positioning"
+      ]
+    },
+    {
+      "title": "Layout Systems",
+      "lessons": [
+        "09-flexbox",
+        "10-css-grid",
+        "11-responsive-design",
+        "12-advanced-selectors"
+      ]
+    },
+    {
+      "title": "Visual Design",
+      "lessons": [
+        "13-typography",
+        "14-color-and-theming",
+        "15-transitions-and-animations",
+        "16-visual-effects"
+      ]
+    },
+    {
+      "title": "Production CSS",
+      "lessons": [
+        "17-css-architecture",
+        "18-dom-manipulation-basics"
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@
   "title": "Programming Methodology",
   "author": "Dutch Casadaban",
   "description": "Learn to write programs that humans can understand. A modern introduction to programming fundamentals using JavaScript, transitioning to TypeScript for type safety and invariants.",
+  "order": 1,
   "modules": [
     {
       "title": "Foundations",

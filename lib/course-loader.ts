@@ -16,7 +16,8 @@ export async function getAllCourses(): Promise<Course[]> {
     })
   )
 
-  return courses
+  // Sort by order field (ascending - newer courses appear later)
+  return courses.sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
 }
 
 export async function getCourse(courseId: string): Promise<Course | null> {

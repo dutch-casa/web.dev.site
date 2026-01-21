@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getCourse, getAllLessonPaths } from "@/lib/course-loader"
 import { getLessonNavigation } from "@/lib/course-types"
@@ -60,7 +61,12 @@ export default async function LessonPage({ params }: { params: Params }) {
           {/* Lesson header */}
           <header className="mb-8 border-b border-border pb-8">
             <div className="mb-4 text-sm text-muted-foreground">
-              <span>{course.title}</span>
+              <Link
+                href={`/modules/${courseId}`}
+                className="hover:text-foreground transition-colors underline underline-offset-2"
+              >
+                {course.title}
+              </Link>
               <span className="mx-2">•</span>
               <span>{nav.current.moduleTitle}</span>
               <span className="mx-2">•</span>

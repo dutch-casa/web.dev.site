@@ -1,0 +1,75 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+.main-nav {
+  background: #34495e;
+  padding: 1rem 2rem;
+  /* TODO: Use flexbox to align logo and nav-links */
+  /* Add: display, justify-content, align-items */
+  /* Add: flex-wrap to allow wrapping on small screens */
+  /* Add: gap for consistent spacing */
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+}
+
+.nav-links {
+  list-style: none;
+  /* TODO: Use flexbox for the link list */
+  /* Add: display, flex-wrap, gap */
+}
+
+.nav-links li {
+  /* Links should not shrink below their content width */
+}
+
+.nav-links a {
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  display: block;
+  transition: background 0.3s;
+}
+
+.nav-links a:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+main {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+}
+
+main h1 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+main ul {
+  margin: 1rem 0 1rem 2rem;
+}
+
+main li {
+  margin: 0.5rem 0;
+}
+
+/* TODO: Create a flexbox layout where:
+   - The nav container uses flexbox with wrap
+   - The logo and nav-links are aligned properly
+   - The nav-links also use flexbox with wrap
+   - Gap property is used instead of margins for spacing
+   - On narrow screens, links wrap to multiple rows gracefully
+*/

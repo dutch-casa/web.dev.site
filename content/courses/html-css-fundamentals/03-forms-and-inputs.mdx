@@ -1,0 +1,398 @@
+# Forms and Inputs
+
+Forms are the web's primary data collection mechanism. A well-structured form guides users through input, validates data before submission, and works reliably across devices and contexts.
+
+HTML provides built-in input types, validation attributes, and semantic grouping elements that browsers understand. Use them before reaching for JavaScript validation libraries.
+
+## The Form Element
+
+The `<form>` element wraps related inputs and defines where data goes when submitted.
+
+```html
+<form action="/api/submit" method="post">
+  <label for="email">Email</label>
+  <input type="email" id="email" name="email" required>
+
+  <button type="submit">Submit</button>
+</form>
+```
+
+Key attributes:
+- **`action`**: The URL where form data is sent
+- **`method`**: HTTP method (`get` or `post`). Use `post` for mutations, `get` for searches.
+- **`novalidate`**: Disables browser validation (useful for custom validation UIs)
+
+Pressing Enter in any text input submits the form. This works automatically—no JavaScript needed. Users expect this behavior on desktop and laptop devices.
+
+<Tip>
+For textareas where Enter should create new lines (like message inputs), use Cmd+Enter (Mac) or Ctrl+Enter (Windows/Linux) as the submit shortcut. Implement this with JavaScript:
+
+```javascript
+textarea.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    form.submit();
+  }
+});
+```
+</Tip>
+
+## Input Types
+
+The `type` attribute determines how an input behaves and what keyboard appears on mobile devices.
+
+### Email
+
+```html
+<input type="email" name="email" required>
+```
+
+Browsers validate email format (`user@domain.com`) and show an email-optimized keyboard on mobile with easy access to `@` and `.com`.
+
+### URL
+
+```html
+<input type="url" name="website" placeholder="https://example.com">
+```
+
+Validates URL structure and shows a URL keyboard with `/`, `.com`, and protocol shortcuts on mobile.
+
+### Number
+
+```html
+<input type="number" name="quantity" min="1" max="100" step="1">
+```
+
+Shows a numeric keyboard on mobile. Use `min`, `max`, and `step` attributes to constrain values. Browsers provide spinner controls (up/down arrows) on desktop.
+
+For currency or precise decimal values, use `type="text"` with `inputmode="decimal"` and `pattern` validation instead. The `number` input can lose precision with floating-point values.
+
+### Date and Time
+
+```html
+<input type="date" name="birthday">
+<input type="time" name="appointment">
+<input type="datetime-local" name="event">
+```
+
+Browsers provide native date/time pickers. The value format is always ISO 8601 (`YYYY-MM-DD` for dates), regardless of display format.
+
+### Color
+
+```html
+<input type="color" name="brand-color" value="#3b82f6">
+```
+
+Shows a native color picker. The value is always a hex color (`#rrggbb`).
+
+### Range
+
+```html
+<input type="range" name="volume" min="0" max="100" value="50">
+```
+
+Displays a slider control. Use for approximate values where visual position matters more than exact numbers.
+
+### File
+
+```html
+<input type="file" name="avatar" accept="image/png,image/jpeg">
+```
+
+Opens the system file picker. Use `accept` to filter file types. Add `multiple` to allow selecting multiple files.
+
+## Text Inputs and Mobile Considerations
+
+Text input font size determines whether mobile browsers zoom on focus. iOS Safari zooms in when input font size is below 16px, forcing users to manually zoom out after typing.
+
+```css
+/* Prevents iOS zoom on focus */
+input, textarea, select {
+  font-size: 16px;
+}
+```
+
+Set this globally. Even if your design uses smaller fonts elsewhere, input fields should be 16px minimum. You can adjust visual scale with padding and line-height.
+
+<Note>
+Autofocus moves keyboard focus to an input when the page loads. This improves efficiency on desktop. On mobile devices, autofocus triggers the virtual keyboard, obscuring content and disrupting navigation. Use autofocus only on desktop:
+
+```html
+<input type="text" autofocus media="(min-width: 768px)">
+```
+
+Or detect programmatically with JavaScript:
+
+```javascript
+if (!/Mobi|Android/i.test(navigator.userAgent)) {
+  document.querySelector('input').focus();
+}
+```
+</Note>
+
+## Labels
+
+Every input needs an associated label. Labels provide context for users and create larger click targets—clicking the label focuses its input.
+
+**Explicit labels** use the `for` attribute matching the input's `id`:
+
+```html
+<label for="username">Username</label>
+<input type="text" id="username" name="username">
+```
+
+**Implicit labels** wrap the input:
+
+```html
+<label>
+  Username
+  <input type="text" name="username">
+</label>
+```
+
+Explicit labels are more flexible for complex layouts where label and input are not adjacent. Implicit labels are cleaner for simple forms.
+
+Screen readers announce the label when focus moves to the input. Without a label, users hear only "text field" with no context about what to enter.
+
+## Validation Attributes
+
+HTML provides built-in validation that works without JavaScript.
+
+### Required
+
+```html
+<input type="text" name="username" required>
+```
+
+Prevents form submission if the field is empty. Browsers show error messages automatically.
+
+### Pattern
+
+```html
+<input type="text" name="zipcode" pattern="\d{5}" title="5-digit ZIP code">
+```
+
+Validates against a regular expression. The `title` attribute provides a hint shown in the browser's validation message.
+
+### Min, Max, Minlength, Maxlength
+
+```html
+<input type="number" name="age" min="13" max="120">
+<input type="text" name="password" minlength="8" maxlength="128">
+```
+
+Constrains numeric ranges or text length. Browsers prevent form submission if values fall outside bounds.
+
+### Example: Complete Form with Validation
+
+```html
+<form action="/api/register" method="post">
+  <label for="email">Email</label>
+  <input
+    type="email"
+    id="email"
+    name="email"
+    required
+    placeholder="you@example.com">
+
+  <label for="age">Age</label>
+  <input
+    type="number"
+    id="age"
+    name="age"
+    min="13"
+    required>
+
+  <label for="website">Website (optional)</label>
+  <input
+    type="url"
+    id="website"
+    name="website"
+    placeholder="https://example.com">
+
+  <button type="submit">Register</button>
+</form>
+```
+
+The browser validates email format, ensures age is at least 13, and checks URL structure—all without JavaScript.
+
+## Fieldsets and Legends
+
+Group related inputs with `<fieldset>` and provide a caption with `<legend>`.
+
+```html
+<form>
+  <fieldset>
+    <legend>Shipping Address</legend>
+
+    <label for="street">Street</label>
+    <input type="text" id="street" name="street" required>
+
+    <label for="city">City</label>
+    <input type="text" id="city" name="city" required>
+
+    <label for="zip">ZIP Code</label>
+    <input type="text" id="zip" name="zip" pattern="\d{5}" required>
+  </fieldset>
+
+  <fieldset>
+    <legend>Billing Address</legend>
+    <!-- More inputs -->
+  </fieldset>
+
+  <button type="submit">Submit Order</button>
+</form>
+```
+
+Fieldsets create visual and semantic grouping. Screen readers announce the legend when entering the fieldset, providing context for all contained inputs.
+
+You can disable an entire fieldset with the `disabled` attribute:
+
+```html
+<fieldset disabled>
+  <legend>Unavailable Options</legend>
+  <!-- All inputs inside are disabled -->
+</fieldset>
+```
+
+## The Datalist Element
+
+The `<datalist>` provides autocomplete suggestions for text inputs.
+
+```html
+<label for="browser">Choose a browser</label>
+<input type="text" id="browser" name="browser" list="browsers">
+
+<datalist id="browsers">
+  <option value="Chrome">
+  <option value="Firefox">
+  <option value="Safari">
+  <option value="Edge">
+</datalist>
+```
+
+Users can type any value, but the datalist offers suggestions. This combines the flexibility of free text with the guidance of a select menu.
+
+Unlike `<select>`, datalist allows values not in the list. Use it when you want to suggest common options without restricting input.
+
+## Input Decorations
+
+Forms often need icons or buttons positioned inside inputs (search icons, password visibility toggles, clear buttons).
+
+Do not make these decorations sibling elements of the input. Use absolute positioning within a wrapper:
+
+```html
+<div class="input-wrapper">
+  <input type="search" name="query" placeholder="Search...">
+  <button type="button" class="search-icon" aria-label="Search">
+    <svg><!-- search icon --></svg>
+  </button>
+</div>
+```
+
+```css
+.input-wrapper {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+```
+
+This keeps the input's clickable area intact while overlaying the decoration. Making decorations siblings creates dead zones where clicks don't focus the input.
+
+## Checkbox and Radio Dead Zones
+
+Checkboxes and radio buttons have small click targets. Clicking the label focuses the input, but if there's space between the input and label, that space becomes a dead zone.
+
+Make the entire row clickable by wrapping both in a label:
+
+```html
+<!-- Dead zone between input and text -->
+<input type="checkbox" id="terms">
+<label for="terms">I agree to the terms</label>
+
+<!-- Entire row is clickable -->
+<label class="checkbox-row">
+  <input type="checkbox" name="terms">
+  <span>I agree to the terms</span>
+</label>
+```
+
+```css
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px;
+}
+```
+
+Users can click anywhere in the row to toggle the checkbox. This significantly improves usability, especially on touch devices.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="Which input type should you use for collecting a website URL?"
+  options={[
+    "type=\"text\"",
+    "type=\"url\"",
+    "type=\"link\"",
+    "type=\"web\""
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="To prevent iOS Safari from zooming on input focus, set the font-size to at least ___ pixels."
+  answer="16"
+  fuzzyThreshold={0}
+/>
+
+<MultipleChoice
+  question="What is the purpose of the <fieldset> element?"
+  options={[
+    "To validate form inputs",
+    "To group related inputs with a semantic container",
+    "To submit form data to a server",
+    "To create multi-column form layouts"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="When should you use the autofocus attribute?"
+  options={[
+    "Always, to improve user experience",
+    "Only on mobile devices",
+    "Only on desktop devices where it won't trigger virtual keyboards",
+    "Never, it's deprecated"
+  ]}
+  correct={2}
+/>
+
+<FillBlank
+  question="The ___ element provides autocomplete suggestions for text inputs without restricting user input."
+  answer="datalist"
+  fuzzyThreshold={0.2}
+/>
+
+## Practice
+
+<Exercise id="hc-accessible-form" />
+
+## Summary
+
+- **Form Submission:** Pressing Enter in text inputs submits forms automatically—use Cmd+Enter for textareas where Enter should create new lines.
+- **Input Types:** Use semantic types (`email`, `url`, `number`, `date`, `color`, `range`, `file`) for appropriate validation and mobile keyboards.
+- **Mobile Considerations:** Set input font-size to 16px minimum to prevent iOS zoom; avoid autofocus on touch devices where it triggers virtual keyboards.
+- **Labels:** Every input needs an associated label via `for`/`id` or wrapping—labels provide context and expand click targets.
+- **Built-in Validation:** Use `required`, `pattern`, `min`, `max`, `minlength`, and `maxlength` for client-side validation without JavaScript.
+- **Fieldsets:** Group related inputs with `<fieldset>` and `<legend>` for semantic structure and bulk operations.
+- **Datalist:** Provide autocomplete suggestions with `<datalist>` while allowing free-form input.
+- **Input Decorations:** Position icons absolutely within wrapper elements to avoid dead zones in input click areas.
+- **Checkbox Rows:** Wrap checkbox/radio inputs and their labels together to make entire rows clickable, eliminating dead zones.

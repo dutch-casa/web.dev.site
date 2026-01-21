@@ -1,0 +1,110 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+  background: #f0f2f5;
+}
+
+.dashboard {
+  min-height: 100vh;
+  /* TODO: Set up CSS Grid with template areas */
+  /*
+   Desktop layout should be:
+   "header  header  header"
+   "sidebar main    main"
+   "sidebar widget1 widget2"
+   "sidebar widget3 widget3"
+
+   Mobile (< 768px) layout should be:
+   "header"
+   "sidebar"
+   "main"
+   "widget1"
+   "widget2"
+   "widget3"
+  */
+}
+
+.header {
+  background: #2c3e50;
+  color: white;
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* TODO: Assign grid-area name */
+}
+
+.sidebar {
+  background: #34495e;
+  padding: 2rem 1rem;
+  /* TODO: Assign grid-area name */
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar a {
+  color: white;
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.sidebar a:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.main-content {
+  padding: 2rem;
+  /* TODO: Assign grid-area name */
+}
+
+.main-content h2 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.widget {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.widget h3 {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.widget .stat {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.widget-1 {
+  /* TODO: Assign grid-area name */
+}
+
+.widget-2 {
+  /* TODO: Assign grid-area name */
+}
+
+.widget-3 {
+  /* TODO: Assign grid-area name */
+}
+
+/* TODO: Add media query for mobile layout (max-width: 768px) */
+/* Change grid-template-areas to stack vertically */

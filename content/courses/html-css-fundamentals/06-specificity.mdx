@@ -1,0 +1,271 @@
+# Specificity
+
+Specificity measures how targeted a CSS selector is. When the cascade reaches the specificity stage, the selector with the highest specificity wins. Understanding specificity means understanding the (A, B, C) calculation—not points, but a three-part number that determines priority.
+
+## The (A, B, C) Calculation
+
+Specificity is represented as a three-part tuple: (A, B, C). Each part counts a different category of selector:
+
+- **A:** ID selectors (`#header`)
+- **B:** Class selectors (`.button`), attribute selectors (`[type="text"]`), pseudo-classes (`:hover`, `:nth-child()`)
+- **C:** Type selectors (`div`, `p`), pseudo-elements (`::before`, `::after`)
+
+The universal selector (`*`), combinators (`>`, `+`, `~`), and `:where()` contribute zero specificity.
+
+### Calculation Examples
+
+```css
+/* (0, 0, 1) */
+p { color: blue; }
+
+/* (0, 1, 1) */
+p.intro { color: green; }
+
+/* (0, 2, 1) */
+p.intro:hover { color: red; }
+
+/* (1, 0, 0) */
+#main { color: purple; }
+
+/* (1, 1, 2) */
+#main p.intro { color: orange; }
+```
+
+To calculate specificity, count each category independently. The selector `#header .nav li` has:
+- A = 1 (one ID: `#header`)
+- B = 1 (one class: `.nav`)
+- C = 1 (one type: `li`)
+- Specificity: (1, 1, 1)
+
+## Comparing Specificity
+
+Specificity is compared left-to-right, like comparing numbers. The leftmost difference determines the winner:
+
+- (1, 0, 0) beats (0, 99, 99)—a single ID beats any number of classes or types
+- (0, 2, 0) beats (0, 1, 10)—more classes beat more types
+- (0, 1, 5) beats (0, 1, 3)—tie on classes, more types win
+
+This isn't a point system. You can't accumulate 10 classes to beat 1 ID. Each column is independent.
+
+```css
+/* (1, 0, 0) - This wins */
+#button { background: blue; }
+
+/* (0, 10, 10) - This loses */
+.btn.primary.large.rounded.shadow.active.focus.disabled.mobile.desktop {
+  background: red;
+}
+```
+
+<Warning>
+Inline styles have specificity (1, 0, 0, 0)—higher than any ID selector. This is why inline styles are hard to override and should be avoided for styling. Reserve them for dynamic JavaScript-driven changes.
+</Warning>
+
+## Pseudo-classes and Specificity
+
+Most pseudo-classes count as class selectors (B = 1):
+
+```css
+/* (0, 1, 1) */
+a:hover { color: red; }
+
+/* (0, 2, 1) */
+a:hover:focus { color: blue; }
+
+/* (0, 1, 1) */
+input:nth-child(2) { border: 1px solid gray; }
+```
+
+## Special Cases: `:where()`, `:is()`, `:not()`, `:has()`
+
+These pseudo-classes alter specificity calculation:
+
+### `:where()` — Zero Specificity
+
+`:where()` contributes zero specificity, but its arguments count normally—except the whole thing is wrapped in zero:
+
+```css
+/* (0, 0, 0) - :where() has zero specificity */
+:where(#header, .nav) { color: blue; }
+
+/* (0, 0, 1) - This wins despite lower "real" specificity */
+p { color: red; }
+```
+
+Use `:where()` to write defensive selectors that are easy to override:
+
+```css
+/* Framework styles—low specificity on purpose */
+:where(.button) {
+  padding: 0.5em 1em;
+  border: none;
+}
+
+/* User can override with a single class */
+.custom-button {
+  padding: 1em 2em; /* Wins—(0,1,0) > (0,0,0) */
+}
+```
+
+### `:is()` — Takes Highest Specificity
+
+`:is()` takes the specificity of its most specific argument:
+
+```css
+/* (1, 0, 1) - Takes #header's ID specificity */
+:is(#header, .nav, div) p { color: blue; }
+
+/* (0, 1, 1) - This loses */
+.content p { color: red; }
+```
+
+Even though you're targeting `.content`, the `:is()` selector wins because it includes an ID in its argument list.
+
+### `:not()` — Takes Argument Specificity
+
+`:not()` itself contributes zero, but its argument counts:
+
+```css
+/* (0, 1, 1) - .hidden counts */
+p:not(.hidden) { display: block; }
+
+/* (0, 0, 1) - This loses */
+p { display: none; }
+```
+
+### `:has()` — Takes Argument Specificity
+
+`:has()` works like `:not()`:
+
+```css
+/* (0, 1, 1) - .active counts */
+div:has(.active) { background: yellow; }
+```
+
+## Specificity Escalation: A Code Smell
+
+When you override a style by increasing specificity, you create a ratchet. The next override needs even higher specificity:
+
+```css
+/* Round 1 */
+.button { background: blue; }
+
+/* Round 2 - Need to override */
+.button.primary { background: green; }
+
+/* Round 3 - Need even more specificity */
+.header .button.primary { background: red; }
+
+/* Round 4 - Desperation */
+#header .button.primary { background: purple; }
+
+/* Round 5 - Defeat */
+.button { background: orange !important; }
+```
+
+This is specificity war. Avoid it by keeping specificity flat.
+
+## BEM: Specificity Flattening
+
+BEM (Block Element Modifier) keeps all selectors at (0, 1, 0):
+
+```css
+/* All (0, 1, 0) */
+.button { background: blue; }
+.button--primary { background: green; }
+.button--large { padding: 1em 2em; }
+.button__icon { margin-right: 0.5em; }
+```
+
+No nesting, no escalation. Every selector has equal specificity, so source order determines priority. This makes overrides predictable.
+
+You don't have to use BEM syntax, but the principle applies: prefer flat selectors over nested ones.
+
+## Attribute Selectors
+
+Attribute selectors count as class selectors (B = 1):
+
+```css
+/* (0, 1, 1) */
+input[type="text"] { border: 1px solid gray; }
+
+/* (0, 1, 1) */
+a[href^="https"] { color: green; }
+
+/* (0, 2, 1) */
+input[type="text"][required] { border-color: red; }
+```
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What is the specificity of `#header .nav li:hover`?"
+  options={[
+    "(1, 1, 1)",
+    "(1, 2, 1)",
+    "(1, 1, 2)",
+    "(0, 2, 2)"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="Which selector wins: `.button.primary` (0,2,0) vs `div.button` (0,1,1)?"
+  options={[
+    "div.button—more total selectors",
+    ".button.primary—more classes",
+    "They tie",
+    "div.button—type selectors beat classes"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="The pseudo-class ___ contributes zero specificity to a selector."
+  answer=":where()"
+  fuzzyThreshold={0}
+/>
+
+<MultipleChoice
+  question="Why is specificity escalation a code smell?"
+  options={[
+    "It increases file size",
+    "It creates a ratchet effect requiring ever-higher specificity",
+    "It slows down rendering",
+    "It breaks cascade layers"
+  ]}
+  correct={1}
+/>
+
+## Practical Calculation
+
+Let's calculate: `#main .sidebar > ul:not(.hidden) li::before`
+
+- **A:** 1 (`#main`)
+- **B:** 2 (`.sidebar`, `:not(.hidden)` where `.hidden` counts)
+- **C:** 3 (`ul`, `li`, `::before`)
+- **Result:** (1, 2, 3)
+
+Combinators (`>`) contribute zero. The `:not()` counts its argument (`.hidden` = 1 class).
+
+Compare to `.sidebar ul li`:
+- **A:** 0
+- **B:** 1 (`.sidebar`)
+- **C:** 2 (`ul`, `li`)
+- **Result:** (0, 1, 2)
+
+The first selector wins: (1, 2, 3) > (0, 1, 2). The ID in the first selector makes it unbeatable by the second, regardless of class or type count.
+
+## Practice
+
+<Exercise id="hc-specificity-calculation" />
+
+## Summary
+
+- **Specificity is (A, B, C):** ID count, class/attribute/pseudo-class count, type/pseudo-element count.
+- **Not a point system:** 10 classes can't beat 1 ID. Compare left-to-right.
+- **`:where()` = zero specificity:** Use for easily overridable framework styles.
+- **`:is()`, `:not()`, `:has()` take argument specificity:** Can increase specificity unexpectedly.
+- **Inline styles:** Specificity (1, 0, 0, 0)—higher than any selector. Avoid for styling.
+- **Specificity escalation:** A code smell indicating architectural problems. Keep selectors flat.
+- **BEM flattens specificity:** All selectors at (0, 1, 0) eliminates escalation wars.

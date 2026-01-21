@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Player</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    .player {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .controls button {
+      width: 48px;
+      height: 48px;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 4px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .sidebar {
+      margin-top: 40px;
+      padding: 20px;
+      background: #e9ecef;
+      border-radius: 8px;
+    }
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+    }
+  </style>
+</head>
+<body>
+  <!--
+    INSTRUCTIONS:
+    This music player has several accessibility issues. Find and fix them:
+
+    1. Icon buttons without text labels (screen readers can't understand them)
+    2. Missing skip link or improper skip link implementation
+    3. Tab order issues (the sidebar link should come after main content)
+    4. Missing ARIA labels where needed
+    5. Poor heading structure
+
+    Fix these issues to make the component fully accessible.
+    Do not change the visual design or CSS.
+  -->
+
+  <div class="player">
+    <div style="font-size: 24px; font-weight: bold;">Now Playing</div>
+    <p>Summer Breeze - The Jazz Collective</p>
+
+    <div class="controls">
+      <button>⏮</button>
+      <button>▶</button>
+      <button>⏭</button>
+      <button>🔀</button>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div style="font-size: 18px; font-weight: bold;">Quick Links</div>
+    <ul>
+      <li><a href="#playlist">View Playlist</a></li>
+      <li><a href="#favorites">My Favorites</a></li>
+    </ul>
+  </div>
+
+  <main id="content">
+    <div style="font-size: 20px; font-weight: bold; margin-top: 40px;">About This Song</div>
+    <p>
+      "Summer Breeze" is a classic jazz composition featuring smooth saxophone
+      melodies and a relaxed rhythm section. Perfect for unwinding after a long day.
+    </p>
+  </main>
+</body>
+</html>

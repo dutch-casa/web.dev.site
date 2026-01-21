@@ -1,0 +1,4 @@
+title: Card Dimensions
+description: Calculate and implement card dimensions using the box model
+template: html
+focus: /src/styles.css

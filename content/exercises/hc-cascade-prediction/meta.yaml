@@ -1,0 +1,4 @@
+title: Predicting the Cascade
+description: Given multiple CSS rules, predict which styles will be applied based on cascade rules
+template: html
+focus: /src/index.html

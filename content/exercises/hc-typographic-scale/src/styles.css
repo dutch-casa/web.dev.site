@@ -1,0 +1,52 @@
+/* TODO: Define a typographic scale using CSS custom properties
+ *
+ * Create custom properties for font sizes using a consistent ratio.
+ * Suggested approach:
+ * - Use rem units for accessibility
+ * - Base size: 1rem (16px)
+ * - Scale ratio: 1.25 (major third) or 1.333 (perfect fourth)
+ * - Create variables: --font-size-sm, --font-size-base, --font-size-lg, etc.
+ * - Apply appropriate line-heights for each size
+ */
+
+:root {
+  /* Define your font size custom properties here */
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+  max-width: 70ch;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* Apply your typographic scale to headings and text */
+
+h1 {
+  /* Use custom property for font size */
+}
+
+h2 {
+  /* Use custom property for font size */
+}
+
+h3 {
+  /* Use custom property for font size */
+}
+
+h4 {
+  /* Use custom property for font size */
+}
+
+h5 {
+  /* Use custom property for font size */
+}
+
+h6 {
+  /* Use custom property for font size */
+}
+
+.lead {
+  /* Larger text for article lead */
+}

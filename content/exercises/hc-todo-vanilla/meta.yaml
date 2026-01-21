@@ -1,0 +1,4 @@
+title: Vanilla JS Todo List
+description: Build a todo list with add/remove functionality using vanilla JavaScript
+template: html
+focus: /src/app.js

@@ -1,0 +1,456 @@
+# CSS Architecture
+
+As projects grow, CSS becomes unmaintainable. Specificity wars erupt when `.button` gets overridden by `.nav .button`, which gets overridden by `.nav ul li .button`. Naming collisions occur when two developers create `.card` for different components. Dead code accumulates because nobody knows if that `.legacy-header` class is still used.
+
+Architecture solves these problems by establishing conventions for how CSS is written, organized, and scaled.
+
+## The Core Problems
+
+Three issues plague unstructured CSS:
+
+**Specificity wars:** Each override requires higher specificity. You start with `.button`, then need `.header .button` to override it, then `.header .nav .button`, until you're writing `!important` everywhere.
+
+**Naming collisions:** Multiple developers create `.modal`, `.card`, or `.button` with conflicting styles. Global scope means every class name must be unique across the entire application.
+
+**Dead code:** Removing a feature from the JavaScript doesn't remove its CSS. Old classes linger because grepping for "modal" finds 50 matches and nobody knows which are active.
+
+Architecture methodologies address these by constraining how you write CSS.
+
+## BEM Methodology
+
+BEM (Block Element Modifier) uses naming conventions to make relationships explicit. Every class follows one of three patterns:
+
+```css
+/* Block: standalone component */
+.card { }
+
+/* Element: part of a block */
+.card__title { }
+.card__body { }
+.card__image { }
+
+/* Modifier: variation of block or element */
+.card--featured { }
+.card__title--large { }
+```
+
+The `__` denotes "child of" and `--` denotes "variation of". This creates a flat specificity hierarchy—every selector is a single class:
+
+```css
+/* All specificity (0,1,0) */
+.card {
+  border: 1px solid #ddd;
+  padding: 1rem;
+}
+
+.card__title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.card--featured {
+  border-color: #007bff;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.card--featured .card__title {
+  color: #007bff;
+}
+```
+
+The last rule breaks BEM convention by nesting. Better:
+
+```css
+.card__title--featured {
+  color: #007bff;
+}
+```
+
+```html
+<div class="card card--featured">
+  <h3 class="card__title card__title--featured">Featured Article</h3>
+  <p class="card__body">Content here</p>
+</div>
+```
+
+**Tradeoffs:** BEM prevents specificity wars and makes HTML self-documenting. The cost is verbose class names and HTML. `class="card card--featured card--large card--shadow"` is explicit but cluttered.
+
+## CSS Modules
+
+CSS Modules solve naming collisions by scoping classes to components. During build, class names are rewritten with unique hashes:
+
+```css
+/* Button.module.css */
+.button {
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  color: white;
+}
+
+.primary {
+  background: #0056b3;
+}
+```
+
+```javascript
+import styles from './Button.module.css';
+
+<button className={styles.button}>Click</button>
+// Renders: <button class="Button_button__2Rx4k">Click</button>
+```
+
+The hash `2Rx4k` ensures `.button` in `Button.module.css` never conflicts with `.button` in `Card.module.css`. Two developers can both use `.container` without collision.
+
+**Composition:** Modules support composing styles:
+
+```css
+/* Button.module.css */
+.base {
+  padding: 0.5rem 1rem;
+  border: none;
+  cursor: pointer;
+}
+
+.primary {
+  composes: base;
+  background: #007bff;
+  color: white;
+}
+
+.secondary {
+  composes: base;
+  background: #6c757d;
+  color: white;
+}
+```
+
+```javascript
+<button className={styles.primary}>Primary</button>
+// Renders: <button class="Button_base__a3f2 Button_primary__8kL1">
+```
+
+Both classes are applied. The CSS output includes both rulesets.
+
+**Tradeoffs:** CSS Modules eliminate naming collisions and make dead code obvious (unused imports show up in build warnings). The cost is build tooling dependency and loss of cascade—styles don't leak between components even when you want them to.
+
+## Utility-First CSS
+
+Utility-first (Tailwind's philosophy) inverts the component model. Instead of creating semantic classes, compose behavior from atomic utilities:
+
+```html
+<!-- Traditional: semantic class -->
+<button class="btn btn-primary">Click</button>
+
+<!-- Utility-first: composed utilities -->
+<button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+  Click
+</button>
+```
+
+Each class does one thing: `px-4` sets horizontal padding, `bg-blue-600` sets background, `hover:bg-blue-700` changes background on hover.
+
+**Advantages:**
+
+1. **No naming:** You never invent class names like `.article-card-header-title-large`.
+2. **No context switching:** Styles are in the HTML. No jumping between files.
+3. **No dead CSS:** Removing HTML removes styles automatically.
+4. **Design consistency:** Utility classes enforce a design system (spacing scale, color palette).
+
+**Disadvantages:**
+
+1. **Verbose HTML:** Long class lists reduce readability.
+2. **Repetition:** The same utility combinations repeat across many elements.
+3. **Difficult custom styles:** One-off designs still require writing CSS.
+
+**When to use each:**
+
+- **BEM:** Large applications with multiple developers, established design patterns.
+- **CSS Modules:** Component-based frameworks (React, Vue), need for scoping.
+- **Utility-first:** Rapid prototyping, design systems with defined scales, small teams.
+
+Most projects benefit from a hybrid: utility classes for spacing/layout, component classes for complex UI.
+
+## Design Tokens
+
+Design tokens are variables that define a design system's primitives: colors, spacing, typography, shadows. They ensure consistency and enable theming.
+
+```css
+:root {
+  /* Colors */
+  --color-primary: #007bff;
+  --color-primary-dark: #0056b3;
+  --color-secondary: #6c757d;
+  --color-danger: #dc3545;
+  --color-success: #28a745;
+
+  /* Spacing scale (4px base) */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem;  /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem;    /* 16px */
+  --space-6: 1.5rem;  /* 24px */
+  --space-8: 2rem;    /* 32px */
+
+  /* Typography scale */
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+```
+
+Components reference tokens instead of hardcoded values:
+
+```css
+.button {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-base);
+  background: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.button:hover {
+  background: var(--color-primary-dark);
+  box-shadow: var(--shadow-md);
+}
+```
+
+**Theming:** Change tokens to change the entire design:
+
+```css
+/* Dark theme */
+[data-theme="dark"] {
+  --color-primary: #4dabf7;
+  --color-primary-dark: #339af0;
+  --color-secondary: #adb5bd;
+}
+```
+
+All components update automatically because they reference variables, not literal values.
+
+## CSS Layers
+
+The `@layer` directive organizes CSS into explicit layers with defined priority. Layers allow separating reset styles, base styles, components, and utilities without specificity tricks.
+
+```css
+/* Define layer order (lowest to highest priority) */
+@layer reset, base, components, utilities;
+
+/* Reset layer */
+@layer reset {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+}
+
+/* Base layer: element defaults */
+@layer base {
+  body {
+    font-family: system-ui, sans-serif;
+    line-height: 1.5;
+    color: #333;
+  }
+
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.5rem; }
+}
+
+/* Components layer */
+@layer components {
+  .button {
+    padding: 0.5rem 1rem;
+    background: #007bff;
+    color: white;
+    border: none;
+  }
+
+  .card {
+    border: 1px solid #ddd;
+    padding: 1rem;
+  }
+}
+
+/* Utilities layer (highest priority) */
+@layer utilities {
+  .text-center { text-align: center; }
+  .mt-4 { margin-top: 1rem; }
+  .hidden { display: none; }
+}
+```
+
+**Priority rules:**
+
+1. Unlayered styles have highest priority (use for quick overrides).
+2. Layered styles follow declaration order: `reset < base < components < utilities`.
+3. Within a layer, specificity and source order apply normally.
+
+This means `.text-center` (utility layer) always beats `.button` (component layer), even though both have specificity `(0,1,0)`. No need for `!important`.
+
+```css
+@layer components {
+  .button {
+    text-align: left; /* Default for buttons */
+  }
+}
+
+@layer utilities {
+  .text-center {
+    text-align: center; /* Always wins */
+  }
+}
+```
+
+```html
+<button class="button text-center">Centered</button>
+```
+
+The button is centered because utilities layer has higher priority.
+
+**Benefits:**
+
+- **Predictable overrides:** Utilities always beat components without high specificity.
+- **Safe third-party CSS:** Wrap external libraries in a layer to prevent leakage.
+- **Clear architecture:** Code organization matches priority order.
+
+## Critical CSS
+
+Critical CSS is the minimum CSS needed to render above-the-fold content. Loading it inline eliminates a render-blocking request, improving First Contentful Paint.
+
+**Process:**
+
+1. Identify above-the-fold content (header, hero section, first article).
+2. Extract only the CSS rules that style those elements.
+3. Inline critical CSS in `<head>`.
+4. Load remaining CSS asynchronously.
+
+```html
+<head>
+  <style>
+    /* Critical CSS inlined */
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+    }
+    .header {
+      background: #333;
+      color: white;
+      padding: 1rem;
+    }
+    .hero {
+      min-height: 400px;
+      background: #007bff;
+    }
+  </style>
+
+  <!-- Non-critical CSS loaded async -->
+  <link rel="preload" href="/styles/main.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/styles/main.css"></noscript>
+</head>
+```
+
+The `preload` + `onload` pattern loads the stylesheet without blocking render. JavaScript changes `rel="preload"` to `rel="stylesheet"` after load. The `<noscript>` fallback ensures CSS loads if JavaScript is disabled.
+
+**Tradeoffs:** Critical CSS improves perceived performance but increases HTML size and requires build tooling to extract. Best for content-heavy sites where FCP matters more than total page weight.
+
+## DevTools Debugging
+
+Browser DevTools reveal why CSS isn't applying.
+
+**Computed styles:** Shows the final computed value after all cascade/inheritance/specificity rules:
+
+1. Inspect element.
+2. Go to "Computed" tab.
+3. Find property (e.g., `color`).
+4. Click arrow to see which rule won and which lost.
+
+**Overridden styles:** Crossed-out rules show what was overridden. In a specificity war, higher specificity wins regardless of source order:
+
+```css
+.button { color: blue; }        /* (0,1,0) - loses */
+nav .button { color: red; }     /* (0,2,0) - wins */
+```
+
+The `.nav .button` rule wins because `(0,2,0)` > `(0,1,0)`. The `.button` rule appears crossed-out in DevTools, showing it was overridden.
+
+**Force state:** Trigger pseudo-classes manually:
+
+1. Inspect element.
+2. Click `:hov` button.
+3. Check `:hover`, `:focus`, `:active`, etc.
+
+This reveals hover styles without needing to hover.
+
+**Changes tracking:** Edit CSS in DevTools, then copy changes to source files:
+
+1. Modify values in Styles panel.
+2. Check "Changes" tab (drawer menu).
+3. See diff of all modifications this session.
+
+## Practice
+
+<Exercise id="hc-css-layers" />
+
+## Summary
+
+- **BEM:** Flat specificity via naming conventions (`block__element--modifier`). Prevents specificity wars but creates verbose class names.
+- **CSS Modules:** Scoped classes with hash suffixes. Eliminates naming collisions but requires build tooling.
+- **Utility-first:** Atomic classes composed in HTML. No naming but verbose markup.
+- **Design tokens:** CSS variables for design primitives. Enable theming and consistency.
+- **`@layer`:** Explicit priority layers. Utilities beat components without specificity tricks.
+- **Critical CSS:** Inline above-the-fold styles. Improve FCP at cost of HTML size.
+- **DevTools:** Computed styles show cascade resolution. Force pseudo-classes for debugging.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="In BEM methodology, what does `card__title--large` represent?"
+  options={[
+    "A card block with a large title element",
+    "A title element of the card block with a large modifier",
+    "A large block containing a card title",
+    "A title block with card and large modifiers"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What is the primary advantage of CSS Modules over traditional CSS?"
+  options={[
+    "Smaller file sizes",
+    "Faster rendering",
+    "Scoped class names prevent naming collisions",
+    "Better browser compatibility"
+  ]}
+  correct={2}
+/>
+
+<MultipleChoice
+  question="When using @layer, how are layers prioritized?"
+  options={[
+    "Alphabetically by layer name",
+    "By specificity of selectors within each layer",
+    "By the order declared in @layer statement",
+    "Layers closest to the element in HTML win"
+  ]}
+  correct={2}
+/>
+
+<FillBlank
+  question="Design tokens are typically implemented using CSS ___ to enable theming and consistency."
+  answer="variables"
+  fuzzyThreshold={0.2}
+/>
+
+<FillBlank
+  question="The technique of inlining minimal CSS for above-the-fold content to improve render time is called ___ CSS."
+  answer="critical"
+  fuzzyThreshold={0}
+/>

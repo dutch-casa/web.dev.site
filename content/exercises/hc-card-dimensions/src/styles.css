@@ -1,0 +1,89 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  padding: 2rem;
+  background: #f5f5f5;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.card {
+  /* TODO: Set the content width to 300px */
+  width: /* your answer here */;
+
+  /* TODO: Add 20px padding on all sides */
+  padding: /* your answer here */;
+
+  /* TODO: Add a 2px solid border (color: #3498db) */
+  border: /* your answer here */;
+
+  /* TODO: Add 16px margin on all sides */
+  margin: /* your answer here */;
+
+  background: white;
+  border-radius: 8px;
+}
+
+.card h2 {
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.card p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+  color: #555;
+}
+
+.card button {
+  padding: 0.75rem 1.5rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.info {
+  margin-top: 3rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #e74c3c;
+}
+
+.info h3 {
+  margin-bottom: 1rem;
+  color: #e74c3c;
+}
+
+.info ul {
+  margin: 1rem 0 1rem 2rem;
+}
+
+.info li {
+  margin: 0.5rem 0;
+}
+
+.answer {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+/* TODO: Calculate the total width including margin
+   Content: 300px
+   Padding: 20px × 2 = 40px
+   Border: 2px × 2 = 4px
+   Margin: 16px × 2 = 32px
+   Total: ??? px
+
+   Update the #width-answer in your HTML with the correct value
+*/

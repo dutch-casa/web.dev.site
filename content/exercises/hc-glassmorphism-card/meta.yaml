@@ -1,0 +1,4 @@
+title: Glassmorphism Card
+description: Build a glassmorphism card with backdrop blur and gradient borders
+template: html
+focus: /src/styles.css

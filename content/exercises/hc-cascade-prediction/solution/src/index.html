@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cascade Prediction</title>
+  <style>
+    /* Rule 1 */
+    p {
+      color: blue;
+      font-size: 16px;
+    }
+
+    /* Rule 2 */
+    .intro {
+      color: green;
+      font-weight: bold;
+    }
+
+    /* Rule 3 */
+    #welcome {
+      color: red;
+    }
+
+    /* Rule 4 */
+    p.intro {
+      color: purple;
+    }
+
+    /* Rule 5 */
+    body p {
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <p id="welcome" class="intro">
+    Welcome to our site! We're glad you're here.
+  </p>
+
+  <section style="margin-top: 40px; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+    <h2>Your Predictions</h2>
+
+    <div style="margin-bottom: 20px;">
+      <strong>Question 1: What color will the text be?</strong>
+      <p>Answer: red (from Rule 3: #welcome)</p>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <strong>Question 2: What font-size will be applied?</strong>
+      <p>Answer: 18px (from Rule 5: body p)</p>
+    </div>
+
+    <div>
+      <strong>Question 3: Will the text be bold?</strong>
+      <p>Answer: Yes, font-weight: bold is applied</p>
+    </div>
+  </section>
+
+  <section style="margin-top: 20px; padding: 20px; background: #fff3cd; border-radius: 8px;">
+    <h2>Explanation</h2>
+    <p>
+      <strong>Color:</strong> The ID selector #welcome (Rule 3) has the highest specificity (1-0-0),
+      beating both the class selector .intro (0-1-0), the element+class selector p.intro (0-1-1),
+      and the element selector p (0-0-1). ID selectors always win in specificity calculations.
+    </p>
+    <p>
+      <strong>Font-size:</strong> Rule 5 (body p) has specificity 0-0-2 (two element selectors),
+      which is higher than Rule 1 (p) with specificity 0-0-1. When multiple rules target the same
+      property, the one with higher specificity wins.
+    </p>
+    <p>
+      <strong>Font-weight:</strong> Rule 2 (.intro) applies font-weight: bold. Even though Rule 3
+      (#welcome) has higher specificity, it doesn't declare font-weight, so there's no conflict.
+      The font-weight: bold from .intro applies without competition.
+    </p>
+  </section>
+</body>
+</html>

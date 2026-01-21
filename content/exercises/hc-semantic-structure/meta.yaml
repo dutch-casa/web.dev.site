@@ -1,0 +1,4 @@
+title: Semantic Structure Identification
+description: Identify semantic structure in a blog post layout and mark it up with appropriate HTML elements
+template: html
+focus: /src/index.html

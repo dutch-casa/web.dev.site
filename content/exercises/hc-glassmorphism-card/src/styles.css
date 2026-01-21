@@ -1,0 +1,144 @@
+/* TODO: Create a glassmorphism effect
+ *
+ * Requirements:
+ * 1. Use backdrop-filter: blur() for the frosted glass effect
+ * 2. Add semi-transparent background (rgba with alpha < 0.3)
+ * 3. Create a gradient border effect
+ *    - Can use border-image with linear-gradient
+ *    - Or use ::before/::after pseudo-element with gradient
+ * 4. Add subtle box-shadow for depth
+ * 5. Consider adding a hover effect
+ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Animated background with colorful shapes */
+.background {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: -1;
+}
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  animation: float 20s ease-in-out infinite;
+}
+
+.shape-1 {
+  width: 300px;
+  height: 300px;
+  background: #f093fb;
+  top: 10%;
+  left: 10%;
+}
+
+.shape-2 {
+  width: 400px;
+  height: 400px;
+  background: #4facfe;
+  bottom: 10%;
+  right: 10%;
+  animation-delay: -5s;
+}
+
+.shape-3 {
+  width: 250px;
+  height: 250px;
+  background: #43e97b;
+  top: 50%;
+  left: 50%;
+  animation-delay: -10s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(50px, -50px);
+  }
+  66% {
+    transform: translate(-50px, 50px);
+  }
+}
+
+.container {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+
+.glass-card {
+  /* TODO: Add glassmorphism styling
+   * - backdrop-filter: blur(...)
+   * - Semi-transparent background
+   * - Gradient border
+   * - Box shadow
+   */
+  padding: 3rem;
+  border-radius: 1.5rem;
+  max-width: 400px;
+  width: 100%;
+  color: white;
+}
+
+h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+p {
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+.feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+}
+
+.icon {
+  font-size: 1.5rem;
+}
+
+.glass-button {
+  /* TODO: Add glass button styling
+   * Similar to card but adapted for button
+   */
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  color: white;
+}

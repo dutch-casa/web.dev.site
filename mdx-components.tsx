@@ -103,6 +103,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Math,
     MathBlock,
 
+    // Diagrams
+    MermaidDiagram,
+
     ...components,
   }
 }

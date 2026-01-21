@@ -1,0 +1,501 @@
+# Responsive Design
+
+Responsive design means your interface adapts to different screen sizes, devices, and user preferences. One codebase serves desktop, tablet, and mobile.
+
+The alternative is building separate sites for each device—expensive and unmaintainable. Responsive design emerged as the solution.
+
+## The Viewport Meta Tag
+
+Mobile browsers simulate desktop width by default, making sites tiny and unreadable. The viewport meta tag tells browsers to respect device width.
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1">
+```
+
+Without this, your responsive styles won't work. Always include it in `<head>`.
+
+## Mobile-First vs Desktop-First
+
+Two approaches to responsive design:
+
+**Mobile-first:** Start with mobile styles, add complexity for larger screens.
+
+```css
+/* Mobile base styles */
+.container {
+  padding: 1rem;
+}
+
+/* Tablet and up */
+@media (min-width: 768px) {
+  .container {
+    padding: 2rem;
+  }
+}
+
+/* Desktop and up */
+@media (min-width: 1024px) {
+  .container {
+    padding: 3rem;
+  }
+}
+```
+
+**Desktop-first:** Start with desktop styles, simplify for smaller screens.
+
+```css
+/* Desktop base styles */
+.container {
+  padding: 3rem;
+}
+
+/* Tablet and down */
+@media (max-width: 1023px) {
+  .container {
+    padding: 2rem;
+  }
+}
+
+/* Mobile and down */
+@media (max-width: 767px) {
+  .container {
+    padding: 1rem;
+  }
+}
+```
+
+Mobile-first is generally better. Mobile constraints force you to prioritize content. It's easier to add features than remove them.
+
+## Media Queries
+
+Media queries apply styles conditionally based on device characteristics.
+
+```css
+@media (min-width: 768px) {
+  /* Styles for screens 768px and wider */
+}
+```
+
+### Min-Width
+
+"Minimum width" means "at least this wide."
+
+```css
+.nav {
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .nav {
+    flex-direction: row; /* horizontal on wider screens */
+  }
+}
+```
+
+### Max-Width
+
+"Maximum width" means "this wide or narrower."
+
+```css
+.sidebar {
+  display: block;
+}
+
+@media (max-width: 767px) {
+  .sidebar {
+    display: none; /* hide on mobile */
+  }
+}
+```
+
+### Common Breakpoints
+
+There are no "standard" breakpoints. Choose based on your content. Common starting points:
+
+```css
+/* Mobile-first breakpoints */
+@media (min-width: 640px)  { /* Large phone */ }
+@media (min-width: 768px)  { /* Tablet */ }
+@media (min-width: 1024px) { /* Desktop */ }
+@media (min-width: 1280px) { /* Large desktop */ }
+```
+
+<Tip>
+Let content determine breakpoints. If text becomes too wide to read comfortably, add a breakpoint.
+</Tip>
+
+### Feature Queries
+
+Test for browser capabilities with `@supports`.
+
+```css
+.grid {
+  display: flex; /* fallback */
+}
+
+@supports (display: grid) {
+  .grid {
+    display: grid;
+  }
+}
+```
+
+### Hover Media Query
+
+Touch devices have no hover state. Tapping triggers hover as a side effect, creating false positives.
+
+```css
+/* Only apply hover effects on devices with hover capability */
+@media (hover: hover) and (pointer: fine) {
+  .button:hover {
+    background: #0056b3;
+  }
+}
+```
+
+Without this check, mobile users see hover states when they tap. The media query says "only apply hover effects on devices with precise pointing (mouse/trackpad)."
+
+## Container Queries
+
+Media queries respond to viewport size. Container queries respond to parent element size.
+
+<Note>
+Container queries are the modern approach to component-level responsiveness. They let components adapt based on available space, not screen size.
+</Note>
+
+```css
+.card-container {
+  container-type: inline-size; /* makes this a container */
+}
+
+.card {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@container (min-width: 400px) {
+  .card {
+    grid-template-columns: 200px 1fr; /* two columns when container is wide */
+  }
+}
+```
+
+The card layout changes based on its container's width, not the viewport. Reusable components that work anywhere.
+
+### Container vs Media Queries
+
+Use **container queries** when:
+- Component needs to adapt to its parent's size
+- Component appears in different contexts (sidebar, main, modal)
+- Building reusable components
+
+Use **media queries** when:
+- Styling based on device characteristics (viewport, orientation)
+- Global layout changes
+- Device-specific features (hover, high resolution)
+
+```css
+/* Page layout: media query */
+@media (min-width: 1024px) {
+  .page {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+  }
+}
+
+/* Card component: container query */
+.card-wrapper {
+  container-type: inline-size;
+}
+
+@container (min-width: 500px) {
+  .card {
+    flex-direction: row;
+  }
+}
+```
+
+## Fluid Typography
+
+Typography that scales between minimum and maximum sizes using `clamp()`.
+
+```css
+h1 {
+  font-size: clamp(1.5rem, 5vw, 3rem);
+}
+```
+
+The font size is:
+- Never smaller than 1.5rem
+- Never larger than 3rem
+- 5% of viewport width between those bounds
+
+This replaces verbose media queries:
+
+```css
+/* Old way: multiple breakpoints */
+h1 {
+  font-size: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  h1 {
+    font-size: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  h1 {
+    font-size: 3rem;
+  }
+}
+
+/* New way: one declaration */
+h1 {
+  font-size: clamp(1.5rem, 5vw, 3rem);
+}
+```
+
+## Responsive Images
+
+Serve appropriate image sizes for different screens to reduce bandwidth and improve performance.
+
+### Srcset and Sizes
+
+```html
+<img
+  src="image-800.jpg"
+  srcset="
+    image-400.jpg 400w,
+    image-800.jpg 800w,
+    image-1200.jpg 1200w
+  "
+  sizes="
+    (max-width: 768px) 100vw,
+    (max-width: 1200px) 50vw,
+    33vw
+  "
+  alt="Description"
+>
+```
+
+- `srcset`: Available image files and their widths
+- `sizes`: How wide the image will be at different viewport sizes
+- Browser picks the best image based on screen size and density
+
+### Picture Element
+
+Use `<picture>` for art direction—different images for different contexts.
+
+```html
+<picture>
+  <source media="(min-width: 1024px)" srcset="wide-image.jpg">
+  <source media="(min-width: 768px)" srcset="medium-image.jpg">
+  <img src="small-image.jpg" alt="Description">
+</picture>
+```
+
+Different image crops or compositions for mobile vs desktop.
+
+## Content-Driven Breakpoints
+
+Don't use device-specific breakpoints like "iPhone" or "iPad." Devices change. Content is constant.
+
+Add breakpoints when content breaks:
+
+1. Start with mobile layout
+2. Gradually increase viewport width
+3. When content looks cramped or awkward, add a breakpoint
+4. Continue until desktop size
+
+```css
+.article {
+  padding: 1rem;
+  max-width: 100%;
+}
+
+/* Text becomes too wide to read comfortably */
+@media (min-width: 720px) {
+  .article {
+    max-width: 65ch; /* limit line length */
+    margin: 0 auto;
+  }
+}
+
+/* Enough space for sidebar */
+@media (min-width: 1024px) {
+  .layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+  }
+}
+```
+
+## Viewport Height Units
+
+Traditional `vh` units have issues on mobile. The address bar appears and disappears, causing layout shifts.
+
+New dynamic units solve this:
+
+```css
+.hero {
+  height: 100dvh; /* Dynamic viewport height */
+}
+```
+
+Viewport unit variants:
+- **dvh:** Dynamic (changes when address bar appears/disappears)
+- **svh:** Small (assumes address bar visible)
+- **lvh:** Large (assumes address bar hidden)
+
+Use `dvh` for most cases. It adapts to actual available space.
+
+```css
+/* Mobile-safe full-height hero */
+.hero {
+  min-height: 100svh; /* fallback: small viewport */
+  min-height: 100dvh; /* preferred: dynamic viewport */
+}
+```
+
+## Practical Responsive Layout
+
+Here's a complete responsive page layout:
+
+```css
+/* Container queries */
+.card-container {
+  container-type: inline-size;
+}
+
+/* Base mobile styles */
+.page {
+  display: grid;
+  grid-template-areas:
+    "header"
+    "main"
+    "sidebar"
+    "footer";
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.header { grid-area: header; }
+.main { grid-area: main; }
+.sidebar { grid-area: sidebar; }
+.footer { grid-area: footer; }
+
+/* Fluid typography */
+h1 {
+  font-size: clamp(1.5rem, 5vw, 3rem);
+}
+
+p {
+  font-size: clamp(1rem, 2.5vw, 1.125rem);
+}
+
+/* Tablet: side-by-side content */
+@media (min-width: 768px) {
+  .page {
+    padding: 2rem;
+    gap: 2rem;
+  }
+}
+
+/* Desktop: traditional layout */
+@media (min-width: 1024px) {
+  .page {
+    grid-template-columns: 1fr 250px;
+    grid-template-areas:
+      "header header"
+      "main sidebar"
+      "footer footer";
+  }
+}
+
+/* Card component with container query */
+.card {
+  display: grid;
+  gap: 1rem;
+}
+
+@container (min-width: 500px) {
+  .card {
+    grid-template-columns: 200px 1fr;
+    align-items: center;
+  }
+}
+
+/* Hover only on pointer devices */
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+}
+```
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What does the viewport meta tag do?"
+  options={[
+    "Sets the page background color",
+    "Tells mobile browsers to respect device width",
+    "Enables responsive images",
+    "Adds CSS media query support"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="When should you use container queries instead of media queries?"
+  options={[
+    "Always, container queries are newer",
+    "When a component needs to adapt based on its parent's size",
+    "For viewport orientation changes",
+    "Never, media queries are more compatible"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="To create fluid typography that scales between 1rem and 2rem based on 3vw, use font-size: ___(1rem, 3vw, 2rem)."
+  answer="clamp"
+  fuzzyThreshold={0.8}
+/>
+
+<MultipleChoice
+  question="Why use @media (hover: hover) and (pointer: fine) for hover effects?"
+  options={[
+    "It makes hover effects faster",
+    "It prevents false hover states on touch devices",
+    "It adds accessibility features",
+    "It's required for CSS validation"
+  ]}
+  correct={1}
+/>
+
+## Practice
+
+<Exercise id="hc-responsive-layout" />
+
+## Summary
+
+- **Viewport meta tag:** Required for responsive design, tells mobile browsers to respect device width
+- **Mobile-first:** Start with mobile styles, enhance for larger screens
+- **Media queries:** Apply styles based on viewport size or device features
+- **Min-width:** "At least this wide" (mobile-first approach)
+- **Max-width:** "This wide or narrower" (desktop-first approach)
+- **Container queries:** Modern approach for component-level responsiveness based on parent size
+- **Fluid typography:** Use `clamp()` to scale font sizes smoothly between bounds
+- **Responsive images:** Use `srcset` and `sizes` for bandwidth optimization
+- **Picture element:** Different images for different contexts (art direction)
+- **Content-driven breakpoints:** Add breakpoints when content breaks, not based on devices
+- **Dynamic viewport units:** Use `dvh`/`svh`/`lvh` instead of `vh` for mobile-safe layouts
+- **Hover media query:** `@media (hover: hover) and (pointer: fine)` prevents false hover states on touch devices

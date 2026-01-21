@@ -1,0 +1,141 @@
+/* TODO: Organize this messy CSS using @layer
+ *
+ * Current problems:
+ * - No organization or structure
+ * - Specificity conflicts
+ * - Hard to maintain
+ * - Utility classes mixed with components
+ *
+ * Your task:
+ * 1. Create layers: reset, base, components, utilities
+ * 2. Move styles into appropriate layers
+ * 3. Declare layer order at the top of the file
+ *
+ * Layer order suggestion: @layer reset, base, components, utilities;
+ */
+
+/* Reset styles - these should be in a 'reset' layer */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Base styles - these should be in a 'base' layer */
+body {
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* Component: Header - should be in 'components' layer */
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Navigation - should be in 'components' layer */
+nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background 0.2s;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Main content - should be in 'base' layer */
+main {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 2rem;
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* Component: Card - should be in 'components' layer */
+.card {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-title {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #667eea;
+}
+
+.card-content {
+  margin-bottom: 1.5rem;
+  color: #666;
+}
+
+/* Component: Button - should be in 'components' layer */
+.button {
+  background: #e0e0e0;
+  color: #333;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.button:hover {
+  background: #d0d0d0;
+  transform: scale(1.05);
+}
+
+.button-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.button-primary:hover {
+  opacity: 0.9;
+}
+
+/* Utilities - should be in 'utilities' layer with highest priority */
+.text-center {
+  text-align: center !important;
+}
+
+.mt-4 {
+  margin-top: 2rem !important;
+}
+
+/* This creates a specificity conflict - utilities should always win */
+p {
+  margin-top: 1rem;
+}

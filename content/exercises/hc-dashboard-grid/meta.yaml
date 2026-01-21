@@ -1,0 +1,4 @@
+title: Dashboard Grid Layout
+description: Build a responsive dashboard using CSS Grid with template areas
+template: html
+focus: /src/styles.css

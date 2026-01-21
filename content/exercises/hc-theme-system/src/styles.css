@@ -1,0 +1,96 @@
+/* TODO: Create a theme system with light and dark modes
+ *
+ * Requirements:
+ * 1. Define color custom properties for both light and dark themes
+ * 2. Use the light-dark() function OR @media (prefers-color-scheme: dark)
+ * 3. Consider using oklch() for colors (more perceptually uniform)
+ * 4. Define colors for:
+ *    - Background colors (page, card)
+ *    - Text colors (primary, secondary)
+ *    - Accent/brand colors
+ *    - Border colors
+ * 5. Ensure sufficient contrast in both themes
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Define your color custom properties here */
+  /* Example approach:
+   * --color-bg: oklch(...);
+   * --color-text: oklch(...);
+   * etc.
+   */
+}
+
+/* Alternative: Use @media query for dark mode
+@media (prefers-color-scheme: dark) {
+  :root {
+    // Override colors for dark mode
+  }
+}
+*/
+
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  /* Apply background color from theme */
+}
+
+.container {
+  padding: 2rem;
+}
+
+.card {
+  /* Apply card styling with theme colors */
+  padding: 2rem;
+  border-radius: 1rem;
+  max-width: 400px;
+}
+
+h2 {
+  margin-top: 0;
+  /* Apply text color from theme */
+}
+
+p {
+  line-height: 1.6;
+  /* Apply secondary text color from theme */
+}
+
+.stats {
+  display: flex;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  /* Apply accent color from theme */
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  /* Apply secondary text color from theme */
+}
+
+.button {
+  /* Apply button styling with theme colors */
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}

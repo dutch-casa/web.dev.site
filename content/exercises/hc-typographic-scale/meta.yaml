@@ -1,0 +1,4 @@
+title: Typographic Scale
+description: Create a typographic scale using CSS custom properties and apply it to an article with multiple heading levels
+template: html
+focus: /src/styles.css

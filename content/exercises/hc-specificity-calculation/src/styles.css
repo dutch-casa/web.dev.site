@@ -1,0 +1,72 @@
+/*
+  INSTRUCTIONS:
+  The selectors below are in RANDOM order. Your task:
+
+  1. Calculate the specificity for each selector using the format (ID-CLASS-ELEMENT)
+  2. Add a comment above each rule with its specificity
+  3. Reorder all the rules from LOWEST to HIGHEST specificity
+
+  Example format:
+  /* Specificity: 0-1-1 */
+  /* p.intro { ... }
+
+  Rules to calculate and reorder:
+  - Some selectors have the same specificity (keep their relative order)
+  - Remember: IDs = 1-0-0, Classes/Attributes/Pseudo-classes = 0-1-0, Elements/Pseudo-elements = 0-0-1
+  - Count each component carefully
+
+  Do not modify the properties inside the rules, only:
+  - Add specificity comments
+  - Reorder the rules
+*/
+
+
+/* Rule A */
+#featured .title {
+  color: darkblue;
+}
+
+/* Rule B */
+article h2 {
+  font-size: 24px;
+}
+
+/* Rule C */
+.post.highlight {
+  background: #f0f0f0;
+}
+
+/* Rule D */
+h2 {
+  margin-bottom: 10px;
+}
+
+/* Rule E */
+main article.post h2.title {
+  line-height: 1.4;
+}
+
+/* Rule F */
+#search input {
+  padding: 8px;
+}
+
+/* Rule G */
+.widget .search-input {
+  border: 1px solid #ccc;
+}
+
+/* Rule H */
+footer p {
+  font-size: 14px;
+}
+
+/* Rule I */
+#main-footer .copyright {
+  color: gray;
+}
+
+/* Rule J */
+body main article {
+  padding: 20px;
+}

@@ -1,0 +1,77 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+.main-header {
+  background: #2c3e50;
+  color: white;
+  /* TODO: Make this header sticky at the top */
+  /* Add: position, top, and z-index properties */
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.main-header h1 {
+  font-size: 1.5rem;
+}
+
+nav {
+  display: flex;
+  gap: 2rem;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+nav a:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+section {
+  /* TODO: Add scroll-margin-top to account for the sticky header */
+  /* This ensures anchor links don't hide content behind the header */
+  /* Hint: The header is approximately 72px tall */
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+section h2 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-size: 2rem;
+}
+
+section p {
+  margin-bottom: 1rem;
+  color: #555;
+}
+
+/* TODO: Make the header sticky and add proper scroll-margin-top to sections
+   so that when clicking anchor links, the content appears below the header */

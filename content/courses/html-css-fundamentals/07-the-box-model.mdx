@@ -1,0 +1,348 @@
+# The Box Model
+
+Every element in CSS is a rectangular box. Understanding the box model means understanding what makes up that rectangle: content, padding, border, and margin. These four layers determine an element's size and spacing.
+
+## The Four Layers
+
+<MermaidDiagram chart={`
+graph TD
+    A[Margin - transparent, outside spacing] --> B[Border - visible edge]
+    B --> C[Padding - inside spacing]
+    C --> D[Content - text/children]
+
+    style A fill:#fff,stroke:#999,stroke-dasharray: 5 5
+    style B fill:#ddd,stroke:#333
+    style C fill:#e8f4f8,stroke:#0088cc
+    style D fill:#fff,stroke:#0088cc
+`} />
+
+**Content** is the innermost layer—text, images, or child elements.
+
+**Padding** is transparent space between content and border. It expands the element's background color.
+
+**Border** is a visible line around the padding. It has width, style, and color.
+
+**Margin** is transparent space outside the border. It pushes other elements away.
+
+```css
+.box {
+  width: 200px;            /* Content width */
+  padding: 20px;           /* Inside spacing */
+  border: 2px solid black; /* Visible edge */
+  margin: 10px;            /* Outside spacing */
+}
+```
+
+## `box-sizing`: The Critical Property
+
+By default, `width` and `height` set the content box size. Padding and border add to this:
+
+```css
+.box {
+  width: 200px;
+  padding: 20px;
+  border: 2px solid black;
+}
+/* Total width: 200 + (20 × 2) + (2 × 2) = 244px */
+```
+
+This is `box-sizing: content-box`. It's unintuitive—when you set `width: 200px`, the element isn't 200px wide.
+
+`box-sizing: border-box` changes the calculation. `width` now includes padding and border:
+
+```css
+.box {
+  box-sizing: border-box;
+  width: 200px;
+  padding: 20px;
+  border: 2px solid black;
+}
+/* Total width: 200px (padding and border included) */
+/* Content width: 200 - (20 × 2) - (2 × 2) = 156px */
+```
+
+This matches intuition. If you set `width: 200px`, the element is 200px wide.
+
+**Always use `border-box`.** Set it globally:
+
+```css
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+```
+
+This is a universal best practice. You'll never want `content-box`.
+
+## Margin Collapse
+
+Adjacent vertical margins collapse—they merge into a single margin equal to the larger of the two:
+
+```css
+.box-1 { margin-bottom: 30px; }
+.box-2 { margin-top: 20px; }
+/* Space between boxes: 30px (not 50px) */
+```
+
+The 30px margin "wins" and the 20px margin disappears.
+
+### When Margins Collapse
+
+Margins collapse when:
+- Elements are in normal flow (not floated or positioned)
+- No border, padding, or content separates them
+- Both are block-level
+
+Margins do **not** collapse when:
+- Parent has padding or border
+- Parent creates a new formatting context (flex, grid, `display: flow-root`)
+- Elements are inline or inline-block
+- One element is positioned
+
+### Why Margin Collapse Exists
+
+Margin collapse solves the "double space" problem. Headings have default top and bottom margins. Without collapse, two headings would have double spacing between them.
+
+```html
+<h2>First Heading</h2>  <!-- margin-bottom: 20px -->
+<h2>Second Heading</h2> <!-- margin-top: 20px -->
+<!-- Without collapse: 40px gap. With collapse: 20px gap. -->
+```
+
+### Preventing Margin Collapse
+
+If you don't want collapse, create a formatting context:
+
+```css
+.container {
+  display: flow-root; /* Creates formatting context */
+}
+```
+
+Or add a minimal border:
+
+```css
+.container {
+  border-top: 1px solid transparent;
+}
+```
+
+Though a better approach is to use `padding` on the parent instead of margins on children.
+
+## Negative Margins
+
+Unlike padding, margins can be negative. This pulls the element in the opposite direction:
+
+```css
+.overlap {
+  margin-top: -20px; /* Moves element up, potentially overlapping previous element */
+}
+
+.expand {
+  margin-left: -10px;
+  margin-right: -10px;
+  /* Content extends 10px beyond container on each side */
+}
+```
+
+Negative margins are useful for:
+- Breaking elements out of containers
+- Overlapping decorative elements
+- Adjusting optical alignment
+
+But use sparingly—negative margins can create unexpected layout shifts.
+
+## `outline`: The Layout-Free Border
+
+`outline` draws a line around an element like `border`, but doesn't affect layout:
+
+```css
+.focus-indicator {
+  outline: 2px solid blue;
+  outline-offset: 2px; /* Space between element and outline */
+}
+```
+
+Outlines:
+- Don't add to element dimensions
+- Don't trigger layout recalculation
+- Can overlap adjacent elements
+- Are drawn on top of everything (including borders)
+
+Use `outline` for focus indicators (`:focus`) or debugging—never for layout structure.
+
+<Tip>
+For subtle borders that don't create layout shift, use `box-shadow` with zero blur instead of `border`:
+
+```css
+.card {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+```
+
+This draws a 1px "border" without affecting box model calculations. On retina displays, you can even use 0.5px for hairline borders:
+
+```css
+.divider {
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.12);
+}
+```
+</Tip>
+
+## Intrinsic Sizing
+
+Instead of fixed dimensions, you can size elements based on their content:
+
+**`min-content`** — Shrinks to the smallest possible width without overflow (usually the longest word):
+
+```css
+.shrink {
+  width: min-content;
+}
+```
+
+**`max-content`** — Expands to fit all content on one line (no wrapping):
+
+```css
+.expand {
+  width: max-content;
+}
+```
+
+**`fit-content`** — Uses `max-content` but respects container constraints:
+
+```css
+.button {
+  width: fit-content; /* As wide as text, but not wider than parent */
+}
+```
+
+These are useful for components that should size to their content:
+
+```css
+.tag {
+  width: fit-content;
+  padding: 0.25em 0.75em;
+}
+/* Tag is as wide as its text plus padding */
+```
+
+## `aspect-ratio`: Dimension Locking
+
+`aspect-ratio` locks an element's proportions:
+
+```css
+.video-container {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+}
+/* Height automatically calculated to maintain 16:9 ratio */
+```
+
+This prevents layout shift when images or videos load:
+
+```css
+.thumbnail {
+  aspect-ratio: 4 / 3;
+  width: 200px;
+  background: #f0f0f0;
+}
+/* Reserves 150px height before image loads */
+```
+
+Before `aspect-ratio`, you'd use the padding-hack:
+
+```css
+/* Old approach—no longer necessary */
+.video-wrapper {
+  padding-bottom: 56.25%; /* 9/16 * 100 = 56.25% */
+  position: relative;
+}
+```
+
+Always use `aspect-ratio` for new code.
+
+## Hardcoded Dimensions for Dynamic Content
+
+When content loads asynchronously (images, ads, embeds), reserve space with hardcoded dimensions to prevent layout shift:
+
+```css
+.avatar {
+  width: 48px;
+  height: 48px;
+  background: #e0e0e0;
+}
+
+.ad-slot {
+  width: 300px;
+  height: 250px;
+  background: #f5f5f5;
+}
+```
+
+The background color shows while content loads, and the fixed dimensions prevent the page from jumping when content appears.
+
+For images, use `aspect-ratio` with `width` or `height`:
+
+```html
+<img src="photo.jpg" width="800" height="600" style="width: 100%; height: auto;">
+```
+
+The browser calculates the space before the image loads, preventing shift.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="With `box-sizing: border-box`, `width: 300px`, `padding: 20px`, and `border: 5px`, what is the content width?"
+  options={[
+    "300px",
+    "250px",
+    "350px",
+    "270px"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="Two block elements have `margin-bottom: 40px` and `margin-top: 25px`. How much space is between them?"
+  options={[
+    "65px—margins add",
+    "40px—larger margin wins",
+    "25px—smaller margin wins",
+    "32.5px—margins average"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="The ___ property draws a line around an element without affecting layout."
+  answer="outline"
+  fuzzyThreshold={0}
+/>
+
+<MultipleChoice
+  question="Why use `box-shadow: 0 0 0 1px` instead of `border: 1px solid`?"
+  options={[
+    "Box shadows render faster",
+    "Box shadows don't affect box model dimensions",
+    "Borders don't work on inline elements",
+    "Box shadows have better browser support"
+  ]}
+  correct={1}
+/>
+
+## Practice
+
+<Exercise id="hc-card-dimensions" />
+
+## Summary
+
+- **Box model layers:** Content, padding, border, margin (inside to outside).
+- **`box-sizing: border-box`:** Makes `width` include padding and border. Always use this globally.
+- **Margin collapse:** Adjacent vertical margins merge into the larger margin.
+- **Prevent collapse:** Use `display: flow-root`, padding, or borders on the parent.
+- **Negative margins:** Pull elements in the opposite direction. Useful for breakout layouts.
+- **`outline`:** Draws around elements without affecting layout. Use for focus indicators.
+- **Box shadows for borders:** `box-shadow: 0 0 0 1px` creates a "border" without layout shift.
+- **Intrinsic sizing:** `min-content`, `max-content`, `fit-content` size elements to their content.
+- **`aspect-ratio`:** Locks proportions to prevent layout shift during image loading.
+- **Hardcode dynamic dimensions:** Reserve space for async content to prevent layout shift.

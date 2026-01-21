@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cascade Prediction</title>
+  <style>
+    /* Rule 1 */
+    p {
+      color: blue;
+      font-size: 16px;
+    }
+
+    /* Rule 2 */
+    .intro {
+      color: green;
+      font-weight: bold;
+    }
+
+    /* Rule 3 */
+    #welcome {
+      color: red;
+    }
+
+    /* Rule 4 */
+    p.intro {
+      color: purple;
+    }
+
+    /* Rule 5 */
+    body p {
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <!--
+    INSTRUCTIONS:
+    Below is a paragraph with id="welcome" and class="intro".
+    Multiple CSS rules target this element.
+
+    Based on the cascade rules (origin, specificity, source order):
+    1. What color will the text be?
+    2. What font-size will be applied?
+    3. Will the text be bold?
+
+    Uncomment the CORRECT answers below. Think carefully about:
+    - Which rule has the highest specificity for color?
+    - Which rule wins for font-size based on specificity?
+    - Which rule applies font-weight?
+
+    Do not modify the CSS or HTML structure, only uncomment your answers.
+  -->
+
+  <p id="welcome" class="intro">
+    Welcome to our site! We're glad you're here.
+  </p>
+
+  <section style="margin-top: 40px; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+    <h2>Your Predictions</h2>
+
+    <div style="margin-bottom: 20px;">
+      <strong>Question 1: What color will the text be?</strong>
+      <!-- Uncomment ONE answer: -->
+      <!-- <p>Answer: blue (from Rule 1: p)</p> -->
+      <!-- <p>Answer: green (from Rule 2: .intro)</p> -->
+      <!-- <p>Answer: red (from Rule 3: #welcome)</p> -->
+      <!-- <p>Answer: purple (from Rule 4: p.intro)</p> -->
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <strong>Question 2: What font-size will be applied?</strong>
+      <!-- Uncomment ONE answer: -->
+      <!-- <p>Answer: 16px (from Rule 1: p)</p> -->
+      <!-- <p>Answer: 18px (from Rule 5: body p)</p> -->
+    </div>
+
+    <div>
+      <strong>Question 3: Will the text be bold?</strong>
+      <!-- Uncomment ONE answer: -->
+      <!-- <p>Answer: Yes, font-weight: bold is applied</p> -->
+      <!-- <p>Answer: No, font-weight is not applied (normal weight)</p> -->
+    </div>
+  </section>
+
+  <section style="margin-top: 20px; padding: 20px; background: #fff3cd; border-radius: 8px;">
+    <h2>Explanation</h2>
+    <p><em>After uncommenting your answers, explain your reasoning here:</em></p>
+    <!-- Replace this comment with your explanation of why each answer is correct -->
+  </section>
+</body>
+</html>

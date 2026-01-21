@@ -1,0 +1,63 @@
+/*
+  SOLUTION: Rules ordered from LOWEST to HIGHEST specificity
+*/
+
+/* Specificity: 0-0-1 */
+/* Rule D */
+h2 {
+  margin-bottom: 10px;
+}
+
+/* Specificity: 0-0-2 */
+/* Rule B */
+article h2 {
+  font-size: 24px;
+}
+
+/* Specificity: 0-0-2 */
+/* Rule H */
+footer p {
+  font-size: 14px;
+}
+
+/* Specificity: 0-0-3 */
+/* Rule J */
+body main article {
+  padding: 20px;
+}
+
+/* Specificity: 0-2-0 */
+/* Rule C */
+.post.highlight {
+  background: #f0f0f0;
+}
+
+/* Specificity: 0-2-0 */
+/* Rule G */
+.widget .search-input {
+  border: 1px solid #ccc;
+}
+
+/* Specificity: 0-2-4 */
+/* Rule E */
+main article.post h2.title {
+  line-height: 1.4;
+}
+
+/* Specificity: 1-0-1 */
+/* Rule F */
+#search input {
+  padding: 8px;
+}
+
+/* Specificity: 1-1-0 */
+/* Rule A */
+#featured .title {
+  color: darkblue;
+}
+
+/* Specificity: 1-1-0 */
+/* Rule I */
+#main-footer .copyright {
+  color: gray;
+}

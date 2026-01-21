@@ -1,0 +1,550 @@
+# DOM Manipulation Basics
+
+The DOM (Document Object Model) is the browser's in-memory representation of your HTML. JavaScript can read and modify this structure, enabling interactivity: showing/hiding elements, updating text, responding to clicks. Understanding selection, modification, and event handling is foundational for building dynamic interfaces.
+
+## Selecting Elements
+
+Two methods dominate: `querySelector` for single elements, `querySelectorAll` for multiple.
+
+**querySelector:** Returns the first element matching a CSS selector, or `null` if none found:
+
+```javascript
+const header = document.querySelector('.header');
+const firstButton = document.querySelector('button');
+const emailInput = document.querySelector('#email');
+const navLink = document.querySelector('.nav a[href="/about"]');
+```
+
+Any valid CSS selector works: classes, IDs, attributes, descendant combinators.
+
+**querySelectorAll:** Returns a NodeList of all matching elements:
+
+```javascript
+const allButtons = document.querySelectorAll('button');
+const navItems = document.querySelectorAll('.nav-item');
+
+console.log(allButtons.length); // 5
+```
+
+NodeList is array-like but not a true array. It has `.length` and `[index]` access but lacks array methods like `.map()`, `.filter()`.
+
+**Converting to array:**
+
+```javascript
+const buttons = Array.from(document.querySelectorAll('button'));
+// or
+const buttons = [...document.querySelectorAll('button')];
+
+// Now array methods work
+buttons.forEach(btn => console.log(btn.textContent));
+buttons.filter(btn => btn.disabled);
+```
+
+The spread operator `...` is more concise. Use it when you need array methods.
+
+<Tip>
+querySelector/querySelectorAll search the entire document by default. Narrow scope by calling on an element: `container.querySelector('.item')` searches only within `container`.
+</Tip>
+
+## Reading and Modifying Content
+
+**Text content:**
+
+```javascript
+const heading = document.querySelector('h1');
+
+// Get text
+console.log(heading.textContent); // "Welcome to My Site"
+
+// Set text
+heading.textContent = "Updated Title";
+```
+
+`textContent` gets or sets the text inside an element, stripping HTML tags. Setting it replaces all children with a text node.
+
+**Attributes:**
+
+```javascript
+const link = document.querySelector('a');
+
+// Get attribute
+const href = link.getAttribute('href'); // "/about"
+
+// Set attribute
+link.setAttribute('href', '/contact');
+
+// Remove attribute
+link.removeAttribute('target');
+
+// Check existence
+if (link.hasAttribute('download')) {
+  // Handle download link
+}
+```
+
+Some attributes have property shortcuts: `link.href`, `img.src`, `input.value`. Use properties when available—they're faster and type-correct values (`input.disabled` is boolean, not string).
+
+## classList: Managing Classes
+
+The `classList` API manages element classes without string manipulation.
+
+```javascript
+const button = document.querySelector('.button');
+
+// Add class
+button.classList.add('active');
+// <button class="button active">
+
+// Add multiple
+button.classList.add('primary', 'large');
+// <button class="button active primary large">
+
+// Remove class
+button.classList.remove('active');
+
+// Toggle (add if absent, remove if present)
+button.classList.toggle('hidden');
+
+// Check presence
+if (button.classList.contains('active')) {
+  console.log('Button is active');
+}
+```
+
+**Toggle with condition:** Pass a second argument to force add or remove:
+
+```javascript
+// Force add
+button.classList.toggle('visible', true);  // Same as .add('visible')
+
+// Force remove
+button.classList.toggle('visible', false); // Same as .remove('visible')
+```
+
+This is useful when state comes from a variable:
+
+```javascript
+const isActive = user.status === 'online';
+statusIcon.classList.toggle('active', isActive);
+```
+
+One line replaces an if/else.
+
+<Warning>
+Avoid `element.className = 'new-class'`. This replaces all classes. Use `classList` methods to preserve existing classes.
+</Warning>
+
+## Creating and Adding Elements
+
+**createElement:** Constructs a new element:
+
+```javascript
+const paragraph = document.createElement('p');
+paragraph.textContent = 'New paragraph text';
+paragraph.classList.add('intro');
+```
+
+The element exists in memory but isn't visible until added to the DOM.
+
+**appendChild:** Adds an element as the last child:
+
+```javascript
+const container = document.querySelector('.container');
+container.appendChild(paragraph);
+```
+
+Now the paragraph renders inside `.container`.
+
+**Practical example—adding list items:**
+
+```javascript
+const list = document.querySelector('ul');
+const items = ['Apple', 'Banana', 'Orange'];
+
+items.forEach(fruit => {
+  const li = document.createElement('li');
+  li.textContent = fruit;
+  list.appendChild(li);
+});
+```
+
+This creates three `<li>` elements and appends them to the `<ul>`.
+
+**insertBefore:** For more control over position:
+
+```javascript
+const referenceNode = list.querySelector('li:first-child');
+list.insertBefore(newItem, referenceNode);
+```
+
+Inserts `newItem` before `referenceNode`.
+
+## Removing Elements
+
+**remove():** Deletes element from DOM:
+
+```javascript
+const oldElement = document.querySelector('.deprecated');
+oldElement.remove();
+```
+
+The element is gone. No parent reference needed.
+
+**Older approach—removeChild:** Requires parent:
+
+```javascript
+const parent = oldElement.parentNode;
+parent.removeChild(oldElement);
+```
+
+Use `.remove()` unless supporting IE11.
+
+## Event Listeners
+
+Events signal user actions: clicks, keypresses, form submissions. Event listeners execute code when events fire.
+
+**addEventListener:** Registers a listener:
+
+```javascript
+const button = document.querySelector('.submit');
+
+button.addEventListener('click', function(event) {
+  console.log('Button clicked!');
+  console.log('Clicked element:', event.target);
+});
+```
+
+The function receives an `event` object with details about what happened.
+
+**Arrow function syntax:**
+
+```javascript
+button.addEventListener('click', (event) => {
+  console.log('Clicked');
+});
+```
+
+Use arrow functions unless you need `this` to reference the element (rare with modern patterns).
+
+**Event object properties:**
+
+```javascript
+element.addEventListener('click', (event) => {
+  event.target;           // Element that triggered event
+  event.currentTarget;    // Element with listener attached
+  event.preventDefault(); // Stop default action (form submit, link navigation)
+  event.stopPropagation(); // Stop event bubbling to parent elements
+});
+```
+
+`preventDefault()` is essential for custom form handling:
+
+```javascript
+form.addEventListener('submit', (event) => {
+  event.preventDefault(); // Don't reload page
+
+  const formData = new FormData(event.target);
+  // Process form data with JavaScript
+});
+```
+
+**Common events:**
+
+- `'click'`: Mouse click or tap
+- `'submit'`: Form submission
+- `'input'`: Input value changed (fires on every keystroke)
+- `'change'`: Input value changed (fires on blur)
+- `'keydown'`: Key pressed
+- `'focus'`: Element focused
+- `'blur'`: Element lost focus
+
+## Event Delegation
+
+Instead of adding listeners to many elements, add one to a parent and use `event.target` to determine which child was clicked.
+
+**Without delegation:**
+
+```javascript
+const buttons = document.querySelectorAll('.item button');
+buttons.forEach(button => {
+  button.addEventListener('click', (event) => {
+    console.log('Clicked:', event.target.textContent);
+  });
+});
+```
+
+Every button gets a listener. If you add buttons dynamically, they won't have listeners.
+
+**With delegation:**
+
+```javascript
+const list = document.querySelector('.item-list');
+
+list.addEventListener('click', (event) => {
+  // Check if clicked element is a button
+  if (event.target.matches('button')) {
+    console.log('Clicked:', event.target.textContent);
+  }
+});
+```
+
+One listener on the parent handles all button clicks, including buttons added later.
+
+**Why this works:** Events bubble. When you click a button, the click event fires on the button, then its parent, then its parent's parent, up to `document`. The delegated listener on `.item-list` catches the bubbling event.
+
+**Practical todo list example:**
+
+```javascript
+const todoList = document.querySelector('.todo-list');
+const input = document.querySelector('.todo-input');
+const addButton = document.querySelector('.add-button');
+
+// Add todo
+addButton.addEventListener('click', () => {
+  const text = input.value.trim();
+  if (!text) return;
+
+  // Create list item with DOM methods (safe)
+  const li = document.createElement('li');
+
+  const todoText = document.createElement('span');
+  todoText.className = 'todo-text';
+  todoText.textContent = text;
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'delete-button';
+  deleteBtn.textContent = 'Delete';
+
+  li.appendChild(todoText);
+  li.appendChild(deleteBtn);
+  todoList.appendChild(li);
+
+  input.value = '';
+});
+
+// Delete todo (delegated)
+todoList.addEventListener('click', (event) => {
+  if (event.target.matches('.delete-button')) {
+    event.target.closest('li').remove();
+  }
+});
+```
+
+The delete handler uses delegation—one listener handles all delete buttons. `closest('li')` finds the nearest ancestor `<li>` and removes it.
+
+<Tip>
+Use `event.target.closest(selector)` to find the nearest ancestor matching a selector. This is safer than assuming DOM structure (e.g., `event.target.parentElement.parentElement`).
+</Tip>
+
+## Touch and Mobile Considerations
+
+Mobile devices require additional care for interactive elements.
+
+**Minimum tap targets:** Fingers are imprecise. Apple's Human Interface Guidelines recommend 44×44pt minimum. Achieve this without enlarging visible size:
+
+```css
+.small-icon {
+  width: 20px;
+  height: 20px;
+  position: relative;
+}
+
+.small-icon::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: -12px;
+  right: -12px;
+  bottom: -12px;
+  /* 44px hit area (20px + 12px + 12px) */
+}
+```
+
+The pseudo-element expands the clickable area without affecting layout.
+
+**Prevent double-tap zoom:** iOS double-tap-to-zoom interferes with buttons:
+
+```css
+button {
+  touch-action: manipulation;
+}
+```
+
+This disables double-tap zoom on the element, making clicks feel instant. Apply to interactive elements, not content (users should be able to zoom text).
+
+**Cross-platform keyboard shortcuts:** Show the correct modifier key based on OS:
+
+```javascript
+const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+const modifierKey = isMac ? 'Cmd' : 'Ctrl';
+
+shortcutHint.textContent = `Save: ${modifierKey}+S`;
+// Mac: "Save: Cmd+S"
+// Windows: "Save: Ctrl+S"
+```
+
+This improves perceived professionalism. Users notice when shortcuts show the wrong key.
+
+**Detect keyboard with addEventListener:**
+
+```javascript
+document.addEventListener('keydown', (event) => {
+  // Check for Cmd+S (Mac) or Ctrl+S (Windows)
+  if ((event.metaKey || event.ctrlKey) && event.key === 's') {
+    event.preventDefault(); // Stop browser Save dialog
+    saveDocument();
+  }
+});
+```
+
+`event.metaKey` is Cmd on Mac, Windows key on PC. `event.ctrlKey` is Ctrl. Use `(event.metaKey || event.ctrlKey)` to handle both.
+
+## Managing Background Behavior
+
+The `visibilitychange` event fires when the user switches tabs. Use it to pause expensive operations when your tab is hidden:
+
+```javascript
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // Tab hidden: pause timers, video, animations
+    clearInterval(pollingTimer);
+    videoElement.pause();
+  } else {
+    // Tab visible: resume
+    pollingTimer = setInterval(pollForUpdates, 5000);
+    videoElement.play();
+  }
+});
+```
+
+This reduces CPU usage and respects user attention. Don't poll a server when the user isn't looking.
+
+**Video autoplay:** Mobile Safari blocks autoplay with sound. Mute the video and add `playsinline` to allow autoplay:
+
+```html
+<video autoplay muted playsinline>
+  <source src="hero.mp4" type="video/mp4">
+</video>
+```
+
+Without `muted`, autoplay fails. Without `playsinline`, iOS opens fullscreen instead of playing inline.
+
+## CSS vs JavaScript for State
+
+Use CSS classes for state whenever possible. Let CSS handle presentation logic.
+
+**Bad (JS controls styles):**
+
+```javascript
+element.addEventListener('click', () => {
+  element.style.backgroundColor = '#007bff';
+  element.style.color = 'white';
+  element.style.fontWeight = 'bold';
+});
+```
+
+Mixing presentation logic in JavaScript makes state harder to track and styles harder to override.
+
+**Good (JS controls classes):**
+
+```javascript
+element.addEventListener('click', () => {
+  element.classList.add('active');
+});
+```
+
+```css
+.element.active {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+}
+```
+
+CSS defines appearance. JavaScript defines behavior. This separation simplifies debugging—inspect element to see which classes are active, modify CSS to change appearance without touching JS.
+
+**When to use inline styles:** Dynamic values computed from data:
+
+```javascript
+const percentage = (completed / total) * 100;
+progressBar.style.width = `${percentage}%`;
+```
+
+Percentages, coordinates, and other computed values belong in JavaScript because they can't be predefined in CSS.
+
+## Practice
+
+<Exercise id="hc-todo-vanilla" />
+
+## Summary
+
+- **querySelector/querySelectorAll:** Select elements with CSS selectors. Convert NodeList to array for array methods.
+- **textContent:** Get or set element text. Setting replaces all children.
+- **Attributes:** `getAttribute`, `setAttribute`, `removeAttribute`, `hasAttribute`.
+- **classList:** `add`, `remove`, `toggle`, `contains` for managing classes.
+- **createElement/appendChild:** Build elements in JS, add to DOM.
+- **remove():** Delete elements from DOM.
+- **addEventListener:** Register event handlers. Use `event.preventDefault()` to stop default actions.
+- **Event delegation:** One listener on parent handles clicks from many children. Works with dynamically added elements.
+- **Touch considerations:** 44px tap targets, `touch-action: manipulation` to prevent double-tap zoom.
+- **Keyboard shortcuts:** Check `event.metaKey` (Cmd/Win) or `event.ctrlKey`. Show correct modifier key per OS.
+- **visibilitychange:** Pause timers/video when tab hidden.
+- **CSS vs JS:** Use classes for state, inline styles for computed values.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What is the difference between querySelector and querySelectorAll?"
+  options={[
+    "querySelector is faster than querySelectorAll",
+    "querySelector returns the first match, querySelectorAll returns all matches",
+    "querySelector only accepts IDs, querySelectorAll accepts any selector",
+    "querySelectorAll returns an array, querySelector returns an element"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="Which classList method would you use to add a class if it's absent or remove it if present?"
+  options={[
+    "classList.switch()",
+    "classList.toggle()",
+    "classList.reverse()",
+    "classList.change()"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What is the primary benefit of event delegation?"
+  options={[
+    "Events fire faster",
+    "Reduces memory usage and handles dynamically added elements",
+    "Prevents event bubbling",
+    "Works without JavaScript enabled"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What CSS property prevents double-tap zoom on mobile buttons?"
+  options={[
+    "user-select: none",
+    "pointer-events: none",
+    "touch-action: manipulation",
+    "tap-highlight-color: transparent"
+  ]}
+  correct={2}
+/>
+
+<FillBlank
+  question="The ___ event fires when the user switches tabs, allowing you to pause timers and video."
+  answer="visibilitychange"
+  fuzzyThreshold={0}
+/>
+
+<FillBlank
+  question="To check which key was pressed in a keyboard event, use event.___"
+  answer="key"
+  fuzzyThreshold={0}
+/>

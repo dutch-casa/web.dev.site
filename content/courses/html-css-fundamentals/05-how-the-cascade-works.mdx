@@ -1,0 +1,199 @@
+# How the Cascade Works
+
+When multiple CSS rules target the same element, the browser needs a tie-breaking system. The cascade is that system—a deterministic algorithm that resolves conflicts between competing style declarations. Understanding the cascade means understanding which rules win and why.
+
+The cascade isn't "last rule wins." It's a multi-stage tournament where declarations compete through several filters before a winner emerges.
+
+## The Cascade Algorithm
+
+The cascade evaluates declarations in this order:
+
+1. **Origin and Importance**
+2. **Context** (shadow DOM encapsulation, if applicable)
+3. **Cascade Layers**
+4. **Specificity**
+5. **Source Order**
+
+Each stage acts as a filter. Only if two declarations tie at one stage do they advance to the next.
+
+<MermaidDiagram chart={`
+flowchart TD
+    A[Multiple declarations target same property] --> B{Origin & Importance}
+    B -->|Winner| Z[Apply declaration]
+    B -->|Tie| C{Cascade Layer}
+    C -->|Winner| Z
+    C -->|Tie| D{Specificity}
+    D -->|Winner| Z
+    D -->|Tie| E{Source Order}
+    E -->|Last wins| Z
+`} />
+
+## Origin: Where CSS Comes From
+
+CSS declarations originate from three sources:
+
+**User-agent stylesheets** are the browser's defaults—`display: block` for `<div>`, default margins on `<body>`, etc.
+
+**User stylesheets** allow users to inject their own CSS (often for accessibility, like increasing font size).
+
+**Author stylesheets** are the CSS you write.
+
+The cascade gives author styles higher priority than user styles, which beat user-agent styles. This makes intuitive sense: your styles should override browser defaults.
+
+```css
+/* User-agent stylesheet (lowest priority) */
+div { display: block; }
+
+/* User stylesheet (middle priority) */
+* { font-size: 18px; }
+
+/* Author stylesheet (highest priority) */
+div { display: flex; }
+```
+
+In this example, the `<div>` gets `display: flex` because author origin beats user-agent origin.
+
+## The `!important` Exception
+
+Adding `!important` to a declaration inverts the priority order. Important user styles beat important author styles.
+
+```css
+/* Author stylesheet */
+p { color: blue !important; }
+
+/* User stylesheet */
+p { color: black !important; } /* This wins */
+```
+
+This inversion exists for accessibility. If a user declares `* { font-size: 24px !important; }` due to vision impairment, that should override author styles.
+
+Within the same origin, `!important` declarations beat normal declarations:
+
+```css
+.button {
+  background: blue;
+}
+
+.button {
+  background: red !important; /* Wins despite being same specificity */
+}
+```
+
+<Warning>
+`!important` is a code smell. It usually indicates specificity problems or over-reliance on inline styles. Fix the root cause instead of applying `!important` as a patch.
+</Warning>
+
+## Cascade Layers
+
+Cascade layers let you explicitly define priority within author styles using `@layer`:
+
+```css
+@layer base, components, utilities;
+
+@layer utilities {
+  .text-center { text-align: center; } /* Highest priority */
+}
+
+@layer base {
+  p { text-align: left; } /* Lowest priority */
+}
+
+@layer components {
+  .card { text-align: right; } /* Middle priority */
+}
+```
+
+Layers are ordered by the first `@layer` declaration. Later-defined layers win over earlier ones. This is the reverse of source order—the `base` layer is defined first but has lowest priority.
+
+Unlayered styles have higher priority than any layered style:
+
+```css
+@layer utilities {
+  .text-red { color: red; }
+}
+
+.text-blue { color: blue; } /* Wins—unlayered beats layered */
+```
+
+Layers solve the "framework vs. custom styles" problem. Put framework CSS in a low-priority layer, your components in a middle layer, and utility classes in a high-priority layer. This mirrors the natural priority you want.
+
+## Specificity as Tiebreaker
+
+If two declarations have the same origin, importance, and layer, the cascade checks specificity. We'll explore specificity calculation in the next lesson, but conceptually it measures "how targeted" a selector is.
+
+```css
+@layer components {
+  .button { background: blue; } /* Specificity: (0,1,0) */
+  button.primary { background: green; } /* Wins—higher specificity */
+}
+```
+
+## Source Order: The Final Judge
+
+If origin, importance, layer, and specificity all tie, the last declaration in source order wins:
+
+```css
+.button { background: blue; }
+.button { background: green; } /* Wins—same specificity, later in source */
+```
+
+This is why CSS frameworks often fail to override: if your custom CSS loads before the framework, the framework's later declarations win. Load order matters.
+
+```html
+<link rel="stylesheet" href="custom.css"> <!-- Loads first -->
+<link rel="stylesheet" href="framework.css"> <!-- Loads last, wins ties -->
+```
+
+## Mental Model: Tournament Bracket
+
+Think of the cascade as a tournament. Each stage eliminates competitors:
+
+1. **Origin filter:** Only author styles remain (assuming no `!important`).
+2. **Layer filter:** Only utilities layer remains.
+3. **Specificity filter:** Only `.button.primary` remains (if it has higher specificity).
+4. **Source order filter:** Last matching rule wins.
+
+The declaration that survives all filters is applied.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="If an author stylesheet has `.button { color: blue }` and a user stylesheet has `.button { color: red !important }`, what color is the button?"
+  options={[
+    "Blue—author styles beat user styles",
+    "Red—!important inverts origin priority",
+    "Blue—!important only affects same origin",
+    "Red—user styles always win"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="Given `@layer base, theme;` and styles in both layers with identical specificity, which layer wins?"
+  options={[
+    "base—it's declared first",
+    "theme—it's declared last",
+    "Neither—they tie",
+    "Whichever has more rules"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="The final tiebreaker in the cascade algorithm is ___ order."
+  answer="source"
+  fuzzyThreshold={0}
+/>
+
+## Practice
+
+<Exercise id="hc-cascade-prediction" />
+
+## Summary
+
+- **The cascade is an algorithm:** It resolves conflicts through origin, importance, layers, specificity, and source order.
+- **Origin priority:** Author > User > User-agent (inverted with `!important`).
+- **Cascade layers:** Explicitly control priority within author styles. Later-defined layers win.
+- **Unlayered beats layered:** Styles outside `@layer` have higher priority than any layered style.
+- **Source order matters:** Last matching declaration wins if all else ties.
+- **Mental model:** Each cascade stage filters out losers until one declaration remains.

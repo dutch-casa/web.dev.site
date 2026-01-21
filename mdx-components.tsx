@@ -16,6 +16,8 @@ import {
   SimpleExercise,
   ExerciseBlock,
   MermaidDiagram,
+  Math,
+  MathBlock,
 } from "@/components/mdx"
 import { CodeBlockWrapper } from "@/components/mdx/code-block"
 
@@ -96,6 +98,10 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     Exercise,
     SimpleExercise,
     ExerciseBlock,
+
+    // Math (KaTeX)
+    Math,
+    MathBlock,
 
     ...components,
   }

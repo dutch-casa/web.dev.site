@@ -1,3 +1,4 @@
+
 // TypeScript Introduction Exercise
 //
 // Add proper type annotations to all these functions and interfaces:

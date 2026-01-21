@@ -1,3 +1,4 @@
+
 // Advanced TypeScript Types Exercise
 //
 // Complete these type definitions and functions:

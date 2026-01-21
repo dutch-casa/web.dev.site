@@ -5,6 +5,7 @@ export { CodeSlides, CodeSlidesSimple } from "./code-slides"
 export { Video, YouTubeVideo } from "./video"
 export { Quiz, MultipleChoice, FillBlank, ShortAnswer } from "./quiz"
 export { MermaidDiagram } from "./mermaid-diagram"
+export { Math, MathBlock } from "./math"
 
 // Exercises
 // - Exercise: File-based (loads from content/exercises/{id}/) - PREFERRED

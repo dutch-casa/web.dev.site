@@ -11,6 +11,8 @@ import {
   useTutorialFiles,
   useTutorialActions,
   useTutorial,
+  useTutorialShowingSolution,
+  useTutorialConfig,
 } from "@/lib/tutorial-kit/context"
 import { useTutorialKitContext } from "./TutorialKit"
 import { useSettings } from "@/lib/tutorial-kit/settings"
@@ -110,6 +112,8 @@ export function EditorPane({
   const openFiles = useTutorial((s) => s.editor.openFiles)
   const dirty = useTutorial((s) => s.editor.dirty)
   const actions = useTutorialActions()
+  const config = useTutorialConfig()
+  const showingSolution = useTutorialShowingSolution()
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const monacoRef = useRef<Monaco | null>(null)
   const vimModeRef = useRef<{ dispose: () => void } | null>(null)
@@ -119,8 +123,17 @@ export function EditorPane({
   const { vimMode, fontSize, lineNumbers, wordWrap } = useSettings()
   const [vimStatus, setVimStatus] = useState("")
   const [cursorLine, setCursorLine] = useState(1)
+  const [editorReady, setEditorReady] = useState(false)
 
-  const content = activeFile ? files[activeFile] ?? "" : ""
+  // Get solution content for active file if showing solution
+  const solutionContent = showingSolution && activeFile && config?.solution
+    ? config.solution.find((f) => f.path === activeFile)?.content
+    : null
+  const solutionText = solutionContent?.kind === "inline" ? solutionContent.content : null
+
+  const content = showingSolution && solutionText
+    ? solutionText
+    : activeFile ? files[activeFile] ?? "" : ""
   const language = activeFile ? getLanguage(activeFile) : "plaintext"
 
   // Hybrid line numbers function: current line = absolute, others = relative
@@ -142,9 +155,10 @@ export function EditorPane({
       : "off"
 
   // Initialize/cleanup vim mode
+  // Depends on editorReady to ensure we re-run when editor mounts
   useEffect(() => {
     const editor = editorRef.current
-    if (!editor) return
+    if (!editor || !editorReady) return
 
     // Cleanup existing vim mode
     if (vimModeRef.current) {
@@ -158,6 +172,11 @@ export function EditorPane({
       import("monaco-vim").then(({ initVimMode }) => {
         if (!editorRef.current || !statusBarRef.current) return
         vimModeRef.current = initVimMode(editorRef.current, statusBarRef.current)
+
+        // Focus editor to ensure vim mode is active
+        setTimeout(() => {
+          editorRef.current?.focus()
+        }, 100)
       }).catch(() => {
         // monaco-vim not available
         console.warn("monaco-vim not installed")
@@ -170,7 +189,7 @@ export function EditorPane({
         vimModeRef.current = null
       }
     }
-  }, [vimMode])
+  }, [vimMode, editorReady])
 
   // Update editor options when settings change
   useEffect(() => {
@@ -238,6 +257,9 @@ export function EditorPane({
     editor.onDidChangeCursorPosition((e) => {
       setCursorLine(e.position.lineNumber)
     })
+
+    // Signal that editor is ready for vim mode initialization
+    setEditorReady(true)
   }, [])
 
   const handleChange = useCallback(
@@ -285,15 +307,22 @@ export function EditorPane({
           ))}
         </div>
 
+        {/* Solution banner */}
+        {showingSolution && (
+          <div className="px-3 py-1.5 bg-amber-500/10 border-b border-amber-500/30 text-amber-600 text-xs font-medium">
+            Viewing solution (read-only)
+          </div>
+        )}
+
         {/* Editor */}
         <div className="flex-1 min-h-0 overflow-hidden">
           {activeFile ? (
             <Editor
               height="100%"
-              path={`file://${activeFile}`}
+              path={`file://${activeFile}${showingSolution ? "-solution" : ""}`}
               language={language}
               value={content}
-              onChange={handleChange}
+              onChange={showingSolution ? undefined : handleChange}
               onMount={handleEditorMount}
               theme="vs-dark"
               options={{
@@ -308,11 +337,11 @@ export function EditorPane({
                 automaticLayout: true,
                 tabSize: 2,
                 insertSpaces: true,
-                formatOnPaste: true,
-                formatOnType: true,
-                suggestOnTriggerCharacters: true,
-                acceptSuggestionOnEnter: "on",
-                quickSuggestions: {
+                formatOnPaste: !showingSolution,
+                formatOnType: !showingSolution,
+                suggestOnTriggerCharacters: !showingSolution,
+                acceptSuggestionOnEnter: showingSolution ? "off" : "on",
+                quickSuggestions: showingSolution ? false : {
                   other: true,
                   comments: false,
                   strings: true,
@@ -331,6 +360,7 @@ export function EditorPane({
                   bracketPairs: true,
                   indentation: true,
                 },
+                readOnly: showingSolution,
               }}
             />
           ) : (

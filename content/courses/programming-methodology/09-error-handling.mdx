@@ -1,0 +1,580 @@
+# Error Handling
+
+Programs fail. This is not a bug to fix—it is a fundamental property of software interacting with an unpredictable world. The question is not *whether* your code will encounter errors, but *how* it will respond when it does.
+
+This lesson teaches you to think about errors as a design concern, not an afterthought.
+
+## The Purpose of Errors
+
+Before diving into syntax, understand what errors are *for*. Errors serve two purposes:
+
+1. **Signal that a contract has been violated**: The caller promised something and did not deliver
+2. **Communicate what went wrong**: Future debuggers need information to fix the problem
+
+Every error handling decision should serve at least one of these purposes. If your error handling does neither, it is likely wrong.
+
+## Functions as Contracts
+
+Every function makes a promise: "Give me valid inputs, and I will produce a valid output or tell you exactly what went wrong."
+
+This promise has three parts:
+
+- **Preconditions**: What the caller must provide (valid inputs, required state)
+- **Postconditions**: What the function guarantees if preconditions are met
+- **Invariants**: What remains true throughout execution
+
+```javascript
+/**
+ * Withdraws money from an account.
+ *
+ * Preconditions:
+ *   - amount > 0
+ *   - amount <= account.balance
+ *   - account is not locked
+ *
+ * Postconditions:
+ *   - account.balance decreased by amount
+ *   - returns new balance
+ *
+ * Invariant:
+ *   - account.balance >= 0 (always)
+ */
+function withdraw(account, amount) {
+  // Verify preconditions
+  if (amount <= 0) {
+    throw new Error("Precondition violated: amount must be positive");
+  }
+  if (amount > account.balance) {
+    throw new Error("Precondition violated: insufficient funds");
+  }
+  if (account.locked) {
+    throw new Error("Precondition violated: account is locked");
+  }
+
+  // Perform operation
+  account.balance -= amount;
+
+  // Postcondition is guaranteed: balance decreased, invariant maintained
+  return account.balance;
+}
+```
+
+The contract framing changes how you think about errors. A precondition violation is not "something went wrong"—it is "the caller broke their promise." This distinction matters for deciding how to handle errors.
+
+## The Three Types of Errors
+
+Not all errors are equal. Understanding the type determines the correct response.
+
+### 1. Programming Errors (Bugs)
+
+The code is wrong. A precondition was violated, an invariant was broken, or logic is flawed.
+
+```javascript
+// This is a bug - the caller passed invalid data
+withdraw(account, -50);  // amount must be positive
+
+// This is a bug - we forgot to check something
+if (items.length > 0) {
+  // We assumed items exist but never validated
+}
+```
+
+**Correct response**: Crash loudly. Do not recover. The program is in an unknown state. Let it fail, read the stack trace, fix the bug.
+
+### 2. Operational Errors
+
+The code is correct, but the environment failed. Network down, file missing, database unavailable.
+
+```javascript
+// Not a bug - the file genuinely might not exist
+const config = readFile("/etc/app/config.json");
+
+// Not a bug - the network is unreliable
+const response = await fetch("https://api.example.com/data");
+```
+
+**Correct response**: Handle gracefully. Retry, use fallbacks, or report to the user. These are expected in production.
+
+### 3. User Errors
+
+The user provided invalid input. This is neither a bug nor an environmental failure—it is normal operation.
+
+```javascript
+// User typed "abc" in an age field
+const age = parseInt(userInput);  // NaN
+
+// User submitted empty required field
+if (!email) {
+  // This is expected - users make mistakes
+}
+```
+
+**Correct response**: Validate at the boundary, provide clear feedback, let the user try again.
+
+<Note>
+The same symptom ("missing value") can be three different error types:
+
+- `null` from a bug (programmer forgot to initialize) → crash
+- `null` from network failure (API returned nothing) → retry/fallback
+- `null` from user input (left field empty) → show validation message
+
+Knowing which type guides your response.
+</Note>
+
+## The try/catch Statement
+
+JavaScript uses `try/catch` to handle errors:
+
+```javascript
+try {
+  // Code that might throw an error
+  const result = riskyOperation();
+  console.log(result);
+} catch (error) {
+  // Code that runs if an error is thrown
+  console.log("Something went wrong:", error.message);
+}
+```
+
+The `catch` block receives the error object, which contains information about what went wrong.
+
+### The Error Object
+
+```javascript
+try {
+  throw new Error("Something bad happened");
+} catch (error) {
+  console.log(error.name);     // "Error"
+  console.log(error.message);  // "Something bad happened"
+  console.log(error.stack);    // Stack trace showing where error occurred
+}
+```
+
+### The finally Block
+
+Code in `finally` always runs, whether or not an error occurred:
+
+```javascript
+function readFile(path) {
+  let file = null;
+  try {
+    file = openFile(path);
+    return processFile(file);
+  } catch (error) {
+    console.log("Error reading file:", error.message);
+    return null;
+  } finally {
+    // This always runs - good for cleanup
+    if (file) {
+      closeFile(file);
+    }
+  }
+}
+```
+
+## Throwing Errors
+
+Use `throw` to signal that a contract has been violated:
+
+```javascript
+function divide(a, b) {
+  if (b === 0) {
+    throw new Error("Cannot divide by zero");
+  }
+  return a / b;
+}
+
+try {
+  const result = divide(10, 0);
+} catch (error) {
+  console.log(error.message);  // "Cannot divide by zero"
+}
+```
+
+## Fail Fast
+
+**Fail fast** means: check preconditions immediately, fail at the source of the problem, not downstream where the cause is obscured.
+
+```javascript
+// Bad: fails deep in the code with unclear error
+function processUser(user) {
+  // If user is null, this crashes with "Cannot read property toLowerCase of undefined"
+  // Which tells you nothing about the actual problem
+  sendEmail(user.email.toLowerCase());
+}
+
+// Good: fails fast with clear error at the source
+function processUser(user) {
+  if (!user) {
+    throw new Error("processUser requires a user object");
+  }
+  if (!user.email) {
+    throw new Error("processUser requires user.email");
+  }
+
+  sendEmail(user.email.toLowerCase());
+}
+```
+
+The good version does three things:
+
+1. **Fails where the problem originated**: Not in `sendEmail`, but in `processUser`
+2. **Names the violated contract**: "requires a user object"
+3. **Fails immediately**: No partial work that needs cleanup
+
+<Tip>
+Guard clauses should read like a checklist of preconditions. When they fail, the error message should complete the sentence: "This function requires..."
+</Tip>
+
+## Error Boundaries: Where to Catch
+
+A critical question: at what layer should errors be caught?
+
+**Principle**: Catch errors at the level that can meaningfully handle them.
+
+```javascript
+// Layer 1: Low-level database operation
+function getUserById(id) {
+  // Does NOT catch - it cannot meaningfully handle "user not found"
+  // That decision belongs to the business logic
+  const row = database.query("SELECT * FROM users WHERE id = ?", [id]);
+  if (!row) {
+    throw new NotFoundError(`User ${id} not found`);
+  }
+  return row;
+}
+
+// Layer 2: Business logic
+function getOrderHistory(userId) {
+  // DOES catch - can decide what "user not found" means for this operation
+  try {
+    const user = getUserById(userId);
+    return database.query("SELECT * FROM orders WHERE user_id = ?", [user.id]);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      // Business decision: missing user means empty history
+      return [];
+    }
+    throw error;  // Other errors propagate up
+  }
+}
+
+// Layer 3: Request handler (boundary with outside world)
+async function handleRequest(req, res) {
+  // DOES catch - must always respond, cannot let errors escape
+  try {
+    const orders = await getOrderHistory(req.params.userId);
+    res.json({ orders });
+  } catch (error) {
+    // Log for debugging
+    console.error("Request failed:", error);
+    // User-friendly response (never expose internal details)
+    res.status(500).json({ error: "Unable to fetch orders" });
+  }
+}
+```
+
+**The pattern**:
+- Low-level functions: throw, do not catch
+- Middle layer: catch only what you can meaningfully handle, rethrow the rest
+- Boundary layer: catch everything, log, respond safely
+
+## Custom Error Types
+
+Create error types that communicate intent:
+
+```javascript
+class ValidationError extends Error {
+  constructor(field, message) {
+    super(`${field}: ${message}`);
+    this.name = "ValidationError";
+    this.field = field;
+  }
+}
+
+class NotFoundError extends Error {
+  constructor(resource, id) {
+    super(`${resource} with id ${id} not found`);
+    this.name = "NotFoundError";
+    this.resource = resource;
+    this.id = id;
+  }
+}
+
+class NetworkError extends Error {
+  constructor(url, cause) {
+    super(`Network request to ${url} failed`);
+    this.name = "NetworkError";
+    this.url = url;
+    this.cause = cause;  // Original error
+  }
+}
+```
+
+Custom types enable precise handling:
+
+```javascript
+try {
+  await saveUser(userData);
+} catch (error) {
+  if (error instanceof ValidationError) {
+    // User error: show which field failed
+    showFieldError(error.field, error.message);
+  } else if (error instanceof NetworkError) {
+    // Operational error: offer retry
+    showRetryDialog("Could not save. Check your connection.");
+  } else {
+    // Unknown error: crash and report
+    reportBug(error);
+    throw error;
+  }
+}
+```
+
+## Never Swallow Errors Silently
+
+This is the cardinal sin of error handling:
+
+```javascript
+// TERRIBLE: Errors disappear. Bugs become invisible. Debugging becomes impossible.
+try {
+  doSomething();
+} catch (error) {
+  // Nothing. The program continues in an unknown state.
+}
+
+// BAD: Logs but continues as if nothing happened
+try {
+  doSomething();
+} catch (error) {
+  console.log("Error:", error);
+  // Continues executing with corrupted state
+}
+```
+
+If you catch an error, you must do one of:
+1. **Handle it meaningfully**: Use a fallback, retry, or change behavior
+2. **Transform and rethrow**: Add context, then propagate
+3. **Report and terminate**: Log, notify, then stop or return
+
+```javascript
+// Good: meaningful handling
+try {
+  config = loadConfig("config.json");
+} catch (error) {
+  console.warn("Config not found, using defaults");
+  config = DEFAULT_CONFIG;
+}
+
+// Good: transform and rethrow with context
+try {
+  user = await fetchUser(id);
+} catch (error) {
+  throw new Error(`Failed to load user ${id}: ${error.message}`);
+}
+
+// Good: report and return safe value
+try {
+  analytics.track(event);
+} catch (error) {
+  console.error("Analytics failed:", error);
+  // Analytics failure should not break the app
+  // But we logged it, so we know it is happening
+}
+```
+
+## Writing Error Messages
+
+Error messages are documentation for future debuggers—including yourself at 2 AM.
+
+**Bad error messages**:
+```javascript
+throw new Error("Error");
+throw new Error("Invalid input");
+throw new Error("Something went wrong");
+```
+
+**Good error messages answer three questions**:
+1. What happened?
+2. What was expected?
+3. What was received?
+
+```javascript
+throw new Error(
+  `Invalid age: expected positive integer, got ${typeof age} (${age})`
+);
+
+throw new Error(
+  `User ${userId} not found in database ${dbName}`
+);
+
+throw new Error(
+  `API rate limit exceeded: ${current}/${limit} requests. Retry after ${resetTime}`
+);
+```
+
+## The Result Pattern
+
+Exceptions are not the only way to handle errors. Many modern languages use explicit result types that make errors part of the return value.
+
+```javascript
+// Result type: either success with value, or failure with error
+function parseAge(input) {
+  const num = parseInt(input, 10);
+  if (isNaN(num)) {
+    return { ok: false, error: `"${input}" is not a number` };
+  }
+  if (num < 0 || num > 150) {
+    return { ok: false, error: `Age ${num} is out of valid range (0-150)` };
+  }
+  return { ok: true, value: num };
+}
+
+// Caller must handle both cases
+const result = parseAge(userInput);
+if (!result.ok) {
+  showError(result.error);
+  return;
+}
+const age = result.value;
+// Continue with valid age
+```
+
+**Why use Result instead of throw?**
+
+- **Visible in types**: The function signature shows it can fail
+- **Forces handling**: Cannot ignore—must check `ok` to get value
+- **Composable**: Can chain, transform, combine results
+- **No hidden control flow**: Errors do not jump up the call stack
+
+**When to use which**:
+- **Throw**: Programming errors (bugs), unrecoverable failures
+- **Result**: Expected failures, user input validation, operations that commonly fail
+
+## Optional Chaining and Nullish Coalescing
+
+Modern JavaScript provides operators for handling missing values without exceptions.
+
+### Optional Chaining (`?.`)
+
+Safely access properties that might not exist:
+
+```javascript
+// Without optional chaining - crashes if user or address is null
+const city = user.address.city;
+
+// With optional chaining - returns undefined if any part is missing
+const city = user?.address?.city;
+
+// Works with function calls
+const result = obj.method?.();
+
+// And array access
+const first = arr?.[0];
+```
+
+### Nullish Coalescing (`??`)
+
+Provide defaults for `null` or `undefined`:
+
+```javascript
+// Problem with || : treats 0 and "" as falsy
+const count = user.count || 10;  // If count is 0, becomes 10 (wrong!)
+
+// ?? only triggers on null/undefined
+const count = user.count ?? 10;  // If count is 0, stays 0 (correct!)
+
+// Combine with optional chaining
+const theme = user?.settings?.theme ?? "light";
+```
+
+<Warning>
+Optional chaining is for **expected missing values**, not for hiding bugs. If `user` should always exist, do not write `user?.name`—let it crash so you find the bug.
+</Warning>
+
+## When to Throw vs When to Return
+
+| Situation | Approach | Rationale |
+|-----------|----------|-----------|
+| Caller violated precondition | `throw` | Bug in calling code |
+| Environment failed (network, disk) | `throw` or Result | Operational error |
+| User input invalid | Result or return null | Expected, not exceptional |
+| Resource not found (might exist) | Return `null` | "Not found" is valid answer |
+| Resource not found (must exist) | `throw` | Contract violation |
+| Optional feature failed | Catch and continue | Should not break main flow |
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="A function receives null when it expected an object. This is:"
+  options={[
+    "Always an operational error",
+    "Always a programming error",
+    "Depends on whether null is a valid input per the function's contract",
+    "Should be silently ignored"
+  ]}
+  correct={2}
+/>
+
+<MultipleChoice
+  question="What does 'fail fast' mean?"
+  options={[
+    "Code should execute as quickly as possible",
+    "Check preconditions early and fail immediately at the source with clear errors",
+    "Catch all errors and continue execution",
+    "Avoid using try/catch entirely"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="The ___ block always runs, whether or not an error occurred."
+  answer="finally"
+  fuzzyThreshold={0}
+/>
+
+<MultipleChoice
+  question="When should errors be caught?"
+  options={[
+    "As close to the throw as possible",
+    "At the top level only",
+    "At the level that can meaningfully handle them",
+    "Never - let all errors crash the program"
+  ]}
+  correct={2}
+/>
+
+<MultipleChoice
+  question="What does user?.address return if user is null?"
+  options={[
+    "Throws an error",
+    "Returns undefined",
+    "Returns null",
+    "Returns the string 'null'"
+  ]}
+  correct={1}
+/>
+
+## Try It Yourself
+
+Practice error handling:
+
+<Exercise id="pm-error-handling" />
+
+## Summary
+
+Errors are a design concern, not an afterthought. You learned:
+
+- **Functions as contracts**: Preconditions, postconditions, invariants
+- **Three error types**: Programming errors (bugs), operational errors (environment), user errors (input)
+- **Fail fast**: Validate preconditions immediately, fail at the source
+- **Error boundaries**: Catch at the level that can meaningfully handle
+- **Custom error types**: Communicate intent precisely
+- **Never swallow errors**: Handle, transform, or propagate—never ignore
+- **Error messages**: Answer what happened, what was expected, what was received
+- **Result pattern**: Explicit error handling as an alternative to exceptions
+- **Modern operators**: Optional chaining `?.` and nullish coalescing `??`
+
+The goal is not to prevent all errors—that is impossible. The goal is to make errors visible, informative, and recoverable. When your error handling is solid, bugs are caught where they originate, operational failures degrade gracefully, and users get helpful feedback.
+
+Next, we explore systematic debugging techniques—how to find and fix problems when errors do occur.

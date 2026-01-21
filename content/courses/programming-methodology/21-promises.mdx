@@ -1,0 +1,641 @@
+# Promises
+
+## The Problem Promises Solve
+
+Recall the callback pattern from the previous lesson:
+
+```javascript
+fetchUser(id, (err, user) => {
+  if (err) return handleError(err);
+  fetchPosts(user.id, (err, posts) => {
+    if (err) return handleError(err);
+    // ... more nesting
+  });
+});
+```
+
+The deeper problem isn't just nesting. It's **inversion of control**. When you pass a callback to `fetchUser`, you're handing your continuation—what happens next—to code you don't control. Will it call your callback once? Twice? Never? At what time? You've given up control.
+
+**Promises invert the inversion.** Instead of giving someone your callback and hoping they call it correctly, you receive a **receipt**—the Promise—that you control. You decide when and how to attach handlers. The Promise guarantees:
+
+1. Handlers will be called **at most once**
+2. Handlers will always run **asynchronously** (even if the Promise is already settled)
+3. The settled value is **immutable**—once resolved, forever resolved
+
+This is the fundamental insight: Promises give you back control over your own continuations.
+
+## The Promise Mental Model
+
+Think of a Promise as a **container for a future value**. Like a shipping tracking number—you have the receipt immediately, even though the package hasn't arrived.
+
+```javascript
+// You get the Promise immediately
+const promise = fetchUser(1);
+
+// The value arrives later
+// But you have the receipt NOW and can decide what to do with it
+```
+
+A Promise is always in one of three **states**:
+
+| State | Meaning | Transitions To |
+|-------|---------|----------------|
+| **Pending** | Waiting for result | Fulfilled OR Rejected |
+| **Fulfilled** | Has a value | Nothing (terminal) |
+| **Rejected** | Has an error | Nothing (terminal) |
+
+Once a Promise **settles** (fulfilled or rejected), it stays that way forever. This immutability is a feature—you can attach handlers at any time and get the same value.
+
+```javascript
+const p = Promise.resolve(42);
+
+// Even 5 seconds later, you get the same value
+setTimeout(() => {
+  p.then(x => console.log(x));  // 42
+}, 5000);
+```
+
+## Creating Promises
+
+The `Promise` constructor takes an **executor function** that receives `resolve` and `reject`:
+
+```javascript
+const promise = new Promise((resolve, reject) => {
+  // This code runs IMMEDIATELY (Promises are eager)
+
+  setTimeout(() => {
+    const success = Math.random() > 0.5;
+    if (success) {
+      resolve("It worked!");     // Fulfill with a value
+    } else {
+      reject(new Error("It failed"));  // Reject with an error
+    }
+  }, 1000);
+});
+```
+
+**Key insight**: The executor runs **immediately**. Promises are eager, not lazy. The moment you write `new Promise(...)`, the executor is already running.
+
+```javascript
+// This prints "Running!" immediately, not when you call .then()
+const p = new Promise(resolve => {
+  console.log("Running!");
+  resolve(42);
+});
+// Output: Running!
+```
+
+## Consuming Promises: then, catch, finally
+
+### The .then() Method
+
+`.then()` attaches a handler that runs when the Promise fulfills:
+
+```javascript
+const promise = fetchData();
+
+promise.then((result) => {
+  console.log("Success:", result);
+});
+```
+
+**Critical rule**: `.then()` handlers always run **asynchronously**, even for already-settled Promises:
+
+```javascript
+console.log("1");
+Promise.resolve("2").then(x => console.log(x));
+console.log("3");
+
+// Output: 1, 3, 2  (not 1, 2, 3!)
+```
+
+Why? Consistency. If `.then()` sometimes ran synchronously (for settled Promises) and sometimes asynchronously (for pending ones), your code would have unpredictable behavior. The language guarantees asynchronous execution always.
+
+### The .catch() Method
+
+`.catch()` handles rejections:
+
+```javascript
+fetchData()
+  .then((data) => {
+    console.log("Success:", data);
+  })
+  .catch((error) => {
+    console.log("Error:", error.message);
+  });
+```
+
+`.catch(fn)` is just shorthand for `.then(undefined, fn)`.
+
+### The .finally() Method
+
+`.finally()` runs regardless of outcome—perfect for cleanup:
+
+```javascript
+showLoadingSpinner();
+
+fetchData()
+  .then((data) => displayData(data))
+  .catch((error) => showError(error))
+  .finally(() => hideLoadingSpinner());  // Always runs
+```
+
+## Promise Chaining: The Transformative Idea
+
+Here's the key insight that makes Promises powerful: **`.then()` returns a new Promise**.
+
+This enables chaining—each step transforms the value for the next:
+
+```javascript
+fetchUser(userId)
+  .then((user) => {
+    console.log("Got user:", user.name);
+    return fetchPosts(user.id);  // Return a Promise
+  })
+  .then((posts) => {
+    console.log("Got posts:", posts.length);
+    return fetchComments(posts[0].id);
+  })
+  .then((comments) => {
+    console.log("Got comments:", comments.length);
+  })
+  .catch((error) => {
+    // Catches error from ANY step above
+    console.log("Error:", error.message);
+  });
+```
+
+### The Flatten Rule
+
+What happens if you return a Promise from `.then()`? It **automatically unwraps**:
+
+```javascript
+// These two are equivalent:
+
+Promise.resolve(1)
+  .then(x => Promise.resolve(x + 1))
+  .then(y => console.log(y));  // 2
+
+Promise.resolve(1)
+  .then(x => x + 1)
+  .then(y => console.log(y));  // 2
+```
+
+Whether you return a plain value or a Promise, the next `.then()` receives the **unwrapped value**, not a Promise. This is why chaining works so cleanly—you never have to deal with "a Promise of a Promise."
+
+### Returning Values vs. Returning Promises
+
+```javascript
+// Return a plain value: immediately available
+.then(user => user.name)  // Next .then gets the string
+
+// Return a Promise: chain waits for it
+.then(user => fetchPosts(user.id))  // Next .then gets posts array
+
+// Return nothing: next .then gets undefined
+.then(user => { console.log(user); })  // Next .then gets undefined
+```
+
+## Error Propagation
+
+Errors propagate through Promise chains until caught:
+
+```javascript
+fetchUser(1)
+  .then(user => {
+    throw new Error("Something went wrong");  // Error thrown here
+  })
+  .then(result => {
+    console.log("This never runs");  // Skipped!
+  })
+  .then(result => {
+    console.log("This never runs either");  // Skipped!
+  })
+  .catch(error => {
+    console.log("Caught:", error.message);  // Catches the error
+  });
+```
+
+Errors "fall through" `.then()` handlers until they hit a `.catch()`. This is similar to how exceptions bubble up through function calls.
+
+### Recovering from Errors
+
+You can recover mid-chain by returning a value from `.catch()`:
+
+```javascript
+fetchUser(1)
+  .then(user => {
+    throw new Error("Oops");
+  })
+  .catch(error => {
+    console.log("Recovering...");
+    return { name: "Default User" };  // Provide a fallback
+  })
+  .then(user => {
+    console.log(user.name);  // "Default User" - chain continues!
+  });
+```
+
+### Re-throwing Errors
+
+To handle an error but still fail the chain, re-throw:
+
+```javascript
+fetchData()
+  .catch(error => {
+    logError(error);  // Log it
+    throw error;      // Re-throw to fail the chain
+  })
+  .then(data => {
+    // This won't run if there was an error
+  });
+```
+
+## Promisifying Callbacks
+
+Wrap callback-based code in Promises to use them in chains:
+
+```javascript
+import { readFile } from "fs";
+
+function readFilePromise(path) {
+  return new Promise((resolve, reject) => {
+    readFile(path, "utf-8", (error, content) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(content);
+      }
+    });
+  });
+}
+
+// Now it chains beautifully
+readFilePromise("./config.json")
+  .then(content => JSON.parse(content))
+  .then(config => console.log(config.version))
+  .catch(error => console.log("Error:", error.message));
+```
+
+Most modern APIs return Promises natively. Node.js even provides `fs/promises`:
+
+```javascript
+import { readFile } from "fs/promises";
+
+// Already returns a Promise
+readFile("./data.txt", "utf-8")
+  .then(content => console.log(content));
+```
+
+## Promise Combinators
+
+When you have multiple Promises, these static methods coordinate them.
+
+### Promise.all: Wait for All (Fail Fast)
+
+```javascript
+const promise1 = fetchUser(1);
+const promise2 = fetchUser(2);
+const promise3 = fetchUser(3);
+
+Promise.all([promise1, promise2, promise3])
+  .then((users) => {
+    // users is [user1, user2, user3] - same order as input!
+    console.log("All users:", users);
+  })
+  .catch((error) => {
+    // Rejects as soon as ANY promise rejects
+    console.log("One failed:", error.message);
+  });
+```
+
+**Key behavior**: If any Promise rejects, `Promise.all` rejects immediately—even if others are still pending. The other Promises keep running (they're not cancelled), but their results are ignored.
+
+Use `Promise.all` when you need **all** results and **any** failure is fatal.
+
+### Promise.allSettled: Wait for All (No Fail Fast)
+
+```javascript
+const promises = [
+  Promise.resolve("success"),
+  Promise.reject(new Error("failed")),
+  Promise.resolve("another success")
+];
+
+Promise.allSettled(promises).then((results) => {
+  // results is an array of outcome objects
+  results.forEach((result, index) => {
+    if (result.status === "fulfilled") {
+      console.log(`${index}: ${result.value}`);
+    } else {
+      console.log(`${index}: ${result.reason.message}`);
+    }
+  });
+});
+// 0: success
+// 1: failed
+// 2: another success
+```
+
+Use `Promise.allSettled` when you want to know what happened to **each** Promise, regardless of success or failure.
+
+### Promise.race: First to Settle
+
+```javascript
+const slow = new Promise(resolve => setTimeout(() => resolve("slow"), 2000));
+const fast = new Promise(resolve => setTimeout(() => resolve("fast"), 100));
+
+Promise.race([slow, fast]).then((result) => {
+  console.log(result);  // "fast"
+});
+```
+
+Practical use—implementing timeouts:
+
+```javascript
+function withTimeout(promise, ms) {
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("Timeout")), ms)
+  );
+  return Promise.race([promise, timeout]);
+}
+
+// Fetch with 5-second timeout
+withTimeout(fetchData(), 5000)
+  .then(data => console.log(data))
+  .catch(err => console.log(err.message));  // "Timeout" or actual error
+```
+
+### Promise.any: First to Fulfill
+
+```javascript
+const promises = [
+  Promise.reject(new Error("fail 1")),
+  Promise.resolve("success!"),
+  Promise.reject(new Error("fail 2"))
+];
+
+Promise.any(promises).then((result) => {
+  console.log(result);  // "success!"
+});
+```
+
+`Promise.any` ignores rejections unless **all** Promises reject (then it throws `AggregateError`).
+
+## The Event Loop: How Promises Execute
+
+Understanding **when** Promise handlers run is crucial for debugging async code.
+
+JavaScript has a single thread and an **event loop**. Work is queued in two priority levels:
+
+1. **Microtasks** (high priority): Promise handlers, `queueMicrotask()`
+2. **Macrotasks** (lower priority): `setTimeout`, `setInterval`, I/O
+
+After each piece of synchronous code finishes, the event loop:
+1. Drains **all** microtasks (including new ones added during draining)
+2. Runs **one** macrotask
+3. Repeats
+
+```javascript
+console.log("1");
+
+setTimeout(() => console.log("2"), 0);  // Macrotask
+
+Promise.resolve().then(() => console.log("3"));  // Microtask
+
+console.log("4");
+
+// Output: 1, 4, 3, 2
+```
+
+Why does "3" print before "2" even though both have 0 delay? Promise handlers (microtasks) always run before timers (macrotasks).
+
+This matters when you're debugging timing issues or wondering why code runs in a particular order.
+
+## Common Patterns
+
+### Pattern 1: Parallel vs Sequential
+
+```javascript
+// PARALLEL: All requests start at once
+async function getParallel() {
+  const [a, b, c] = await Promise.all([
+    fetchA(),
+    fetchB(),
+    fetchC()
+  ]);
+  return { a, b, c };
+}
+
+// SEQUENTIAL: Each waits for the previous
+async function getSequential() {
+  const a = await fetchA();
+  const b = await fetchB();
+  const c = await fetchC();
+  return { a, b, c };
+}
+```
+
+Use parallel when requests are independent. Use sequential when each depends on the previous.
+
+### Pattern 2: Retry with Backoff
+
+```javascript
+function retry(fn, maxAttempts = 3, delay = 1000) {
+  return fn().catch(error => {
+    if (maxAttempts <= 1) throw error;
+    return new Promise(resolve =>
+      setTimeout(resolve, delay)
+    ).then(() => retry(fn, maxAttempts - 1, delay * 2));
+  });
+}
+
+// Usage
+retry(() => fetchData())
+  .then(data => console.log(data))
+  .catch(err => console.log("All retries failed"));
+```
+
+### Pattern 3: Cache Promises, Not Values
+
+```javascript
+const cache = new Map();
+
+function fetchUserCached(id) {
+  if (!cache.has(id)) {
+    // Cache the Promise itself, not the resolved value
+    cache.set(id, fetchUser(id));
+  }
+  return cache.get(id);
+}
+
+// Multiple calls return the SAME Promise
+fetchUserCached(1).then(user => console.log(user));
+fetchUserCached(1).then(user => console.log(user));  // No second network request
+```
+
+Caching the Promise (not the value) means concurrent requests share one network call.
+
+## Best Practices
+
+### Always Handle Rejections
+
+```javascript
+// BAD: unhandled rejection
+fetchData().then(process);
+
+// GOOD: always catch
+fetchData().then(process).catch(handleError);
+```
+
+Unhandled rejections are like uncaught exceptions—they indicate bugs. Modern runtimes warn or crash on unhandled rejections.
+
+### Keep Chains Flat
+
+```javascript
+// BAD: nested chains (you're back to callback hell)
+fetchUser()
+  .then(user => {
+    return fetchPosts(user.id)
+      .then(posts => {
+        return fetchComments(posts[0].id)
+          .then(comments => {
+            // deeply nested
+          });
+      });
+  });
+
+// GOOD: flat chain
+fetchUser()
+  .then(user => fetchPosts(user.id))
+  .then(posts => fetchComments(posts[0].id))
+  .then(comments => { /* flat */ });
+```
+
+### Don't Wrap Promises in Promises
+
+```javascript
+// BAD: unnecessary wrapping
+function getUser() {
+  return new Promise((resolve, reject) => {
+    fetchUser().then(resolve).catch(reject);
+  });
+}
+
+// GOOD: just return the Promise
+function getUser() {
+  return fetchUser();
+}
+```
+
+### Don't Use Promises for Synchronous Code
+
+```javascript
+// BAD: Promise for sync operation
+function double(x) {
+  return new Promise(resolve => resolve(x * 2));
+}
+
+// GOOD: just return the value
+function double(x) {
+  return x * 2;
+}
+```
+
+### Use Promise.resolve for Consistency
+
+```javascript
+// When you might return sync or async
+function getData(useCache) {
+  if (useCache && cache.has("data")) {
+    return Promise.resolve(cache.get("data"));  // Wrap sync value
+  }
+  return fetchData();  // Already a Promise
+}
+
+// Caller always gets a Promise
+getData(true).then(data => console.log(data));
+```
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What are the three states of a Promise?"
+  options={[
+    "Start, middle, end",
+    "Pending, fulfilled, rejected",
+    "Open, closed, error",
+    "Waiting, running, done"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="Promise.___ runs multiple Promises in parallel and waits for all to complete."
+  answer="all"
+  fuzzyThreshold={0}
+/>
+
+<MultipleChoice
+  question="What happens if any Promise in Promise.all rejects?"
+  options={[
+    "The other Promises are cancelled",
+    "The whole Promise.all rejects immediately",
+    "Only the rejected Promise is returned",
+    "Nothing, it continues with the successful ones"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What does this code print?"
+  codeBlock={`console.log("A");
+Promise.resolve().then(() => console.log("B"));
+console.log("C");`}
+  options={[
+    "A, B, C",
+    "A, C, B",
+    "B, A, C",
+    "The order is random"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="Why do Promise handlers (.then/.catch) always run asynchronously, even for already-settled Promises?"
+  options={[
+    "To make them slower for fairness",
+    "Because the spec was written that way randomly",
+    "To ensure consistent, predictable execution order",
+    "Because JavaScript is single-threaded"
+  ]}
+  correct={2}
+/>
+
+## Try It Yourself
+
+Practice Promises:
+
+<Exercise id="pm-promises" />
+
+## Key Takeaways
+
+**The mental model matters more than the syntax.** Here's what to internalize:
+
+1. **Promises restore control.** Unlike callbacks where you hand off your continuation, Promises give you a receipt. You decide when and how to react.
+
+2. **Settled means forever.** Once a Promise resolves or rejects, that result is immutable. This makes them safe to pass around and attach multiple handlers to.
+
+3. **Handlers are always async.** Even `Promise.resolve(42).then(fn)` runs `fn` asynchronously. This consistency prevents timing bugs.
+
+4. **Chains flatten automatically.** Returning a Promise from `.then()` unwraps it. You never deal with "a Promise of a Promise."
+
+5. **Errors propagate until caught.** Like exceptions, rejections flow through the chain until a `.catch()` handles them.
+
+6. **Microtasks before macrotasks.** Promise handlers run before `setTimeout` callbacks. This is the event loop priority.
+
+## What's Next
+
+Promises are powerful but chains can get verbose. The next lesson introduces `async`/`await`—syntactic sugar that makes async code read like synchronous code while keeping all the Promise semantics you just learned.
+
+`async`/`await` is just Promises underneath. Everything in this lesson—states, chaining, error propagation, combinators—still applies. You're not learning something new; you're learning a cleaner syntax for what you already know.

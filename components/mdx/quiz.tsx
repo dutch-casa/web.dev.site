@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "motion/react"
 import { cn } from "@/lib/utils"
 import { fuzzyMatch } from "@/lib/fuzzy-match"
 import { useControllableState, type Setter } from "@/lib/use-controllable-state"
-import { ScaleIn, Expand } from "@/lib/scale-in"
+import { Expand } from "@/lib/scale-in"
 import {
   IconCheck,
   IconX,
@@ -197,6 +197,7 @@ type FillBlankProps = {
 
 export function FillBlank({ question, answer, fuzzyThreshold = 2, onStateChange }: FillBlankProps) {
   const [input, setInput] = useState("")
+  const [isExactMatch, setIsExactMatch] = useState(false)
   const [state, setState] = useControllableState<QuizState>({
     defaultProp: "unanswered",
     onChange: onStateChange,
@@ -205,7 +206,9 @@ export function FillBlank({ question, answer, fuzzyThreshold = 2, onStateChange 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     if (state !== "unanswered" || !input.trim()) return
-    const isCorrect = fuzzyMatch(input, answer, fuzzyThreshold)
+    const exact = input.trim().toLowerCase() === answer.trim().toLowerCase()
+    const isCorrect = exact || fuzzyMatch(input, answer, fuzzyThreshold)
+    setIsExactMatch(exact)
     setState(isCorrect ? "correct" : "incorrect")
   }, [input, answer, fuzzyThreshold, state, setState])
 
@@ -258,7 +261,16 @@ export function FillBlank({ question, answer, fuzzyThreshold = 2, onStateChange 
           {(state === "correct" || state === "override") ? (
             <>
               <IconCheck className="mt-0.5 size-4 shrink-0" />
-              <span>Correct!</span>
+              {isExactMatch || state === "override" ? (
+                <span>Correct!</span>
+              ) : (
+                <div>
+                  <span>Close enough!</span>
+                  <span className="mt-1.5 block text-muted-foreground">
+                    Answer: <code className="rounded-lg bg-muted px-2 py-0.5">{answer}</code>
+                  </span>
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -285,7 +297,7 @@ export function FillBlank({ question, answer, fuzzyThreshold = 2, onStateChange 
 type ShortAnswerProps = {
   question: string
   hint?: string
-  answer?: string
+  answer: string
   onStateChange?: (state: QuizState) => void
 }
 
@@ -338,12 +350,10 @@ export function ShortAnswer({ question, hint, answer, onStateChange }: ShortAnsw
 
       <Expand show={state === "incorrect"}>
         <div className="space-y-4 pt-4">
-          {answer && (
-            <div className="rounded-xl border border-muted-foreground/20 bg-muted/30 p-4">
-              <p className="text-sm font-medium text-muted-foreground mb-1">Answer:</p>
-              <p className="text-sm">{answer}</p>
-            </div>
-          )}
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+            <p className="text-xs font-medium text-primary/70 uppercase tracking-wide mb-2">Expected Answer</p>
+            <p className="text-sm leading-relaxed">{answer}</p>
+          </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm text-muted-foreground">How did you do?</span>

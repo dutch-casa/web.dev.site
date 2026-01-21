@@ -1,0 +1,432 @@
+# Algorithm Complexity
+
+Every algorithm has a cost. Complexity analysis is the science of predicting that cost *before* your code runs on real data. This skill separates programmers who guess from programmers who know.
+
+## The Fundamental Question
+
+You write a function. It works on 100 items. Will it work on 1 million items?
+
+This is not a theoretical concern. Real systems process:
+- Millions of database records
+- Billions of log entries
+- Trillions of network packets
+
+If your algorithm's cost grows faster than your data, you will hit a wall. Complexity analysis tells you where that wall is.
+
+## Thinking in Orders of Magnitude
+
+Professional programmers think in powers of 10:
+
+| Items | Description |
+|-------|-------------|
+| 10^1 | Small test data |
+| 10^3 | Local development |
+| 10^6 | Production database |
+| 10^9 | Big data / search engines |
+| 10^12 | Large-scale analytics |
+
+An algorithm that feels "a bit slow" at 1,000 items may be completely unusable at 1,000,000 items. Complexity analysis predicts this.
+
+## Big-O: The Language of Scalability
+
+Big-O notation describes how an algorithm's resource usage (time or space) grows as input size grows. We write O(f(n)) where n is the input size and f(n) describes the growth rate.
+
+**Key insight:** Big-O ignores constant factors and focuses on the *shape* of growth. We care about whether something grows linearly, quadratically, or exponentially - not whether it takes 2 milliseconds or 5 milliseconds on small input.
+
+### The Major Complexity Classes
+
+```
+O(1)      - Constant     : Same cost regardless of input size
+O(log n)  - Logarithmic  : Cost grows slowly, even for huge inputs
+O(n)      - Linear       : Cost grows proportionally with input
+O(n log n)- Linearithmic : Slightly worse than linear, best for comparison sorting
+O(n^2)    - Quadratic    : Cost explodes; avoid for large data
+O(2^n)    - Exponential  : Only viable for tiny inputs (n < 30)
+```
+
+### Why These Classes Matter
+
+For n = 1,000,000 (one million items):
+
+| Complexity | Operations | If 1 op = 1 microsecond |
+|------------|------------|-------------------------|
+| O(1) | 1 | 1 microsecond |
+| O(log n) | 20 | 20 microseconds |
+| O(n) | 1,000,000 | 1 second |
+| O(n log n) | 20,000,000 | 20 seconds |
+| O(n^2) | 1,000,000,000,000 | 11.5 days |
+| O(2^n) | Uncomputable | Heat death of universe |
+
+**This is the lesson:** The difference between O(n) and O(n^2) is not "twice as slow." It's the difference between *works* and *doesn't work*.
+
+## Analyzing Code
+
+### Step 1: Identify the Input Size
+
+What is "n"? Usually it's:
+- Array length
+- String length
+- Number of items in a collection
+- Size of input data
+
+### Step 2: Count Operations as Functions of n
+
+#### O(1) - Constant Time
+
+Operations that don't depend on input size:
+
+```javascript
+function getFirst(arr) {
+  return arr[0];  // Always one operation, regardless of arr.length
+}
+
+function accessByIndex(arr, i) {
+  return arr[i];  // Array indexing is O(1) in most languages
+}
+```
+
+Why O(1)? The array stores memory addresses. Accessing index `i` means jumping to `start + (i * element_size)`. No iteration needed.
+
+#### O(n) - Linear Time
+
+A single pass through the data:
+
+```javascript
+function sum(arr) {
+  let total = 0;
+  for (const num of arr) {  // Visits each element once
+    total += num;           // O(1) per element
+  }
+  return total;
+}
+// n elements * O(1) work = O(n) total
+```
+
+#### O(n^2) - Quadratic Time
+
+Nested iteration over the data:
+
+```javascript
+function hasDuplicate(arr) {
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = i + 1; j < arr.length; j++) {
+      if (arr[i] === arr[j]) return true;
+    }
+  }
+  return false;
+}
+// Each of n elements compared to (roughly) n others: O(n^2)
+```
+
+<Warning>
+Quadratic algorithms are a common source of production outages. Code that runs fine in development (n=100) can bring servers down in production (n=100,000).
+</Warning>
+
+#### O(log n) - Logarithmic Time
+
+Algorithms that repeatedly divide the problem in half:
+
+```javascript
+function binarySearch(sortedArr, target) {
+  let left = 0;
+  let right = sortedArr.length - 1;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+    if (sortedArr[mid] === target) return mid;
+    if (sortedArr[mid] < target) {
+      left = mid + 1;   // Eliminate left half
+    } else {
+      right = mid - 1;  // Eliminate right half
+    }
+  }
+  return -1;
+}
+```
+
+**Why logarithmic?** Each step eliminates half the remaining elements:
+
+```
+1,000,000 → 500,000 → 250,000 → 125,000 → ... → 1
+            (about 20 steps)
+```
+
+The logarithm (base 2) answers: "How many times can I halve n before reaching 1?"
+
+```
+log₂(1,000,000) ≈ 20
+```
+
+Binary search on a billion items takes only 30 comparisons.
+
+## Best, Worst, and Average Case
+
+Most algorithms don't have a single complexity - it depends on the input:
+
+```javascript
+function linearSearch(arr, target) {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] === target) return i;
+  }
+  return -1;
+}
+```
+
+- **Best case:** Target is first element. O(1).
+- **Worst case:** Target is last or absent. O(n).
+- **Average case:** Target is somewhere in the middle. O(n/2) = O(n).
+
+<Tip>
+When someone says "this algorithm is O(n)", they usually mean worst case. Always clarify if it matters.
+</Tip>
+
+## Simplification Rules
+
+Big-O focuses on dominant behavior as n grows large.
+
+### Rule 1: Drop Constants
+
+```javascript
+function twoPassSum(arr) {
+  let sum1 = 0, sum2 = 0;
+  for (const x of arr) sum1 += x;  // n operations
+  for (const x of arr) sum2 += x;  // n operations
+  return sum1 + sum2;
+}
+// 2n operations → O(n)
+```
+
+Why drop constants? Because O(2n) and O(n) have the same *shape* - both are straight lines. As n grows, the difference between them becomes irrelevant compared to the difference between O(n) and O(n^2).
+
+### Rule 2: Keep Only the Dominant Term
+
+```javascript
+function mixedComplexity(arr) {
+  // O(n^2) section
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = 0; j < arr.length; j++) {
+      doSomething(arr[i], arr[j]);
+    }
+  }
+  // O(n) section
+  for (const x of arr) {
+    doSomethingElse(x);
+  }
+}
+// n^2 + n → O(n^2)
+```
+
+Why? For large n, the n^2 term dominates completely:
+- n = 1000: n^2 = 1,000,000, n = 1,000. The n is just 0.1% of total.
+- n = 10,000: n^2 = 100,000,000, n = 10,000. The n is 0.01%.
+
+## Space Complexity
+
+Algorithms use memory too. Analyze it the same way:
+
+```javascript
+// O(1) space - fixed memory regardless of input
+function sum(arr) {
+  let total = 0;  // One variable
+  for (const num of arr) {
+    total += num;
+  }
+  return total;
+}
+
+// O(n) space - memory proportional to input
+function reverse(arr) {
+  const result = [];  // Grows to n elements
+  for (let i = arr.length - 1; i >= 0; i--) {
+    result.push(arr[i]);
+  }
+  return result;
+}
+
+// O(1) space version
+function reverseInPlace(arr) {
+  let left = 0, right = arr.length - 1;
+  while (left < right) {
+    [arr[left], arr[right]] = [arr[right], arr[left]];
+    left++;
+    right--;
+  }
+  return arr;
+}
+```
+
+Space-time tradeoffs are common. Caching (memoization) trades O(n) space for better time complexity.
+
+## Amortized Analysis
+
+Some operations are usually fast but occasionally expensive. Amortized analysis considers the average cost over many operations.
+
+**Example: Dynamic arrays**
+
+When you `push` to a JavaScript array:
+- Usually O(1): Just add to the end.
+- Occasionally O(n): Array is full, must allocate new space and copy everything.
+
+But the expensive operation happens so rarely (only when doubling the size) that the *amortized* cost is still O(1) per push.
+
+```javascript
+const arr = [];
+for (let i = 0; i < 1000000; i++) {
+  arr.push(i);  // O(1) amortized
+}
+// Total: O(n), not O(n^2)
+```
+
+**Why this matters:** Hash table operations are O(1) amortized. Understanding amortized analysis lets you trust that claim.
+
+## The Hidden Constants Warning
+
+Big-O hides constant factors. In practice, this matters:
+
+```javascript
+// O(n) with large constant
+function slowLinear(arr) {
+  for (const x of arr) {
+    // 1000 operations per element
+    for (let i = 0; i < 1000; i++) {
+      process(x);
+    }
+  }
+}
+
+// O(n^2) with tiny constant
+function fastQuadratic(arr) {
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = i + 1; j < arr.length; j++) {
+      // 1 simple comparison
+      if (arr[i] === arr[j]) return true;
+    }
+  }
+  return false;
+}
+```
+
+For small n, the "fast quadratic" beats the "slow linear". Big-O tells you what happens *as n grows large*, not what's fastest for your specific case.
+
+**Rule of thumb:** Trust Big-O for large-scale decisions. Profile for small-scale optimization.
+
+## Complexity Drives Data Structure Choice
+
+The complexity of your operations determines which data structure to use:
+
+| Operation | Array | Sorted Array | Hash Table | Balanced Tree |
+|-----------|-------|--------------|------------|---------------|
+| Access by index | O(1) | O(1) | N/A | N/A |
+| Search | O(n) | O(log n) | O(1)* | O(log n) |
+| Insert | O(1)* | O(n) | O(1)* | O(log n) |
+| Delete | O(n) | O(n) | O(1)* | O(log n) |
+
+*Amortized
+
+**This is why data structures matter.** If you're searching frequently, an unsorted array (O(n) per search) will kill performance. Switch to a hash table (O(1) per search) or balanced tree (O(log n) per search).
+
+## Practical Decision Making
+
+### Input Size Guidelines
+
+For modern computers (assuming simple operations):
+
+| Complexity | Practical Limit |
+|------------|-----------------|
+| O(n) | Billions |
+| O(n log n) | Hundreds of millions |
+| O(n^2) | ~10,000 (careful above 1,000) |
+| O(n^3) | ~1,000 |
+| O(2^n) | ~25-30 |
+| O(n!) | ~12 |
+
+### The Optimization Hierarchy
+
+1. **Choose the right algorithm.** Going from O(n^2) to O(n log n) beats any micro-optimization.
+2. **Choose the right data structure.** Wrong data structure = wrong complexity.
+3. **Profile before optimizing constants.** Measure, don't guess.
+
+### When O(n^2) is Fine
+
+Don't over-optimize. If n is always small:
+
+```javascript
+// Fine for small configs (n < 50)
+function findInConfig(config, key) {
+  for (const entry of config) {
+    if (entry.key === key) return entry.value;
+  }
+  return null;
+}
+```
+
+Premature optimization is real. But so is "my O(n^2) algorithm brought down production." Know your data.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="An algorithm takes 1 second for 1,000 items. If it's O(n^2), approximately how long for 10,000 items?"
+  options={[
+    "10 seconds (10x more items)",
+    "100 seconds (100x more operations)",
+    "2 seconds (slightly longer)",
+    "It depends on the machine"
+  ]}
+  correct={1}
+  explanation="Quadratic growth: 10x input size means 100x operations. The key insight is that O(n^2) doesn't scale gracefully."
+/>
+
+<MultipleChoice
+  question="Why do we drop constants in Big-O notation?"
+  options={[
+    "To make the math easier",
+    "Because constants don't affect correctness",
+    "Because the growth rate shape matters more than constant factors for large n",
+    "Because all constants are approximately equal"
+  ]}
+  correct={2}
+  explanation="Big-O captures how cost scales with input size. O(2n) and O(n) both grow linearly - the difference between them becomes irrelevant compared to O(n) vs O(n^2)."
+/>
+
+<FillBlank
+  question="Binary search is O(log n) because each step ___ the remaining search space."
+  answer="halves"
+  alternateAnswers={["halves", "divides in half", "cuts in half", "eliminates half of"]}
+/>
+
+<MultipleChoice
+  question="A function has O(n) best case and O(n^2) worst case. What should you assume when planning for production?"
+  options={[
+    "O(n) - use the best case",
+    "O(n^2) - plan for the worst",
+    "O(n^1.5) - average them",
+    "It doesn't matter for production"
+  ]}
+  correct={1}
+  explanation="Production systems must handle worst cases. Murphy's law applies to algorithms."
+/>
+
+## Try It Yourself
+
+<Exercise id="pm-complexity" />
+
+## Summary
+
+**What you learned:**
+- Complexity analysis predicts scalability before code runs
+- Big-O describes growth rate, ignoring constants
+- Key complexities: O(1), O(log n), O(n), O(n log n), O(n^2), O(2^n)
+- Best/worst/average cases can differ significantly
+- Space complexity matters too
+- Amortized analysis handles occasionally-expensive operations
+- Hidden constants mean Big-O isn't everything - profile for specifics
+
+**What changes your career:**
+- Think in orders of magnitude (10^3, 10^6, 10^9)
+- The difference between O(n) and O(n^2) is "works" vs "doesn't work"
+- Data structure choice is complexity choice
+- Always ask: "What happens when n gets big?"
+
+Understanding complexity is understanding *scale*. As you build larger systems, this skill becomes more valuable, not less. Master it now.
+
+Next, we explore sorting algorithms - a case study in complexity tradeoffs.

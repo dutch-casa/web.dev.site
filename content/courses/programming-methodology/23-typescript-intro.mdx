@@ -1,0 +1,652 @@
+# From JavaScript to TypeScript
+
+## The Central Insight
+
+Every function you write has a **contract**: assumptions about inputs, guarantees about outputs. In JavaScript, these contracts exist only in your head and maybe in comments. TypeScript makes contracts explicit and machine-checked.
+
+This is not about catching typos. It is about **encoding intent** so that:
+1. The compiler verifies your logic
+2. Other programmers (including future you) understand your intent
+3. Refactoring becomes safe because the compiler tells you what broke
+
+Consider a sorting function you wrote:
+
+```javascript
+function bubbleSort(arr) {
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = 0; j < arr.length - 1 - i; j++) {
+      if (arr[j] > arr[j + 1]) {
+        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+      }
+    }
+  }
+  return arr;
+}
+```
+
+What is the contract here? You *meant*: "give me an array of numbers, I'll sort it and return it." But JavaScript sees: "give me anything, I'll do... something."
+
+```javascript
+bubbleSort("hello");           // Iterates over characters, returns string
+bubbleSort([1, "two", 3]);     // Compares mixed types, unpredictable
+bubbleSort({ length: 3 });     // Has .length, so it "works"
+```
+
+The function assumes `arr` contains comparable numbers. This assumption is an **invariant** - a condition that must be true for the code to work correctly. JavaScript cannot enforce invariants. TypeScript can.
+
+## Static vs Dynamic Typing: The Fundamental Tradeoff
+
+Every programming language makes a choice about *when* to check types:
+
+| Approach | When Types Are Checked | Tradeoff |
+|----------|----------------------|----------|
+| **Dynamic** (JavaScript, Python) | Runtime - while executing | Flexible but errors appear late |
+| **Static** (TypeScript, Java) | Compile time - before running | Rigid but errors appear early |
+
+Dynamic typing is not "no types" - JavaScript has types (string, number, object). The difference is *when* violations are caught:
+
+```javascript
+// JavaScript: runs this line, then crashes
+const name = "Alice";
+console.log(name.toFixed(2));  // Runtime error: toFixed is not a function
+```
+
+```typescript
+// TypeScript: refuses to compile
+const name: string = "Alice";
+console.log(name.toFixed(2));  // Compile error: toFixed doesn't exist on string
+```
+
+<Tip>
+A bug caught at compile time costs minutes. A bug caught in production costs hours (or careers). Static typing front-loads the cost of correctness.
+</Tip>
+
+## Types as Documentation
+
+The deepest reason to use types: **they are documentation that cannot lie**.
+
+Comments can become stale. Documentation can drift from reality. But type annotations are checked by the compiler - if they are wrong, the code does not compile.
+
+```typescript
+// This comment might be wrong or outdated:
+// Returns the user's full name as a string
+
+// This type signature is always correct:
+function getFullName(user: User): string { ... }
+```
+
+When you read typed code, you know:
+- What inputs are expected
+- What output is guaranteed
+- What invariants the author assumed
+
+This matters more as codebases grow. In a 10-line script, you can hold everything in your head. In a 100,000-line codebase, types are how you understand code you did not write.
+
+## Your First Type Annotations
+
+In JavaScript, we write:
+
+```javascript
+function greet(name) {
+  return "Hello, " + name.toUpperCase();
+}
+
+greet(123);  // Runtime error! 123.toUpperCase is not a function
+```
+
+In TypeScript, we add type annotations:
+
+```typescript
+function greet(name: string): string {
+  return "Hello, " + name.toUpperCase();
+}
+
+greet(123);  // Compile error! Argument of type 'number' is not assignable to parameter of type 'string'
+```
+
+The syntax `: string` after `name` declares: "this parameter must be a string." The `: string` after the parentheses declares: "this function returns a string." These are the function's **contract**, and TypeScript enforces them.
+
+## Structural Typing: A Critical Difference
+
+TypeScript uses **structural typing** (also called "duck typing"). If it has the right shape, it is the right type:
+
+```typescript
+interface Point {
+  x: number;
+  y: number;
+}
+
+function distance(p: Point): number {
+  return Math.sqrt(p.x ** 2 + p.y ** 2);
+}
+
+// This object was never declared as Point, but it has x and y
+const myLocation = { x: 3, y: 4, name: "Home" };
+distance(myLocation);  // OK! Has the required shape
+```
+
+This is fundamentally different from **nominal typing** (Java, C#) where types must explicitly inherit or implement:
+
+```java
+// Java - nominal typing
+class MyLocation { int x; int y; String name; }
+Point p = new MyLocation();  // Error! MyLocation is not a Point
+```
+
+<Tip>
+Think of interfaces as describing what an object *can do*, not what it *is*. If an object has `.x` and `.y` properties that are numbers, it satisfies the `Point` interface - regardless of how it was created.
+</Tip>
+
+This has profound implications:
+- You can pass plain objects to typed functions
+- Third-party objects work if they have the right shape
+- You do not need complex inheritance hierarchies
+
+## Type Narrowing: TypeScript Tracks What You Know
+
+TypeScript follows your conditional logic and narrows types accordingly:
+
+```typescript
+function process(value: string | number | null) {
+  // Here, value could be string, number, or null
+
+  if (value === null) {
+    return "No value";
+    // After this return, null is eliminated
+  }
+
+  // Here, value is string | number
+
+  if (typeof value === "string") {
+    return value.toUpperCase();  // TypeScript knows: string
+  }
+
+  // Here, value must be number (only option left)
+  return value * 2;  // TypeScript knows: number
+}
+```
+
+This is called **control flow analysis**. The compiler understands that after checking `typeof value === "string"`, within that branch, `value` must be a string. This is not magic - it is logical deduction.
+
+The same works for discriminated unions:
+
+```typescript
+type Result =
+  | { status: "success"; data: string }
+  | { status: "error"; message: string };
+
+function handle(result: Result) {
+  if (result.status === "success") {
+    console.log(result.data);    // OK - TypeScript knows this branch has data
+  } else {
+    console.log(result.message); // OK - TypeScript knows this branch has message
+  }
+}
+```
+
+## The Basic Types
+
+```typescript
+// Primitives
+const name: string = "Alice";
+const age: number = 30;
+const isActive: boolean = true;
+
+// Arrays - two equivalent syntaxes
+const numbers: number[] = [1, 2, 3, 4, 5];
+const names: Array<string> = ["Alice", "Bob", "Carol"];
+
+// Objects with interfaces
+interface User {
+  name: string;
+  email: string;
+  age: number;
+  isAdmin?: boolean;  // ? means optional
+}
+
+const user: User = {
+  name: "Alice",
+  email: "alice@example.com",
+  age: 30
+  // isAdmin is optional, so we can omit it
+};
+```
+
+## Type Inference: Let TypeScript Work
+
+You do not need to annotate everything. TypeScript infers types from values:
+
+```typescript
+const message = "Hello";     // TypeScript infers: string
+const count = 42;            // TypeScript infers: number
+const active = true;         // TypeScript infers: boolean
+
+// Return types are inferred from what you return
+function multiply(a: number, b: number) {
+  return a * b;  // TypeScript infers return type: number
+}
+```
+
+**When to annotate explicitly:**
+- Function parameters (TypeScript cannot infer these)
+- When inference picks a type that is too wide or too narrow
+- Public API boundaries where clarity matters
+
+```typescript
+// Must annotate parameters - TypeScript has no way to infer them
+function greet(name: string): string {
+  return `Hello, ${name}!`;
+}
+
+// Inference picks 'string' but you want a literal type
+const status = "pending";  // type: string
+const status: "pending" = "pending";  // type: "pending" (literal)
+```
+
+## Union Types: Either/Or
+
+A union type allows multiple possibilities:
+
+```typescript
+type ID = string | number;
+
+function findUser(id: ID) {
+  // id could be string or number
+}
+
+findUser(123);      // OK
+findUser("abc");    // OK
+findUser(true);     // Error! boolean is not string | number
+```
+
+Unions are especially useful for nullable values:
+
+```typescript
+function findUser(id: string): User | null {
+  // Return the user if found, null if not
+}
+
+const user = findUser("123");
+// user is User | null - you must handle the null case
+if (user !== null) {
+  console.log(user.name);  // OK - TypeScript knows user is User here
+}
+```
+
+## Literal Types: Specific Values
+
+Types can be specific values, not just categories:
+
+```typescript
+type Direction = "north" | "south" | "east" | "west";
+
+function move(direction: Direction) {
+  console.log(`Moving ${direction}`);
+}
+
+move("north");  // OK
+move("up");     // Error! "up" is not assignable to Direction
+```
+
+This is powerful for modeling state machines, status codes, and configurations.
+
+Use `as const` to infer literal types from values:
+
+```typescript
+// Without as const - type is string[]
+const directions = ["north", "south"];
+
+// With as const - type is readonly ["north", "south"]
+const DIRECTIONS = ["north", "south", "east", "west"] as const;
+
+// Derive the union type from the array
+type Direction = typeof DIRECTIONS[number];  // "north" | "south" | "east" | "west"
+```
+
+## `never`: The Impossible Type
+
+The `never` type represents values that can never occur. It enables **exhaustiveness checking**:
+
+```typescript
+type Status = "pending" | "approved" | "rejected";
+
+function handleStatus(status: Status): string {
+  switch (status) {
+    case "pending":
+      return "Waiting...";
+    case "approved":
+      return "Approved!";
+    case "rejected":
+      return "Rejected.";
+    default:
+      // If we handled all cases, this line is unreachable
+      // TypeScript infers: status is never
+      const _exhaustive: never = status;
+      return _exhaustive;
+  }
+}
+```
+
+Now if someone adds a new status:
+
+```typescript
+type Status = "pending" | "approved" | "rejected" | "cancelled";  // Added!
+```
+
+The code fails to compile because `"cancelled"` is not handled:
+
+```
+Type 'string' is not assignable to type 'never'.
+```
+
+<Tip>
+Use `never` to make the compiler verify you handled all cases. When requirements change (new enum values, new union members), the compiler tells you everywhere that needs updating.
+</Tip>
+
+## `any` vs `unknown`: Escaping the Type System
+
+Sometimes you need to accept any type. TypeScript offers two options:
+
+```typescript
+// any - disables type checking entirely
+function dangerous(value: any) {
+  value.foo.bar.baz();  // No error! TypeScript trusts you blindly
+}
+
+// unknown - type-safe "any"
+function safe(value: unknown) {
+  value.foo;  // Error! Cannot access properties on unknown
+
+  // Must narrow first
+  if (typeof value === "object" && value !== null && "foo" in value) {
+    console.log(value.foo);  // OK after checking
+  }
+}
+```
+
+<Warning title="Avoid `any`">
+`any` defeats the purpose of TypeScript. It silences errors instead of fixing them. Use `unknown` when you genuinely do not know the type, then narrow it with type guards.
+</Warning>
+
+## Interfaces vs Type Aliases
+
+Both define object shapes. The difference is subtle:
+
+```typescript
+// Interface - use for object shapes, especially public APIs
+interface User {
+  name: string;
+  email: string;
+}
+
+// Interfaces can be extended
+interface Admin extends User {
+  permissions: string[];
+}
+
+// Interfaces can be "declaration merged" (augmented across files)
+interface User {
+  age: number;  // Now User has name, email, AND age
+}
+
+// Type alias - use for unions, intersections, mapped types
+type ID = string | number;
+
+type Point = {
+  x: number;
+  y: number;
+};
+
+// Types cannot be merged or extended with extends
+// But they support unions and intersections
+type Result = { success: true; data: string } | { success: false; error: string };
+```
+
+**Rule of thumb:** Use `interface` for object shapes, `type` for everything else.
+
+## Class Access Modifiers
+
+TypeScript adds visibility modifiers to class members:
+
+```typescript
+class BankAccount {
+  public owner: string;          // Accessible anywhere
+  private balance: number;       // Only accessible within this class
+  protected accountId: string;   // Accessible in this class and subclasses
+  readonly createdAt: Date;      // Can only be set in constructor
+
+  constructor(owner: string, initialBalance: number) {
+    this.owner = owner;
+    this.balance = initialBalance;
+    this.accountId = crypto.randomUUID();
+    this.createdAt = new Date();
+  }
+
+  public getBalance(): number {
+    return this.balance;
+  }
+
+  private logTransaction(amount: number): void {
+    console.log(`Transaction: ${amount}`);
+  }
+}
+
+const account = new BankAccount("Alice", 100);
+account.owner;        // OK - public
+account.balance;      // Error! private
+account.getBalance(); // OK - public method
+account.createdAt = new Date();  // Error! readonly
+```
+
+<Tip>
+TypeScript's `private` is **compile-time only**. At runtime, JavaScript can still access the property via `account["balance"]`. For true runtime privacy, use JavaScript's `#` syntax: `#balance`. Both are valid - TypeScript's is more convenient, JavaScript's is truly enforced.
+</Tip>
+
+### Parameter Properties: Shorthand Syntax
+
+Declare and assign in one step:
+
+```typescript
+class User {
+  constructor(
+    public name: string,
+    private email: string,
+    readonly id: number
+  ) {}
+  // TypeScript creates and assigns this.name, this.email, this.id automatically
+}
+
+// Equivalent to this verbose version:
+class User {
+  public name: string;
+  private email: string;
+  readonly id: number;
+
+  constructor(name: string, email: string, id: number) {
+    this.name = name;
+    this.email = email;
+    this.id = id;
+  }
+}
+```
+
+## Function Types and Callbacks
+
+Functions are first-class values. You can type them:
+
+```typescript
+// Inline function type
+function fetchData(callback: (result: string) => void): void {
+  callback("Data loaded");
+}
+
+// Named function type
+type Callback = (result: string) => void;
+function fetchData(callback: Callback): void {
+  callback("Data loaded");
+}
+
+// Function type for methods with multiple signatures
+type Comparator<T> = (a: T, b: T) => number;
+
+function sort<T>(arr: T[], compare: Comparator<T>): T[] {
+  return [...arr].sort(compare);
+}
+
+sort([3, 1, 2], (a, b) => a - b);  // [1, 2, 3]
+```
+
+## Putting It Together: A Real Example
+
+Here is how these concepts work together in realistic code:
+
+```typescript
+// 1. Define the domain with types
+interface Todo {
+  id: string;
+  title: string;
+  completed: boolean;
+  createdAt: Date;
+}
+
+type Filter = "all" | "active" | "completed";
+
+// 2. Functions with clear contracts
+function filterTodos(todos: Todo[], filter: Filter): Todo[] {
+  switch (filter) {
+    case "all":
+      return todos;
+    case "active":
+      return todos.filter(t => !t.completed);
+    case "completed":
+      return todos.filter(t => t.completed);
+    default:
+      // Exhaustiveness check - compiler catches missing cases
+      const _never: never = filter;
+      return _never;
+  }
+}
+
+// 3. API function with union return type
+type ApiResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
+async function fetchTodos(): Promise<ApiResult<Todo[]>> {
+  try {
+    const response = await fetch("/api/todos");
+    const data = await response.json();
+    return { success: true, data };
+  } catch (e) {
+    return { success: false, error: String(e) };
+  }
+}
+
+// 4. Using the API with type narrowing
+async function loadTodos() {
+  const result = await fetchTodos();
+
+  if (result.success) {
+    // TypeScript knows: result.data exists and is Todo[]
+    console.log(`Loaded ${result.data.length} todos`);
+  } else {
+    // TypeScript knows: result.error exists and is string
+    console.error(`Failed: ${result.error}`);
+  }
+}
+```
+
+Notice how the types guide the implementation:
+- `Filter` ensures we handle all filter cases
+- `ApiResult` forces callers to handle both success and failure
+- Type narrowing makes accessing the right properties safe
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What is the primary benefit of static typing?"
+  options={[
+    "Code runs faster",
+    "Errors are caught at compile time, before the code runs",
+    "You write less code",
+    "JavaScript compatibility"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What does TypeScript's structural typing mean?"
+  options={[
+    "Types must be declared with 'class'",
+    "Objects must inherit from the correct parent",
+    "If an object has the right shape (properties), it satisfies the type",
+    "All types must be structures"
+  ]}
+  correct={2}
+/>
+
+<FillBlank
+  question="The type ___ represents values that can never occur and enables exhaustiveness checking."
+  answer="never"
+  fuzzyThreshold={1}
+/>
+
+<MultipleChoice
+  question="What's the difference between 'any' and 'unknown'?"
+  options={[
+    "They are identical",
+    "'any' disables type checking; 'unknown' requires narrowing before use",
+    "'unknown' disables type checking; 'any' requires narrowing",
+    "'any' is for objects; 'unknown' is for primitives"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What does 'string | number' mean in TypeScript?"
+  options={[
+    "A string and a number combined",
+    "Either a string or a number",
+    "A string converted to number",
+    "An error"
+  ]}
+  correct={1}
+/>
+
+## Try It Yourself
+
+Practice converting JavaScript to TypeScript:
+
+<Exercise id="pm-typescript-intro" />
+
+## Summary
+
+You learned the foundational concepts that will shape how you think about code for years:
+
+**The Big Ideas:**
+- Types are **contracts** - machine-checked documentation of your intent
+- **Static typing** catches errors at compile time, not runtime
+- **Structural typing** cares about shape, not inheritance
+- **Type narrowing** lets TypeScript track what you know through control flow
+
+**The Core Types:**
+- Primitives: `string`, `number`, `boolean`
+- Collections: `T[]` or `Array<T>`
+- Objects: `interface` for shapes
+- Unions: `A | B` for either/or
+- Literals: `"north" | "south"` for specific values
+- `never`: for impossible cases and exhaustiveness
+- `unknown`: for safe "any type" handling
+- `any`: escape hatch (avoid it)
+
+**Practical Patterns:**
+- Use `as const` to preserve literal types
+- Use discriminated unions for type-safe state
+- Use `never` in `default` cases to catch missing handlers
+- Let TypeScript infer when it can; annotate when clarity matters
+
+**Class Modifiers:**
+- `public`, `private`, `protected`, `readonly`
+- Parameter properties for concise constructors
+
+Next, we explore **generics** - writing code that works with any type while remaining type-safe. This is where TypeScript's power truly shines.

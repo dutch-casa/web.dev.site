@@ -41,8 +41,11 @@ yarn-error.log*
 next-env.d.ts
 .claude
 .claude
-.claude
-.claude/tsc-cache/ses_456baabdcffeouiMCw55skftkw/affected-repos.txt
-.claude/tsc-cache/ses_456baabdcffeouiMCw55skftkw/edited-files.log
 .tldr
 .tldrignore
+.sisyphus
+.opencode
+.antigravity
+.code
+.cursor
+

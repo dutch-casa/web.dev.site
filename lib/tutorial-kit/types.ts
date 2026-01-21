@@ -92,6 +92,7 @@ export type TutorialState = Readonly<{
   terminal: TerminalState
   panels: PanelState
   expanded: boolean
+  showingSolution: boolean
 }>
 
 // ----------------------------------------------------------------------------
@@ -114,6 +115,7 @@ export type TutorialAction =
   | { readonly type: "SET_TERMINAL_RUNNING"; readonly running: boolean }
   | { readonly type: "TOGGLE_PANEL"; readonly panel: keyof PanelState }
   | { readonly type: "SET_EXPANDED"; readonly expanded: boolean }
+  | { readonly type: "TOGGLE_SOLUTION" }
   | { readonly type: "RESET" }
 
 // ----------------------------------------------------------------------------
@@ -147,6 +149,7 @@ export const initialTutorialState: TutorialState = {
   terminal: initialTerminalState,
   panels: initialPanelState,
   expanded: false,
+  showingSolution: false,
 }
 
 // ----------------------------------------------------------------------------
@@ -242,6 +245,9 @@ export function tutorialReducer(state: TutorialState, action: TutorialAction): T
 
     case "SET_EXPANDED":
       return { ...state, expanded: action.expanded }
+
+    case "TOGGLE_SOLUTION":
+      return { ...state, showingSolution: !state.showingSolution }
 
     case "RESET":
       return { ...initialTutorialState, config: state.config }

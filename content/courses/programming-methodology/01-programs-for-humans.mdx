@@ -1,0 +1,219 @@
+# Programs Are For Humans
+
+The goal of this course is not just to make programs that work. The goal is to make programs that *humans can understand*.
+
+This may surprise you. After all, computers run programs. Why should we care if humans understand them?
+
+## The Economics of Software
+
+Here is the uncomfortable truth about programming:
+
+**Writing code is cheap. Maintaining code is expensive.**
+
+When you write a function, you write it once. But that function will be read, debugged, extended, and modified for years. Studies of industrial software projects consistently find that maintenance costs exceed initial development costs by a factor of ten or more. Some estimates run as high as 15:1.
+
+This means that for every hour you spend writing code, you (or someone else) will spend ten to fifteen hours *reading and changing* it. If you optimize for writing speed at the expense of reading speed, you are optimizing for the 1 while ignoring the 10.
+
+Professional programmers spend 60-80% of their time reading code. Not writing. Reading. Understanding. Tracing. Debugging. If code is hard to understand, everything takes longer - not by a little, but by multiples.
+
+A program that works but is incomprehensible is a liability. A program that is clear and correct is an asset.
+
+## The Second Reader
+
+When you write code, think about who will read it.
+
+The first reader is you, six months from now, at 11 PM, trying to fix a bug before a deadline. You will have forgotten everything about why you wrote the code the way you did. You will stare at your own functions and wonder what you were thinking.
+
+The second reader is a colleague who has never seen your code before. They need to fix something, add a feature, or understand how your module works with theirs. They have no context. Everything you know about your code, they must learn by reading it.
+
+Write for these readers. They are real. They are suffering. Have mercy on them.
+
+## Your First Program
+
+The tradition in programming courses is to start with a program that displays "Hello, World!". Let us do that:
+
+```javascript
+console.log("Hello, World!");
+```
+
+`console.log` is a function that outputs text. In this case, it prints "Hello, World!" to the console.
+
+<Tip>
+The console is where programs can display information for debugging and logging. In our interactive environment, you will see the output below your code.
+</Tip>
+
+## Try It Yourself
+
+Write your first program in the exercise below:
+
+<Exercise id="pm-hello-world" />
+
+## Why Your Brain Needs Good Code
+
+There is a reason readable code matters, and it is not just aesthetics. It is cognitive science.
+
+Your working memory - the part of your brain that holds things while you think about them - can only hold about four items at once. When you read code, you are constantly loading things into working memory: what this variable holds, what that function returns, what state has changed.
+
+Unreadable code forces you to hold too many things in your head simultaneously. You read a line and think: "What is `x`? What did `f` return? What state changed before this?" Each question consumes a slot. Run out of slots, and you lose track. You have to re-read. You make mistakes.
+
+Readable code respects your cognitive limits. Good names let you understand a variable without tracing its origin. Small functions let you understand one piece without holding the whole system in your head. Clear structure shows you where to look without searching.
+
+This is not opinion. This is how human cognition works. Code that ignores these limits is fighting your brain.
+
+## The Four Principles of Readable Code
+
+### 1. Names Reveal Intent
+
+Compare these two versions:
+
+```javascript
+// Hard to understand - what is f? What is x?
+function f(x) {
+  return x * 1.1;
+}
+
+// Clear - the name tells you what happens
+function addTax(price) {
+  const TAX_RATE = 0.1;
+  return price * (1 + TAX_RATE);
+}
+```
+
+The second version tells you *what* it does without requiring you to figure it out. You do not need to trace the math to understand that this function adds tax to a price.
+
+Notice the named constant `TAX_RATE`. Instead of a magic number `1.1` that requires reverse-engineering ("why 1.1? is that a 10% tax? 11%?"), the constant documents its own meaning.
+
+**The test:** Can someone understand what this code does by reading the names alone? If they need to trace the implementation, the names are too weak.
+
+### 2. Code Should Be Obvious
+
+The best code does not need comments because its meaning is clear from the names and structure:
+
+```javascript
+// Bad: comment required because code is cryptic
+// Check if user can access premium content
+if (u.s === "p" || u.s === "e") { ... }
+
+// Good: code explains itself
+const isPremiumUser = user.subscription === "premium";
+const isEmployee = user.subscription === "employee";
+if (isPremiumUser || isEmployee) { ... }
+```
+
+Notice what happened in the good version. We introduced intermediate variables not because we needed them for computation, but because we needed them for *explanation*. The variable names `isPremiumUser` and `isEmployee` document the meaning of each check.
+
+This is a critical insight: variables and functions are not just for computation. They are for naming concepts. If you find yourself wanting to write a comment, ask: "Can I express this meaning with a name instead?"
+
+### 3. Functions Should Do One Thing
+
+A function named `calculateTotalAndSendEmail` is doing too much. Break it into `calculateTotal` and `sendReceipt`.
+
+This is not arbitrary. It connects to how humans solve problems: by decomposition. When you face a complex problem, you break it into sub-problems. Each sub-problem gets a name. Each name becomes a function.
+
+Good programs are built from small, named pieces that each do one job well. A function should do one thing, at one level of abstraction, with no surprises.
+
+**The test:** Can you describe what a function does without using the word "and"? If you say "it calculates the total *and* sends an email," it is doing two things.
+
+### 4. Avoid Surprises
+
+Your code should do what a reader expects from its name and context. If a function is named `getUser`, it should get a user. It should not delete files. It should not send emails. It should not modify global state.
+
+Surprises in code are expensive. Every surprise forces the reader to update their mental model. Every update risks introducing bugs when assumptions turn out to be wrong.
+
+**The test:** If someone reads only the function signature and call sites, will their assumptions about its behavior be correct?
+
+## The Computer Does Not Care
+
+The computer will run this:
+
+```javascript
+function a(b,c){let d=b+c;return d*d}
+```
+
+And this:
+
+```javascript
+function squareOfSum(firstNumber, secondNumber) {
+  const sum = firstNumber + secondNumber;
+  return sum * sum;
+}
+```
+
+Both produce exactly the same result. The computer does not care which you write. It does not reward clarity. It does not punish obscurity. It just executes.
+
+But notice the difference for a human reader. The first version requires you to trace through the code: "Okay, `d` is `b + c`, so... we return `d * d`... that is the square of the sum of the inputs." You had to *run the code in your head* to understand it.
+
+The second version is transparent. `squareOfSum` - oh, it squares a sum. `firstNumber`, `secondNumber` - the inputs. `sum` - their sum. `sum * sum` - squared. You understand it by reading the names, not by executing the logic.
+
+This is the difference between *imperative understanding* (tracing step by step) and *declarative understanding* (grasping from structure and names). Declarative understanding is faster, less error-prone, and scales to larger programs. Imperative understanding exhausts working memory and collapses under complexity.
+
+*You* will care about this, six months from now when you need to fix a bug at 11 PM. Your teammates will care when they inherit your code. The maintenance programmer who has never met you will care when your module breaks in production.
+
+Write for humans first. The computer will figure it out.
+
+## How This Course Works
+
+Each lesson contains:
+
+- **Explanations** of key concepts with examples
+- **Interactive exercises** where you write and run code
+- **Quizzes** to test your understanding
+- **Challenges** that extend what you have learned
+
+The exercises use a special environment that runs JavaScript and TypeScript directly in your browser. You can edit code, see results immediately, and experiment freely.
+
+## Getting Help
+
+If you get stuck:
+
+1. Read the error messages carefully - they often tell you exactly what went wrong
+2. Try to break the problem into smaller pieces
+3. Experiment in the console to understand how things work
+4. Remember: everyone makes mistakes while learning. It is normal.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="Why is code readability important?"
+  options={[
+    "It makes the computer run faster",
+    "Code is read more often than written",
+    "It reduces file size",
+    "It prevents all bugs"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="A function should do ___ thing."
+  answer="one"
+  fuzzyThreshold={0}
+/>
+
+## The Master Skill
+
+If there is one skill that separates great programmers from mediocre ones, it is *decomposition*: the ability to break a complex problem into smaller, named sub-problems.
+
+Every principle in this lesson is a consequence of decomposition:
+
+- **Names reveal intent** because each sub-problem gets a name.
+- **Functions do one thing** because each sub-problem becomes one function.
+- **Code is obvious** because the structure mirrors the problem structure.
+
+When you face a hard programming problem, do not try to solve it all at once. Break it into pieces. Name the pieces. Solve each piece. Combine the solutions.
+
+This is not just a programming skill. It is a thinking skill. The best programmers are not those who can hold the most complexity in their heads. They are those who can break complexity into pieces small enough that anyone could understand.
+
+You will practice this throughout the course. It is the most important thing you will learn.
+
+## Summary
+
+- **Maintenance dominates:** Code is read 10x more than written. Optimize for reading.
+- **Respect cognitive limits:** Your brain holds ~4 things at once. Good code does not exceed this.
+- **The second reader:** Write for yourself, confused, six months later.
+- **Names reveal intent:** The reader should understand without tracing logic.
+- **Functions do one thing:** If you need "and" to describe it, split it.
+- **No surprises:** Code should do what its name promises, nothing more.
+- **Decomposition is the master skill:** Break problems into named sub-problems.
+
+Next, we will explore how we represent and store information in programs using variables.

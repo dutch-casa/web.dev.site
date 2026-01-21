@@ -1,0 +1,4 @@
+title: Hello, Programming!
+description: Write your first JavaScript program
+template: simple
+focus: /src/index.js

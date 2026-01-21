@@ -1,0 +1,563 @@
+# Data Modeling
+
+Data modeling is the most consequential decision you make as a programmer. Everything else—algorithms, architecture, testing—flows from how you represent information. Get the model right and code writes itself. Get it wrong and you fight your own data structures for the life of the project.
+
+The core insight: **Your data model is your program's theory of the world.** Every bug is a contradiction between what your model allows and what reality requires.
+
+## The Prime Directive: Make Invalid States Unrepresentable
+
+This is the single most important principle in software engineering. Memorize it. Tattoo it on your brain.
+
+If your data model can represent an invalid state, someone will create that state. Not "might"—**will**. The question is whether that happens in development or production at 3am on a holiday weekend.
+
+```javascript
+// BAD: This model allows invalid states
+const user = {
+  isLoggedIn: true,
+  isGuest: true,        // Wait—can you be both?
+  sessionToken: null,   // Logged in but no token?
+  email: null           // Logged in with no email?
+};
+// This compiles. This passes code review. This will be a bug.
+
+// GOOD: Invalid states are unrepresentable
+// A user is EXACTLY ONE of these. The structure enforces it.
+const guest = { type: "guest" };
+const loggedIn = {
+  type: "authenticated",
+  email: "alice@example.com",    // Required
+  sessionToken: "abc123"          // Required
+};
+// You cannot create an authenticated user without email/token.
+// You cannot create a user that is both guest and authenticated.
+// The invalid states literally cannot be typed.
+```
+
+This principle will save you more bugs than testing, code review, and monitoring combined. When you find yourself writing defensive checks like `if (user.isLoggedIn && user.sessionToken)`, that's a code smell—your model allows invalid states.
+
+## From Problem to Data
+
+When solving a problem, start by breaking down the domain into its parts:
+
+1. **What entities exist?** (Nouns in the problem description become types)
+2. **What properties do they have?** (Attributes of each entity)
+3. **How do they relate?** (Connections between entities)
+4. **What can be derived?** (Computed from other data, not stored)
+5. **What states are invalid?** (Combinations that should be impossible)
+
+That fifth question is where amateurs stop and professionals begin.
+
+### Example: Library System
+
+Problem: "Track books, authors, and who has borrowed what."
+
+Entities and properties:
+```javascript
+// Book
+{
+  id: "book-123",
+  title: "The Great Gatsby",
+  authorId: "author-456",  // Reference to author
+  isbn: "978-0-7432-7356-5",
+  available: true
+}
+
+// Author
+{
+  id: "author-456",
+  name: "F. Scott Fitzgerald",
+  birthYear: 1896
+}
+
+// Borrowing
+{
+  id: "borrow-789",
+  bookId: "book-123",
+  borrowerId: "user-101",
+  borrowedAt: "2024-01-15",
+  dueAt: "2024-01-29",
+  returnedAt: null
+}
+```
+
+## Single Source of Truth
+
+Every piece of data should live in one place. This isn't a style preference—it's a mathematical necessity.
+
+**Why?** Because duplicated data creates a distributed consistency problem. Every copy can diverge. Every divergence is a bug waiting to happen. And here's the kicker: the bugs are often silent. The system keeps running with contradictory data until something catastrophic happens.
+
+```javascript
+// BAD: author name duplicated
+const books = [
+  { title: "Gatsby", authorName: "Fitzgerald" },
+  { title: "Tender", authorName: "Fitzgerald" }  // Duplicated!
+];
+// Day 1: You fix the typo "Fitgerald" → "Fitzgerald" in one place
+// Day 30: A customer report shows "Fitgerald" in a search result
+// Day 31: You discover the other 47 copies you forgot to update
+
+// GOOD: single source of truth
+const authors = {
+  "author-1": { name: "Fitzgerald" }
+};
+const books = [
+  { title: "Gatsby", authorId: "author-1" },
+  { title: "Tender", authorId: "author-1" }
+];
+// Name stored once, referenced by ID
+// Fix it in one place, fixed everywhere, immediately, always
+```
+
+This principle applies at every level: database schemas, API responses, UI state, configuration files. When you find yourself copying data instead of referencing it, stop. You're creating a time bomb.
+
+<Tip>
+The cost of duplication is not linear—it's multiplicative. Two copies means one potential inconsistency. Ten copies means 45 potential inconsistencies (n choose 2). This is why large systems with duplicated data become impossible to maintain.
+</Tip>
+
+## Derived vs Stored Data
+
+Some data can be calculated from other data. The question "should I store this or compute it?" has a clear answer: **store the minimal set of facts; derive everything else.**
+
+Why? Because stored derived data is duplicated data in disguise. The "source" is the inputs; the "copy" is the derived value. Every argument against duplication applies here.
+
+```javascript
+// BAD: storing derived data
+const order = {
+  items: [
+    { name: "Widget", price: 10, quantity: 2 },
+    { name: "Gadget", price: 25, quantity: 1 }
+  ],
+  subtotal: 45,  // Derived: sum of (price * quantity)
+  tax: 3.60,     // Derived: subtotal * taxRate
+  total: 48.60   // Derived: subtotal + tax
+};
+// You just created THREE consistency obligations.
+// Change an item → must update subtotal → must update tax → must update total
+// Forget one step and you have a bug that passes every test
+// until an auditor notices the numbers don't add up.
+
+// GOOD: compute derived values
+const order = {
+  items: [
+    { name: "Widget", price: 10, quantity: 2 },
+    { name: "Gadget", price: 25, quantity: 1 }
+  ],
+  taxRate: 0.08
+};
+
+function getSubtotal(order) {
+  return order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+}
+
+function getTax(order) {
+  return getSubtotal(order) * order.taxRate;
+}
+
+function getTotal(order) {
+  return getSubtotal(order) + getTax(order);
+}
+// The total CANNOT be inconsistent with items.
+// It's mathematically impossible. The structure enforces it.
+```
+
+**The trade-off**: Derived data costs CPU time; stored data costs consistency. In almost every case, spend CPU, preserve consistency. The exception is when computation is genuinely expensive AND data rarely changes—then cache with explicit invalidation. But treat caching as a dangerous optimization, not a default.
+
+## Normalization
+
+Normalization is Single Source of Truth applied systematically. Each entity gets its own collection; relationships use references. This is not optional architectural flair—it's how you survive at scale.
+
+```javascript
+// Normalized data structure
+const database = {
+  users: {
+    "user-1": { id: "user-1", name: "Alice", email: "alice@example.com" },
+    "user-2": { id: "user-2", name: "Bob", email: "bob@example.com" }
+  },
+  posts: {
+    "post-1": { id: "post-1", authorId: "user-1", title: "Hello World", content: "..." },
+    "post-2": { id: "post-2", authorId: "user-1", title: "Second Post", content: "..." },
+    "post-3": { id: "post-3", authorId: "user-2", title: "Bob's Post", content: "..." }
+  },
+  comments: {
+    "comment-1": { id: "comment-1", postId: "post-1", authorId: "user-2", text: "Great post!" }
+  }
+};
+
+// To get a post with author info:
+function getPostWithAuthor(postId) {
+  const post = database.posts[postId];
+  const author = database.users[post.authorId];
+  return { ...post, author };
+}
+```
+
+**The trade-off you must understand**: Normalization trades write simplicity for read complexity. Updates are trivial (change data in one place), but reads require joins (assembling related data). This is the right trade-off for most systems because:
+
+1. Data is read far more often than written
+2. Inconsistent data is catastrophic; extra reads are merely slow
+3. You can optimize reads with caching; you cannot "cache away" inconsistency
+
+**When to denormalize**: Only when you have measured performance problems AND the denormalized data is effectively immutable (like historical snapshots). Premature denormalization is just as dangerous as premature optimization—you're trading correctness for speed you don't yet need.
+
+## Choosing Data Structures
+
+Match the data structure to your access patterns:
+
+| Need | Data Structure |
+|------|----------------|
+| Lookup by unique key | Object or Map |
+| Check membership | Set |
+| Ordered items | Array |
+| Many-to-many relationships | Array of references |
+| Fast insertion at ends | Array (push/pop) |
+| Fast insertion in middle | Linked list (rare in JS) |
+
+### Example: User Roles
+
+```javascript
+// If checking "does user have role X?" frequently:
+// Use a Set for O(1) lookup
+const userRoles = {
+  "user-1": new Set(["admin", "editor"]),
+  "user-2": new Set(["viewer"])
+};
+
+function hasRole(userId, role) {
+  return userRoles[userId]?.has(role) ?? false;
+}
+
+// If listing all roles frequently:
+// Array is fine, iteration is main use case
+const userRoles = {
+  "user-1": ["admin", "editor"],
+  "user-2": ["viewer"]
+};
+```
+
+## Immutable Data Patterns
+
+Mutation is the root of a staggering number of bugs. When you mutate data, you create invisible action at a distance—code that holds a reference to that data suddenly sees different values without being told anything changed.
+
+```javascript
+// The horror of mutation
+function addItem(cart, item) {
+  cart.items.push(item);  // Mutates cart
+  return cart;
+}
+
+const cart = { items: [{ name: "A" }] };
+const displayedCart = cart;  // Another reference to same object
+addItem(cart, { name: "B" });
+
+// displayedCart.items is now ["A", "B"]
+// But the UI component holding displayedCart was never notified!
+// This is the source of 90% of "why did my UI not update?" bugs.
+```
+
+Immutability solves this by making change explicit. If you want a different value, you create a new object:
+
+```javascript
+// Immutable: create new objects
+function addItem(cart, item) {
+  return {
+    ...cart,
+    items: [...cart.items, item]
+  };
+}
+
+const cart1 = { items: [{ name: "A" }] };
+const cart2 = addItem(cart1, { name: "B" });
+
+console.log(cart1.items.length);  // 1 - unchanged, always
+console.log(cart2.items.length);  // 2 - new cart
+
+// cart1 !== cart2, so any comparison detects the change
+// This is how React, Redux, and every modern state manager works
+```
+
+**Why this matters**: With mutation, you must track every reference and manually notify all observers. With immutability, change detection is a simple reference comparison (`===`). You trade memory allocation (cheap, GC handles it) for correctness (priceless).
+
+**The deep insight**: Immutability means values exist in time. `cart1` is the cart before adding B. `cart2` is the cart after. Both exist. You can compare them, undo to the previous state, or debug by logging the history. Mutation destroys this timeline—the past is overwritten and lost.
+
+## Modeling State Machines
+
+This is where "make invalid states unrepresentable" becomes powerful. Many real-world entities have states with defined transitions. A naive boolean soup creates bugs; an explicit state machine prevents them.
+
+```javascript
+// BAD: Boolean soup
+const order = {
+  isPending: true,
+  isPaid: false,
+  isShipped: false,
+  isCancelled: false
+};
+// Can an order be both paid AND cancelled? isPending AND isShipped?
+// The model allows 16 combinations; only 5 are valid.
+// You've created 11 bug opportunities.
+
+// GOOD: State machine
+// Order states: pending -> paid -> shipped -> delivered
+//                       └-> cancelled
+
+const orderStates = {
+  pending: {
+    next: ["paid", "cancelled"]
+  },
+  paid: {
+    next: ["shipped", "cancelled"]
+  },
+  shipped: {
+    next: ["delivered"]
+  },
+  delivered: {
+    next: []  // Final state
+  },
+  cancelled: {
+    next: []  // Final state
+  }
+};
+
+function canTransition(currentState, newState) {
+  return orderStates[currentState].next.includes(newState);
+}
+
+function transitionOrder(order, newState) {
+  if (!canTransition(order.state, newState)) {
+    throw new Error(`Cannot transition from ${order.state} to ${newState}`);
+  }
+
+  return {
+    ...order,
+    state: newState,
+    stateHistory: [...order.stateHistory, { state: newState, at: new Date() }]
+  };
+}
+
+// The model prevents bugs like shipping a cancelled order
+const order = { state: "cancelled", stateHistory: [] };
+transitionOrder(order, "shipped");  // Error! Cannot transition
+// Not a runtime check that might be bypassed—the structure enforces it.
+```
+
+**The profound insight**: Business rules encoded in data survive longer than business rules encoded in code. Code gets refactored, moved, forgotten. Data structures are obvious—you see them every time you look at the data. A developer who has never read your codebase will understand the order lifecycle just by looking at `orderStates`.
+
+## Rich Types Over Primitives
+
+Primitives (strings, numbers) carry no meaning. To a program, an email address and a street address are both "just strings." This is **primitive obsession**, and it's a bug factory.
+
+```javascript
+// Primitive obsession - all strings look the same
+function sendEmail(from, to, subject, body) {
+  // Easy to mix up arguments - all are strings
+}
+sendEmail(body, subject, to, from);  // Compiles. Runs. Sends garbage.
+
+// This bug exists in production systems RIGHT NOW.
+// No test catches it unless you happen to test with that exact permutation.
+```
+
+The fix is **domain types**—wrappers that carry meaning and enforce constraints:
+
+```javascript
+// Rich types make mistakes impossible
+function createEmail(address) {
+  if (!address.includes("@")) {
+    throw new Error("Invalid email address");
+  }
+  return { type: "email", value: address };
+}
+
+function createEmailMessage({ from, to, subject, body }) {
+  return {
+    from: createEmail(from),
+    to: createEmail(to),
+    subject,
+    body
+  };
+}
+
+// Now the structure prevents mixups AND validates at construction
+const message = createEmailMessage({
+  from: "alice@example.com",
+  to: "bob@example.com",
+  subject: "Hello",
+  body: "Hi Bob!"
+});
+```
+
+This pattern scales to every domain concept:
+
+```javascript
+// Money should carry its currency
+function createMoney(amount, currency) {
+  return {
+    amount,
+    currency,
+    add(other) {
+      if (other.currency !== currency) {
+        throw new Error(`Cannot add ${currency} to ${other.currency}`);
+      }
+      return createMoney(amount + other.amount, currency);
+    }
+  };
+}
+
+const usd = createMoney(100, "USD");
+const eur = createMoney(50, "EUR");
+usd.add(eur);  // Error! Cannot add USD to EUR.
+
+// This bug caused the Mars Climate Orbiter crash ($327 million)
+// because one team used metric, another used imperial.
+// Rich types would have caught it at compile time.
+```
+
+**The principle**: If two things should never be mixed, they should have different types. If a value has constraints, enforce them at construction. Invalid data should not be representable.
+
+## Validation at Boundaries: Parse, Don't Validate
+
+This principle is so important it deserves a name: **Parse, Don't Validate.**
+
+The naive approach is to validate data and then use it, trusting that validation happened:
+
+```javascript
+// BAD: Validate then use
+function processUser(input) {
+  validateUser(input);  // Throws if invalid
+  // ... 50 lines later ...
+  sendEmail(input.email);  // Do we trust this? Did validation run?
+}
+// The validation and usage are separated. Nothing connects them.
+// A refactor can easily break this. Delete the validation, code still runs.
+```
+
+The professional approach is to **parse**—transform unstructured input into a structured type, rejecting invalid input during construction:
+
+```javascript
+// GOOD: Parse into domain type
+function createUser(input) {
+  // Validation happens during parsing
+  if (!input.name || typeof input.name !== "string") {
+    throw new Error("Name is required and must be a string");
+  }
+  if (!input.email || !input.email.includes("@")) {
+    throw new Error("Valid email is required");
+  }
+
+  // Output is a DIFFERENT TYPE than input
+  // This type ONLY exists if validation passed
+  return {
+    id: generateId(),
+    name: input.name.trim(),
+    email: input.email.toLowerCase(),
+    createdAt: new Date()
+  };
+}
+
+// Internal functions accept User, not raw input
+function sendWelcomeEmail(user) {
+  // user is a User, not raw input
+  // A User can only exist if createUser succeeded
+  // Therefore user.email is ALWAYS valid—guaranteed by construction
+  emailService.send(user.email, "Welcome!", "...");
+}
+```
+
+**The insight**: The difference between `input` and `User` is not just the fields—it's that `User` represents validated data. If you have a `User`, validation already happened. The type system (or naming convention) carries this proof through your entire codebase.
+
+**Boundaries**: Parse at every system boundary—API endpoints, file reads, database queries, user input. Inside the boundary, trust your domain types. Never pass raw input deep into your system.
+
+## The Mental Model: Data Has Gravity
+
+Think of data as having gravity—it attracts code, complexity, and bugs. Duplicated data has multiple gravitational wells, pulling your codebase in contradictory directions. Centralized data has one center of gravity, keeping everything aligned.
+
+This is why data modeling is the most important decision you make. The wrong model creates gravitational chaos that cannot be fixed by better code. The right model creates a stable foundation where good code naturally emerges.
+
+When you find yourself writing complex code to work around your data structures, the data structures are wrong. Fix the model, and the code simplifies itself.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What is the most important principle in data modeling?"
+  options={[
+    "Store as much data as possible for future needs",
+    "Make invalid states unrepresentable",
+    "Use the simplest data structures",
+    "Optimize for read performance"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What does 'single source of truth' mean?"
+  options={[
+    "Only one person can edit the data",
+    "Each piece of data lives in one place, not duplicated",
+    "The data is always correct",
+    "There is only one database"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="Data that can be calculated from other data is called ___ data."
+  answer="derived"
+  fuzzyThreshold={1}
+/>
+
+<MultipleChoice
+  question="Why treat data as immutable?"
+  options={[
+    "It runs faster",
+    "It uses less memory",
+    "It prevents unintended changes and makes change detection trivial",
+    "JavaScript requires it"
+  ]}
+  correct={2}
+/>
+
+<MultipleChoice
+  question="What does 'Parse, Don't Validate' mean?"
+  options={[
+    "Use regular expressions instead of validators",
+    "Convert text files to binary format",
+    "Transform raw input into typed domain objects, rejecting invalid data at construction",
+    "Parse JSON before validating it"
+  ]}
+  correct={2}
+/>
+
+## Try It Yourself
+
+Practice data modeling:
+
+<Exercise id="pm-data-modeling" />
+
+## Summary
+
+Data modeling is the most consequential decision in software. You learned:
+
+**The Prime Directive: Make Invalid States Unrepresentable**
+- If your model can represent an invalid state, it eventually will
+- Design structures where invalid combinations are impossible to construct
+
+**Core Principles:**
+- **Single source of truth**: Store data once, reference it everywhere
+- **Derive, don't store**: Calculate values from source data; never duplicate
+- **Normalization**: Separate entities, connect with references
+- **Immutability**: Create new objects instead of mutating; preserve history
+- **State machines**: Model lifecycles explicitly; prevent invalid transitions
+- **Rich types over primitives**: Encode meaning and constraints in types
+- **Parse, don't validate**: Transform raw input into domain types at boundaries
+
+**The Trade-offs:**
+- Normalization trades write simplicity for consistency (worth it)
+- Derivation trades CPU for correctness (worth it)
+- Immutability trades memory for debuggability (worth it)
+- Know when to make the opposite trade (rarely)
+
+**The Mental Model:**
+Data has gravity. Duplicated data creates chaos. Centralized, well-modeled data creates stability. When your code feels complex, the problem is usually the data model, not the code.
+
+These principles will serve you for your entire career. They apply to every language, every paradigm, every scale. Master them.
+
+Next, we will explore file I/O.

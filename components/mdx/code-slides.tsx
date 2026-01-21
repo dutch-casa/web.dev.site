@@ -4,16 +4,18 @@ import {
   createContext,
   useContext,
   useState,
-  useCallback,
   useMemo,
+  useRef,
+  useCallback,
   type ReactNode,
   type ReactElement,
   Children,
   isValidElement,
 } from "react"
-import { motion, AnimatePresence, useReducedMotion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
+import useMeasure from "use-measure"
 
 type SlidesState = {
   currentIndex: number
@@ -121,7 +123,7 @@ function Root({ children }: RootProps) {
 }
 
 function Header() {
-  const { currentIndex, totalSlides, labels, goTo, next, prev } = useSlidesContext()
+  const { currentIndex, totalSlides, labels, next, prev } = useSlidesContext()
   const currentLabel = labels[currentIndex] ?? `Slide ${currentIndex + 1}`
 
   return (
@@ -186,69 +188,32 @@ type ContentProps = {
 }
 
 function Content({ slides }: ContentProps) {
-  const { currentIndex, direction, next, prev } = useSlidesContext()
-  const shouldReduceMotion = useReducedMotion()
-
-  const handleDragEnd = useCallback(
-    (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
-      const swipeThreshold = 50
-      const velocityThreshold = 500
-
-      if (
-        info.offset.x < -swipeThreshold ||
-        info.velocity.x < -velocityThreshold
-      ) {
-        next()
-      } else if (
-        info.offset.x > swipeThreshold ||
-        info.velocity.x > velocityThreshold
-      ) {
-        prev()
-      }
-    },
-    [next, prev]
-  )
-
-  const variants = {
-    enter: (dir: number) => ({
-      x: shouldReduceMotion ? 0 : dir > 0 ? 100 : -100,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (dir: number) => ({
-      x: shouldReduceMotion ? 0 : dir < 0 ? 100 : -100,
-      opacity: 0,
-    }),
-  }
+  const { currentIndex } = useSlidesContext()
+  const contentRef = useRef<HTMLDivElement>(null)
+  const measure = useMeasure(contentRef)
 
   return (
     <motion.div
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.1}
-      onDragEnd={handleDragEnd}
-      className="cursor-grab active:cursor-grabbing touch-pan-y"
+      animate={{ height: measure.height }}
+      transition={{
+        height: { type: "spring", stiffness: 300, damping: 30 },
+      }}
+      className="overflow-hidden bg-[#121212]"
     >
-      <AnimatePresence mode="wait" custom={direction}>
-        <motion.div
-          key={currentIndex}
-          custom={direction}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{
-            x: { type: "spring", stiffness: 300, damping: 30 },
-            opacity: { duration: 0.15 },
-          }}
-          className="[&>pre]:my-0 [&>pre]:rounded-none [&>pre]:border-0"
-        >
-          {slides[currentIndex]}
-        </motion.div>
-      </AnimatePresence>
+      <div ref={contentRef}>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={currentIndex}
+            initial={{ opacity: 0, filter: "blur(4px)" }}
+            animate={{ opacity: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, filter: "blur(4px)" }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="[&_.group]:my-0 [&_.group>div]:rounded-none [&_.group>div]:border-0 [&_pre]:!rounded-none"
+          >
+            {slides[currentIndex]}
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </motion.div>
   )
 }
@@ -260,10 +225,17 @@ export const CodeSlides = {
 }
 
 export function CodeSlidesSimple({ children }: { children: ReactNode }) {
+  // Wrap each child as a Slide with auto-generated labels
+  const childArray = Children.toArray(children)
+
   return (
     <CodeSlides.Root>
       <CodeSlides.Header />
-      {children}
+      {childArray.map((child, index) => (
+        <CodeSlides.Slide key={index} label={`Slide ${index + 1}`}>
+          {child}
+        </CodeSlides.Slide>
+      ))}
     </CodeSlides.Root>
   )
 }

@@ -1,0 +1,650 @@
+# Advanced TypeScript
+
+Types are not annotations. Types are a language for describing which states are valid.
+
+The compiler is your first line of defense. Every bug it catches is a bug that never reaches production, never wakes you at 3 AM, never corrupts data. The goal of advanced TypeScript is to **make invalid states unrepresentable** - to structure your types so that illegal states simply cannot be expressed.
+
+This lesson teaches you to think in types.
+
+---
+
+## The Algebra of Types
+
+Types form an algebraic structure. Understanding this structure lets you reason about types instead of memorizing them.
+
+### Product Types (AND)
+
+An object with multiple fields is a *product type* - the set of valid values is the *product* of each field's possibilities:
+
+```typescript
+type Point = { x: number; y: number };
+// A Point must have BOTH x AND y
+```
+
+### Sum Types (OR)
+
+A union is a *sum type* - the set of valid values is the *sum* of each variant:
+
+```typescript
+type Result = "success" | "failure";
+// A Result is EITHER "success" OR "failure"
+```
+
+### Unit and Bottom Types
+
+```typescript
+type Unit = void;   // Exactly one value (absence of value)
+type Bottom = never; // Zero values (impossible)
+```
+
+The `never` type is profound: it represents impossibility. A function returning `never` cannot return. A variable of type `never` cannot exist.
+
+<Tip>
+When you understand types as algebra, you can *calculate* the right type instead of guessing. Product = AND. Sum = OR. `never` = impossible. `unknown` = anything.
+</Tip>
+
+---
+
+## Discriminated Unions: The Most Important Pattern
+
+If you learn one thing from this lesson, let it be this: **discriminated unions model state machines**.
+
+Every program has states. Users are logged in or out. Requests are pending or complete. Forms are valid or invalid. Discriminated unions force you to handle each state explicitly.
+
+```typescript
+// BAD: Optional fields create invalid states
+interface BadUser {
+  name: string;
+  isLoggedIn: boolean;
+  token?: string;        // Can be missing when logged in!
+  loginTime?: Date;      // Can be missing when logged in!
+}
+
+// Can create: { name: "Alice", isLoggedIn: true, token: undefined }
+// This is NONSENSE - logged in but no token?
+
+// GOOD: Discriminated union makes invalid states unrepresentable
+type User =
+  | { status: "anonymous" }
+  | { status: "authenticated"; token: string; loginTime: Date };
+
+// Cannot create an authenticated user without a token
+// The type system rejects it before you can even try
+```
+
+The `status` field is the *discriminant* - it tells TypeScript which variant you have. Within each branch, only the relevant fields exist:
+
+```typescript
+function greet(user: User): string {
+  switch (user.status) {
+    case "anonymous":
+      return "Welcome, guest";
+    case "authenticated":
+      // TypeScript KNOWS token exists here - it's not optional
+      return `Welcome back (session: ${user.token.slice(0, 8)}...)`;
+  }
+}
+```
+
+### Modeling Real Application State
+
+Every UI has states. Model them explicitly:
+
+```typescript
+type RequestState<T> =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; data: T }
+  | { status: "error"; error: Error };
+```
+
+This isn't just a pattern - it's *correct modeling*. A request is in exactly one of these states. Not two. Not a combination. The type enforces this.
+
+```typescript
+function render(state: RequestState<User>): string {
+  switch (state.status) {
+    case "idle":
+      return "Click to load";
+    case "loading":
+      return "Loading...";
+    case "success":
+      return `Hello, ${state.data.name}`;  // data exists here
+    case "error":
+      return `Error: ${state.error.message}`;  // error exists here
+  }
+}
+```
+
+No optional chaining. No null checks. No "what if data is undefined while loading?" - that state cannot exist.
+
+<Tip>
+Discriminated unions collapse branches. Each case has exactly the properties it needs. If you're writing `value?.field` or `if (value !== null)`, you probably need a discriminated union instead.
+</Tip>
+
+---
+
+## Exhaustiveness Checking with never
+
+The `never` type represents impossibility. If you've handled all cases, what remains? Nothing. `never`.
+
+This gives you a compile-time guarantee that you've handled every case:
+
+```typescript
+type Shape =
+  | { kind: "circle"; radius: number }
+  | { kind: "square"; size: number }
+  | { kind: "rectangle"; width: number; height: number };
+
+function area(shape: Shape): number {
+  switch (shape.kind) {
+    case "circle":
+      return Math.PI * shape.radius ** 2;
+    case "square":
+      return shape.size ** 2;
+    case "rectangle":
+      return shape.width * shape.height;
+    default:
+      // After all cases, shape is `never`
+      const _exhaustive: never = shape;
+      throw new Error(`Unknown shape: ${_exhaustive}`);
+  }
+}
+```
+
+Now add a new shape:
+
+```typescript
+type Shape =
+  | { kind: "circle"; radius: number }
+  | { kind: "square"; size: number }
+  | { kind: "rectangle"; width: number; height: number }
+  | { kind: "triangle"; base: number; height: number };  // NEW
+
+// Compile error in area()!
+// Type '{ kind: "triangle"; ... }' is not assignable to type 'never'
+```
+
+The compiler forces you to handle the new case. You cannot forget.
+
+<Tip>
+Always add the `default: never` pattern to switches over discriminated unions. It converts a potential runtime bug into a compile-time error.
+</Tip>
+
+### The Utility Pattern: assertNever
+
+```typescript
+function assertNever(x: never): never {
+  throw new Error(`Unexpected value: ${JSON.stringify(x)}`);
+}
+
+function area(shape: Shape): number {
+  switch (shape.kind) {
+    case "circle": return Math.PI * shape.radius ** 2;
+    case "square": return shape.size ** 2;
+    case "rectangle": return shape.width * shape.height;
+    default: return assertNever(shape);
+  }
+}
+```
+
+---
+
+## Branded Types: Domain Modeling
+
+Primitive types are too permissive. A `string` could be an email, a URL, a user ID, or garbage. A `number` could be dollars, cents, pixels, or a user ID. The type system doesn't distinguish.
+
+Branded types fix this:
+
+```typescript
+// Create distinct types from primitives
+type UserId = string & { readonly __brand: "UserId" };
+type OrderId = string & { readonly __brand: "OrderId" };
+type Email = string & { readonly __brand: "Email" };
+
+// Constructor functions that validate
+function UserId(id: string): UserId {
+  if (!/^user_[a-z0-9]+$/.test(id)) {
+    throw new Error(`Invalid user ID: ${id}`);
+  }
+  return id as UserId;
+}
+
+function Email(email: string): Email {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error(`Invalid email: ${email}`);
+  }
+  return email as Email;
+}
+```
+
+Now the compiler prevents mixing them up:
+
+```typescript
+function getUser(id: UserId): User { /* ... */ }
+function getOrder(id: OrderId): Order { /* ... */ }
+
+const userId = UserId("user_abc123");
+const orderId = OrderId("order_xyz789");
+
+getUser(userId);    // Works
+getUser(orderId);   // Compile error! OrderId is not UserId
+getUser("random");  // Compile error! string is not UserId
+```
+
+This catches a class of bugs that would otherwise only appear in production.
+
+<Tip>
+Branded types make the domain explicit in the type system. `UserId` is not just a string - it's a validated user identifier. The compiler enforces this everywhere.
+</Tip>
+
+---
+
+## Variance: The Direction of Compatibility
+
+This is the concept most programmers never learn - and it costs them years of confusion.
+
+**Variance** describes how type relationships transfer to container types:
+
+```typescript
+// Dog extends Animal (Dog is a subtype of Animal)
+class Animal { name: string = ""; }
+class Dog extends Animal { breed: string = ""; }
+```
+
+### Covariance: Same Direction
+
+If `Dog extends Animal`, then `ReadonlyArray<Dog> extends ReadonlyArray<Animal>`.
+
+The relationship transfers in the *same direction*. This is covariance.
+
+```typescript
+const dogs: ReadonlyArray<Dog> = [{ name: "Rex", breed: "Shepherd" }];
+const animals: ReadonlyArray<Animal> = dogs;  // OK - covariant
+```
+
+Why is this safe? Because you can only *read* from a `ReadonlyArray`. Reading a `Dog` as an `Animal` is fine - a Dog is an Animal.
+
+### Contravariance: Opposite Direction
+
+Function parameters are *contravariant*. The relationship flips:
+
+```typescript
+type AnimalHandler = (a: Animal) => void;
+type DogHandler = (d: Dog) => void;
+
+const handleAnimal: AnimalHandler = (a) => console.log(a.name);
+const handleDog: DogHandler = handleAnimal;  // OK - contravariant!
+```
+
+Why? An `AnimalHandler` can handle *any* animal, including dogs. So it's safe to use where a `DogHandler` is expected. But the reverse is not true:
+
+```typescript
+const dogOnly: DogHandler = (d) => console.log(d.breed);
+const handleAny: AnimalHandler = dogOnly;  // Error! What if passed a Cat?
+```
+
+### Invariance: No Direction
+
+Mutable containers are *invariant* - neither direction works:
+
+```typescript
+const dogs: Dog[] = [{ name: "Rex", breed: "Shepherd" }];
+// const animals: Animal[] = dogs;  // Error in strict mode!
+// Why? You could push a Cat into animals, corrupting dogs
+```
+
+<Tip>
+**Rule of thumb**: Producers are covariant (output). Consumers are contravariant (input). Read-write is invariant.
+</Tip>
+
+---
+
+## Type Guards and Narrowing
+
+Type guards narrow a type from something general to something specific:
+
+```typescript
+function process(value: string | number | null) {
+  if (value === null) {
+    return "nothing";
+  }
+  // TypeScript narrowed: value is string | number
+
+  if (typeof value === "string") {
+    return value.toUpperCase();  // TypeScript knows: string
+  }
+
+  return value.toFixed(2);  // TypeScript knows: number
+}
+```
+
+### Custom Type Guards
+
+For complex types, write predicates that return `value is Type`:
+
+```typescript
+interface ApiError {
+  code: number;
+  message: string;
+}
+
+interface NetworkError {
+  isTimeout: boolean;
+  retryAfter: number;
+}
+
+function isApiError(error: unknown): error is ApiError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    "message" in error
+  );
+}
+
+function handleError(error: ApiError | NetworkError) {
+  if (isApiError(error)) {
+    console.log(`API Error ${error.code}: ${error.message}`);
+  } else {
+    console.log(`Network error, retry in ${error.retryAfter}s`);
+  }
+}
+```
+
+### Assertion Functions
+
+Assert-style guards throw on failure and narrow the type:
+
+```typescript
+function assertIsDefined<T>(value: T): asserts value is NonNullable<T> {
+  if (value === null || value === undefined) {
+    throw new Error("Value is not defined");
+  }
+}
+
+function process(value: string | null) {
+  assertIsDefined(value);
+  // After this line, TypeScript knows value is string
+  console.log(value.toUpperCase());
+}
+```
+
+---
+
+## Type-Level Programming
+
+TypeScript's type system is a programming language in its own right. You can compute new types from existing ones.
+
+### Mapped Types: Transforming Structures
+
+Mapped types iterate over the keys of a type and transform each one:
+
+```typescript
+// The pattern: { [K in keyof T]: Transform<T[K]> }
+
+type Readonly<T> = {
+  readonly [K in keyof T]: T[K];
+};
+
+type Partial<T> = {
+  [K in keyof T]?: T[K];
+};
+
+type Nullable<T> = {
+  [K in keyof T]: T[K] | null;
+};
+```
+
+These transform any object type:
+
+```typescript
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+type ReadonlyUser = Readonly<User>;
+// { readonly id: number; readonly name: string; readonly email: string }
+
+type PartialUser = Partial<User>;
+// { id?: number; name?: string; email?: string }
+```
+
+### Conditional Types: Type-Level If/Else
+
+```typescript
+type IsString<T> = T extends string ? true : false;
+
+type A = IsString<string>;  // true
+type B = IsString<number>;  // false
+type C = IsString<"hello">; // true (string literal extends string)
+```
+
+### The `infer` Keyword: Pattern Matching Types
+
+`infer` extracts types from within other types:
+
+```typescript
+// Extract the element type from an array
+type ElementOf<T> = T extends (infer E)[] ? E : never;
+
+type A = ElementOf<string[]>;  // string
+type B = ElementOf<number[]>;  // number
+
+// Extract the return type of a function
+type ReturnType<T> = T extends (...args: any[]) => infer R ? R : never;
+
+type C = ReturnType<() => string>;  // string
+type D = ReturnType<(x: number) => boolean>;  // boolean
+
+// Extract the resolved type of a Promise
+type Awaited<T> = T extends Promise<infer U> ? U : T;
+
+type E = Awaited<Promise<string>>;  // string
+type F = Awaited<string>;  // string (passthrough for non-promises)
+```
+
+### Template Literal Types: String Manipulation
+
+Combine string literals to create new types:
+
+```typescript
+type EventName = `on${Capitalize<string>}`;
+// Matches: "onClick", "onLoad", "onSubmit", etc.
+
+type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE";
+type Endpoint = "/users" | "/orders" | "/products";
+type Route = `${HTTPMethod} ${Endpoint}`;
+// "GET /users" | "GET /orders" | ... | "DELETE /products" (12 combinations)
+```
+
+---
+
+## The `satisfies` Operator
+
+Validate a value matches a type while preserving the inferred type:
+
+```typescript
+type Color = "red" | "green" | "blue" | { r: number; g: number; b: number };
+
+// Problem: type annotation widens the type
+const palette1: Record<string, Color> = {
+  primary: "red",
+  secondary: { r: 0, g: 100, b: 200 }
+};
+palette1.primary.toUpperCase();  // Error! Color might be object
+
+// Solution: satisfies checks the type without widening
+const palette2 = {
+  primary: "red",
+  secondary: { r: 0, g: 100, b: 200 }
+} satisfies Record<string, Color>;
+
+palette2.primary.toUpperCase();  // Works! TypeScript knows it's "red"
+palette2.secondary.r;            // Works! TypeScript knows the structure
+```
+
+<Tip>
+Use `satisfies` when you want validation without losing type precision. Your autocomplete stays smart.
+</Tip>
+
+---
+
+## The Result Pattern: Explicit Error Handling
+
+Never throw exceptions for expected failures. Return them:
+
+```typescript
+type Result<T, E = Error> =
+  | { ok: true; value: T }
+  | { ok: false; error: E };
+
+function divide(a: number, b: number): Result<number, string> {
+  if (b === 0) {
+    return { ok: false, error: "Division by zero" };
+  }
+  return { ok: true, value: a / b };
+}
+
+// Caller MUST handle both cases
+const result = divide(10, 0);
+if (result.ok) {
+  console.log(result.value);  // TypeScript knows value exists
+} else {
+  console.log(result.error);  // TypeScript knows error exists
+}
+```
+
+This is better than exceptions because:
+1. The type signature tells you it can fail
+2. The compiler forces you to handle the failure
+3. No hidden control flow
+
+<Tip>
+Functions that can fail should return `Result`, not throw. Make failure explicit in the type signature.
+</Tip>
+
+---
+
+## Type Erasure: The Compile/Runtime Boundary
+
+TypeScript types exist only at compile time. At runtime, they vanish:
+
+```typescript
+type UserId = string & { __brand: "UserId" };
+
+const id: UserId = "user_123" as UserId;
+console.log(typeof id);  // "string" - the brand is gone!
+```
+
+This means:
+- You cannot check types at runtime with `typeof` or `instanceof`
+- Type guards must check actual runtime values, not types
+- Generics don't exist at runtime
+
+```typescript
+// This does NOT work
+function isUser<T>(value: unknown): value is T {
+  // T doesn't exist at runtime - can't check against it
+}
+
+// This DOES work
+function isUser(value: unknown): value is User {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    "name" in value
+  );
+}
+```
+
+<Tip>
+Types guide the compiler. Runtime checks guard against external data (API responses, user input, file contents). Both are necessary.
+</Tip>
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What is the primary goal of advanced TypeScript?"
+  options={[
+    "Writing less code",
+    "Faster runtime performance",
+    "Making invalid states unrepresentable",
+    "Avoiding any types"
+  ]}
+  correct={2}
+/>
+
+<MultipleChoice
+  question="What does the `never` type represent?"
+  options={[
+    "A value that is null",
+    "A value that is undefined",
+    "A value that cannot exist (impossibility)",
+    "A value that is optional"
+  ]}
+  correct={2}
+/>
+
+<FillBlank
+  question="A union type is also called a ___ type because the valid values are the sum of each variant."
+  answer="sum"
+  fuzzyThreshold={1}
+/>
+
+<MultipleChoice
+  question="Why are function parameters contravariant?"
+  options={[
+    "Because functions can return any type",
+    "Because a handler for a broader type can safely handle narrower types",
+    "Because JavaScript ignores types at runtime",
+    "Because TypeScript requires it"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What is the purpose of branded types?"
+  options={[
+    "To make code run faster",
+    "To distinguish primitive types in the domain (e.g., UserId vs OrderId)",
+    "To add logging to types",
+    "To remove null from types"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="Why should functions return Result<T, E> instead of throwing exceptions?"
+  options={[
+    "Exceptions are slower",
+    "TypeScript doesn't support exceptions",
+    "The type signature explicitly shows failure is possible, forcing callers to handle it",
+    "Result types use less memory"
+  ]}
+  correct={2}
+/>
+
+## Try It Yourself
+
+<Exercise id="pm-advanced-types" />
+
+## Summary
+
+You learned to think in types:
+
+- **The Algebra of Types**: Product (AND), Sum (OR), Unit (void), Bottom (never)
+- **Discriminated Unions**: Model state machines explicitly. No invalid states. No null checks.
+- **Exhaustiveness with never**: Force handling of all cases at compile time
+- **Branded Types**: Give domain meaning to primitives (UserId, Email, OrderId)
+- **Variance**: Covariance (output), contravariance (input), invariance (read-write)
+- **Type Guards**: Narrow from general to specific with runtime checks
+- **Type-Level Programming**: Mapped types, conditional types, `infer`, template literals
+- **The Result Pattern**: Make failure explicit in the type signature
+- **Type Erasure**: Types guide the compiler; runtime checks guard against external data
+
+The goal is not to use fancy features. The goal is to make your code correct by construction. When invalid states cannot be expressed, entire categories of bugs simply cannot exist.
+
+Write types that make your compiler catch your mistakes. Your future self will thank you.

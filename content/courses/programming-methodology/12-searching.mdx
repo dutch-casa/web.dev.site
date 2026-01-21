@@ -1,0 +1,355 @@
+# Searching Algorithms
+
+Finding information efficiently is one of the most fundamental problems in computer science. The approach you choose depends on what you know about your data - and understanding *why* certain approaches work will serve you for your entire career.
+
+## The Core Insight: Structure Enables Speed
+
+Here's the key idea that separates novice programmers from experts:
+
+> **The more structure your data has, the less work you need to do to search it.**
+
+Unsorted data has no structure - you must check everything. Sorted data encodes information about where values *can* and *cannot* be. Indexed data tells you exactly where to look.
+
+This principle generalizes far beyond searching. It's why databases use indexes, why hash tables exist, and why we organize code into modules.
+
+## Linear Search: The Baseline
+
+The simplest approach: check each element one by one.
+
+```javascript
+function linearSearch(arr, target) {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] === target) {
+      return i;  // Found at index i
+    }
+  }
+  return -1;  // Not found
+}
+
+const numbers = [5, 2, 8, 1, 9, 3];
+console.log(linearSearch(numbers, 8));   // 2
+console.log(linearSearch(numbers, 4));   // -1
+```
+
+**Time complexity: O(n)** - In the worst case, we check every element.
+
+### When Linear Search Is the Right Choice
+
+Linear search isn't "bad" - it's appropriate when:
+
+- **Small arrays** (fewer than ~50 elements): The overhead of fancier algorithms isn't worth it
+- **Unsorted data you'll search once**: Sorting costs O(n log n), so one search is cheaper unsorted
+- **You need the first match**: Linear search naturally finds the first occurrence
+- **Memory is constrained**: No auxiliary data structures needed
+
+The mistake is using linear search when you have structure you could exploit.
+
+## Binary Search: Exploiting Order
+
+When data is sorted, we can do something remarkable: answer questions about a million elements in 20 steps.
+
+### The Invariant That Makes It Work
+
+Binary search is notoriously easy to get wrong. The key to writing it correctly is maintaining an **invariant** - a condition that remains true throughout the algorithm:
+
+> **Invariant**: If the target exists in the array, it is within the range [left, right] (inclusive).
+
+Every decision we make must preserve this invariant:
+
+```javascript
+function binarySearch(arr, target) {
+  // Invariant: if target exists, it's in arr[left..right]
+  let left = 0;
+  let right = arr.length - 1;
+
+  while (left <= right) {
+    // We still have elements to check
+    const mid = Math.floor((left + right) / 2);
+
+    if (arr[mid] === target) {
+      return mid;  // Found!
+    }
+
+    if (arr[mid] < target) {
+      // Target must be to the right of mid (if it exists)
+      // We've checked mid, so exclude it
+      left = mid + 1;
+    } else {
+      // Target must be to the left of mid (if it exists)
+      // We've checked mid, so exclude it
+      right = mid - 1;
+    }
+  }
+
+  // left > right means the range is empty - target doesn't exist
+  return -1;
+}
+```
+
+### Why These Exact Conditions?
+
+Every detail matters:
+
+1. **`left <= right`** (not `<`): We need to check when there's exactly one element left (`left === right`)
+
+2. **`mid + 1` and `mid - 1`** (not just `mid`): We've already checked `arr[mid]`, so we exclude it. Using just `mid` can cause infinite loops.
+
+3. **`Math.floor((left + right) / 2)`**: This ensures `mid` rounds down, staying within bounds. (In languages with integer overflow, use `left + Math.floor((right - left) / 2)`)
+
+<Warning>
+Binary search has been called "the most frequently reinvented algorithm." Even experienced programmers get it wrong. Always verify your implementation handles: empty arrays, single-element arrays, target at first position, target at last position, and target not present.
+</Warning>
+
+### The Recursive View
+
+Binary search has a beautiful recursive structure that reveals *why* it works:
+
+```javascript
+function binarySearchRecursive(arr, target, left = 0, right = arr.length - 1) {
+  // Base case: empty range
+  if (left > right) {
+    return -1;
+  }
+
+  const mid = Math.floor((left + right) / 2);
+
+  // Base case: found
+  if (arr[mid] === target) {
+    return mid;
+  }
+
+  // Recursive case: search the appropriate half
+  if (arr[mid] < target) {
+    return binarySearchRecursive(arr, target, mid + 1, right);
+  } else {
+    return binarySearchRecursive(arr, target, left, mid - 1);
+  }
+}
+```
+
+This version makes the divide-and-conquer pattern explicit: we reduce the problem to a smaller instance of the same problem. This pattern appears everywhere in computer science - in merge sort, quicksort, tree traversals, and countless other algorithms.
+
+### Visualizing the Halving
+
+Searching for 3 in [1, 3, 5, 7, 9, 11, 13]:
+
+```
+Step 1: [1, 3, 5, 7, 9, 11, 13]   left=0, right=6
+                 ^
+        mid=3, arr[3]=7, target < 7, search left
+
+Step 2: [1, 3, 5]                 left=0, right=2
+            ^
+        mid=1, arr[1]=3, found!
+```
+
+Searching for 12 (not present):
+
+```
+Step 1: [1, 3, 5, 7, 9, 11, 13]   left=0, right=6
+                 ^
+        mid=3, arr[3]=7, 12 > 7, search right
+
+Step 2:          [9, 11, 13]      left=4, right=6
+                     ^
+        mid=5, arr[5]=11, 12 > 11, search right
+
+Step 3:              [13]         left=6, right=6
+                      ^
+        mid=6, arr[6]=13, 12 < 13, search left
+
+Step 4:                           left=6, right=5
+        left > right, not found, return -1
+```
+
+### Why O(log n)?
+
+Each step divides the problem in half. How many times can you halve n before reaching 1?
+
+| Array Size | Halvings to 1 | log₂(n) |
+|------------|---------------|---------|
+| 2 | 1 | 1 |
+| 8 | 3 | 3 |
+| 1,024 | 10 | 10 |
+| 1,000,000 | 20 | ~20 |
+| 1,000,000,000 | 30 | ~30 |
+
+A billion elements. Thirty comparisons. This is the power of logarithmic algorithms.
+
+## The Dramatic Difference
+
+| Array Size | Linear Search | Binary Search | Speedup |
+|------------|---------------|---------------|---------|
+| 100 | 100 | 7 | 14x |
+| 10,000 | 10,000 | 14 | 714x |
+| 1,000,000 | 1,000,000 | 20 | 50,000x |
+
+As data grows, this difference becomes the difference between "works" and "impossible."
+
+## Decision Framework
+
+| Your Situation | Best Approach | Why |
+|----------------|---------------|-----|
+| Unsorted, search once | Linear search | Sorting costs O(n log n), not worth it |
+| Unsorted, search many times | Sort first, then binary search | Amortize sort cost over many searches |
+| Sorted, any number of searches | Binary search | Always O(log n) |
+| Search by key, very frequent | Build a Map/index | O(1) after O(n) setup |
+| Small array (< 50 elements) | Either | Modern CPUs make small linear scans fast |
+
+### The Amortization Question
+
+If you have unsorted data and will search k times, when is it worth sorting first?
+
+- Sorting costs: O(n log n)
+- k linear searches cost: O(kn)
+- k binary searches after sorting cost: O(n log n + k log n)
+
+Sorting pays off when k > log n (roughly). For n = 1,000,000, that's about k > 20 searches.
+
+## Searching in Objects
+
+Real-world data is rarely just numbers. JavaScript provides expressive methods for searching arrays of objects:
+
+```javascript
+const users = [
+  { id: 1, name: "Alice", age: 30 },
+  { id: 2, name: "Bob", age: 25 },
+  { id: 3, name: "Carol", age: 35 }
+];
+
+// Find first matching object
+const found = users.find(user => user.age > 28);
+console.log(found);  // { id: 1, name: "Alice", age: 30 }
+
+// Get all matching objects
+const allFound = users.filter(user => user.age > 28);
+console.log(allFound);  // [Alice, Carol]
+
+// Check if any match exists (short-circuits)
+const hasOlder = users.some(user => user.age > 40);
+console.log(hasOlder);  // false
+
+// Check if all match a condition
+const allAdults = users.every(user => user.age >= 18);
+console.log(allAdults);  // true
+
+// Find the index of a match
+const index = users.findIndex(user => user.name === "Bob");
+console.log(index);  // 1
+```
+
+All of these are O(n) linear scans. For frequent lookups, build an index.
+
+## Building an Index for O(1) Lookup
+
+When you'll search the same collection repeatedly, trade space for time by building an index:
+
+```javascript
+const users = [
+  { id: 1, name: "Alice" },
+  { id: 2, name: "Bob" },
+  { id: 3, name: "Carol" }
+];
+
+// Build index once - O(n) time, O(n) space
+const userById = new Map();
+for (const user of users) {
+  userById.set(user.id, user);
+}
+
+// Each lookup is now O(1)
+console.log(userById.get(2));  // { id: 2, name: "Bob" }
+console.log(userById.get(99)); // undefined
+```
+
+You can index by any property - or even multiple properties:
+
+```javascript
+// Multiple indexes for different access patterns
+const byId = new Map();
+const byName = new Map();
+
+for (const user of users) {
+  byId.set(user.id, user);
+  byName.set(user.name.toLowerCase(), user);
+}
+
+// O(1) lookup by either property
+byId.get(1);           // Alice by id
+byName.get("carol");   // Carol by name
+```
+
+This is exactly what databases do. Understanding indexing here prepares you for database design later.
+
+## Proving Binary Search Terminates
+
+How do we know binary search doesn't loop forever? We need to show:
+
+1. **The range shrinks each iteration**: `left` increases or `right` decreases (by at least 1)
+2. **The loop terminates when the range is empty**: `left > right`
+
+Since the range `[left, right]` starts finite and strictly decreases each step, it must eventually become empty. This kind of reasoning - identifying a quantity that decreases toward a limit - is how we prove algorithms terminate.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What is the time complexity of binary search?"
+  options={["O(n)", "O(log n)", "O(1)", "O(n log n)"]}
+  correct={1}
+/>
+
+<FillBlank
+  question="Before using binary search, the data must be ___."
+  answer="sorted"
+  fuzzyThreshold={1}
+/>
+
+<MultipleChoice
+  question="For an array of 1,000 elements, approximately how many comparisons does binary search need in the worst case?"
+  options={["1,000", "500", "100", "10"]}
+  correct={3}
+/>
+
+<MultipleChoice
+  question="What is the invariant that makes binary search correct?"
+  options={[
+    "The middle element is always checked first",
+    "If the target exists, it is within [left, right]",
+    "The array is always divided exactly in half",
+    "Left is always less than right"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="When does it make sense to sort data before searching?"
+  options={[
+    "Always - sorted data is better",
+    "When you'll search many times",
+    "Only for arrays over 1000 elements",
+    "Never - sorting is too expensive"
+  ]}
+  correct={1}
+/>
+
+## Try It Yourself
+
+Practice searching algorithms:
+
+<Exercise id="pm-searching" />
+
+## Summary
+
+Key lessons from this chapter:
+
+- **Structure enables speed**: Sorted data has information encoded in its order; exploit it
+- **Linear search is O(n)**: The right choice when you have no structure to exploit
+- **Binary search is O(log n)**: Requires sorted data, but scales to billions of elements
+- **The invariant is everything**: "Target, if it exists, is in [left, right]" - maintain this and the algorithm is correct
+- **Amortize preprocessing**: Sorting or indexing costs up front but pays off over many searches
+- **Build indexes for O(1)**: When you search frequently by the same key, use a Map
+- **Prove termination**: Identify a quantity that decreases each iteration
+
+The deeper lesson: the same data can be organized different ways, and the organization you choose determines what's efficient. This principle guides everything from choosing data structures to designing databases to architecting systems.
+
+Next, we'll explore algorithm complexity in more depth.

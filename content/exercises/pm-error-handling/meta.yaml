@@ -1,0 +1,4 @@
+title: Error Handling
+description: Practice try/catch and error throwing
+template: simple
+focus: /src/index.js

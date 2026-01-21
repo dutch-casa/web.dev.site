@@ -38,10 +38,13 @@ const EXCLUDED_FILES = new Set(["meta.yaml", "meta.json", ".DS_Store", "node_mod
 // Meta Schema
 // ----------------------------------------------------------------------------
 
+type ExerciseTemplate = "simple" | "react"
+
 interface ExerciseMeta {
   title: string
   description?: string
   focus?: string
+  template?: ExerciseTemplate // "simple" = plain Node.js, "react" = React+Vite (default)
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>
   scripts?: Record<string, string>
@@ -139,16 +142,36 @@ export async function loadExercise(id: string): Promise<ExerciseConfig> {
     // No solution directory - that's fine
   }
 
-  // Merge with scaffold files
+  // Find first visible file for focus
+  const firstVisibleFile = files.find((f) => !f.hidden)?.path ?? files[0]?.path
+
+  // Template determines scaffold and defaults
+  const template = meta.template ?? "react"
+
+  if (template === "simple") {
+    // Simple Node.js exercises - no React, no npm install needed
+    return {
+      id,
+      title: meta.title,
+      description: meta.description,
+      files, // No scaffold files added
+      solution,
+      dependencies: meta.dependencies, // undefined = no npm install
+      devDependencies: meta.devDependencies,
+      scripts: meta.scripts,
+      devCommand: meta.devCommand ?? "node src/index.js",
+      previewPort: undefined,
+      focus: meta.focus ?? firstVisibleFile,
+    }
+  }
+
+  // React template (default) - merge with scaffold files
   const scaffoldFiles = getScaffoldFiles(meta)
   const userFilePaths = new Set(files.map((f) => f.path))
   const mergedFiles: ExerciseFile[] = [
     ...scaffoldFiles.filter((f) => !userFilePaths.has(f.path)),
     ...files,
   ]
-
-  // Find first visible file for focus
-  const firstVisibleFile = files.find((f) => !f.hidden)?.path ?? files[0]?.path
 
   return {
     id,

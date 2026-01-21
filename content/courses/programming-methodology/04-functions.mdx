@@ -1,0 +1,557 @@
+# Functions and Contracts
+
+Functions are the fundamental unit of abstraction in programming. They let you give a name to a computation, hide its details, and reuse it. But functions are more than a convenience - they are *contracts* between the code that calls them and the code that implements them.
+
+This lesson teaches you not just how to write functions, but how to *think* in functions. The mental models here will shape how you design software for decades.
+
+## What Is a Function?
+
+A function is a named block of code that performs a specific task. You can "call" (invoke) a function by its name to run that code:
+
+```javascript
+// Defining a function
+function greet(name) {
+  return "Hello, " + name + "!";
+}
+
+// Calling the function
+const message = greet("Alice");
+console.log(message);  // Prints: Hello, Alice!
+```
+
+The `function` keyword defines a function. The name `greet` identifies the function. The `name` inside parentheses is a **parameter** - a placeholder for data passed to the function. The `return` keyword specifies the value the function produces.
+
+## The Mental Model: What Happens When You Call a Function
+
+Understanding function calls at a mechanical level prevents countless bugs. Here is what happens:
+
+1. **Argument evaluation**: Each argument expression is evaluated *before* the function runs
+2. **Binding**: Parameter names are bound to argument values (copies for primitives)
+3. **Execution**: The function body runs with those bindings
+4. **Return**: Control returns to the caller with the result value
+
+```javascript
+function double(n) {
+  return n * 2;
+}
+
+const x = 5;
+const result = double(x + 1);  // Step 1: evaluate x + 1 → 6
+                                // Step 2: bind n = 6
+                                // Step 3: compute 6 * 2
+                                // Step 4: return 12
+```
+
+<Tip>
+Parameters are like local variables that are automatically initialized with argument values. The function cannot change the original variable `x` - it only has a copy of the value.
+</Tip>
+
+### The Call Stack
+
+When a function calls another function, the computer remembers where to return:
+
+```javascript
+function main() {
+  console.log("Start");
+  const result = outer(5);  // Pause main, enter outer
+  console.log("Result:", result);
+}
+
+function outer(n) {
+  const doubled = inner(n);  // Pause outer, enter inner
+  return doubled + 1;        // Resume here after inner returns
+}
+
+function inner(n) {
+  return n * 2;              // Returns to outer
+}
+
+main();  // Start → 11
+```
+
+The **call stack** tracks this chain of paused functions. Each function call adds a "frame" to the stack; each return removes one. Understanding this prevents confusion when debugging or tracing execution.
+
+## Why Use Functions?
+
+Functions provide several benefits:
+
+1. **Reusability** - Write once, use many times
+2. **Organization** - Group related code together
+3. **Abstraction** - Hide complexity behind a simple name
+4. **Testing** - Test small pieces independently
+5. **Information hiding** - Isolate decisions so they can change
+
+```javascript
+// Instead of repeating this code:
+console.log("Hello, Alice!");
+console.log("Hello, Bob!");
+console.log("Hello, Carol!");
+
+// Use a function:
+function sayHello(name) {
+  console.log("Hello, " + name + "!");
+}
+
+sayHello("Alice");
+sayHello("Bob");
+sayHello("Carol");
+```
+
+### Information Hiding
+
+The deepest reason for functions is *information hiding*. A function hides *how* something is done, exposing only *what* it does.
+
+Consider this function:
+
+```javascript
+function isLeapYear(year) {
+  return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+}
+```
+
+The caller does not need to know the leap year rules. If the rules changed (they will not, but imagine), only this function changes - every caller automatically gets the new behavior.
+
+This principle, articulated by David Parnas in 1972, remains the foundation of good software design: **hide the decisions that are likely to change**.
+
+## Function Contracts
+
+Every function has an implicit **contract** - a formal agreement between caller and implementation.
+
+Think of it like a legal contract:
+- The **caller** promises to provide valid inputs (preconditions)
+- The **function** promises to deliver a valid result (postconditions)
+- Both parties agree on what "valid" means
+
+This is *Design by Contract*, a concept from Bertrand Meyer that makes functions trustworthy.
+
+### The Three Parts of a Contract
+
+1. **Preconditions**: What must be true *before* the function runs
+2. **Postconditions**: What will be true *after* the function completes
+3. **Invariants**: What remains true throughout (more on this in later lessons)
+
+### Preconditions
+
+Preconditions are requirements that must be satisfied for the function to work correctly:
+
+```javascript
+function divide(numerator, denominator) {
+  // Precondition: denominator must not be zero
+  if (denominator === 0) {
+    throw new Error("Cannot divide by zero");
+  }
+
+  return numerator / denominator;
+}
+```
+
+A precondition is a *promise from the caller*. If the caller violates it, the function is not obligated to behave reasonably.
+
+### Postconditions
+
+Postconditions are guarantees about the result - promises from the function to the caller:
+
+```javascript
+function absoluteValue(n) {
+  // Precondition: n is a number
+  // Postcondition: result is always >= 0
+
+  if (n < 0) {
+    return -n;
+  }
+
+  return n;
+}
+```
+
+If `absoluteValue` ever returns a negative number, the function has broken its contract. This is a bug in the function, not the caller.
+
+### Why Contracts Matter
+
+Contracts enable **local reasoning**. When you see:
+
+```javascript
+const distance = absoluteValue(x - y);
+```
+
+You *know* `distance >= 0` without reading the implementation. The postcondition is a fact you can depend on. This compounds: functions that use `absoluteValue` can make their own guarantees, building layers of reliable code.
+
+### Fail Fast
+
+When preconditions are violated, fail immediately with a clear error. This is called **fail fast**:
+
+```javascript
+function createUser(name, age) {
+  // Fail fast - check preconditions immediately
+  if (typeof name !== "string" || name.length === 0) {
+    throw new Error("Name must be a non-empty string");
+  }
+
+  if (typeof age !== "number" || age < 0 || age > 150) {
+    throw new Error("Age must be a number between 0 and 150");
+  }
+
+  // If we get here, we know the inputs are valid
+  return {
+    name: name,
+    age: age,
+    createdAt: new Date()
+  };
+}
+```
+
+<Tip>
+Failing fast means bugs are caught where they originate, not somewhere deep in your code where the root cause is hard to find. An error at line 3 is easier to debug than one at line 3000 caused by bad data from line 3.
+</Tip>
+
+## Parameters and Arguments
+
+Parameters are the names listed in the function definition. Arguments are the actual values passed when calling:
+
+```javascript
+// Parameters: x, y
+function add(x, y) {
+  return x + y;
+}
+
+// Arguments: 5, 3
+const sum = add(5, 3);  // sum is 8
+```
+
+You can have any number of parameters:
+
+```javascript
+function introduce(firstName, lastName, age, city) {
+  return `${firstName} ${lastName} is ${age} years old and lives in ${city}.`;
+}
+
+const bio = introduce("Alice", "Smith", 30, "Boston");
+```
+
+## Return Values
+
+The `return` keyword exits the function and optionally provides a value:
+
+```javascript
+function square(n) {
+  return n * n;
+}
+
+const result = square(4);  // result is 16
+
+// Functions without return (or return alone) return undefined
+function logMessage(message) {
+  console.log(message);
+  // No return statement
+}
+
+const value = logMessage("Hello");  // value is undefined
+```
+
+## Stepwise Refinement: The Process of Decomposition
+
+Throughout this course, you have seen the same idea appear in different forms: readable code breaks calculations into named constants, guard clauses handle one case at a time, and now functions give names to entire operations. This is **decomposition** - breaking a complex problem into smaller, manageable pieces.
+
+But knowing you *should* decompose is not enough. You need a *process* for arriving at good decomposition. That process is **stepwise refinement**, also called top-down design.
+
+### The Process
+
+1. **Start with the goal**: Write the high-level function first, using helper functions that do not exist yet
+2. **Name what you need**: Give clear names to each helper, even though they are not implemented
+3. **Refine each piece**: Implement each helper, applying the same process if needed
+4. **Stop when trivial**: Stop decomposing when a function is so simple it needs no further breakdown
+
+### Example: Grade Statistics
+
+Suppose you need to display grade statistics. Start by writing *what* you want to do, not *how*:
+
+```javascript
+// Step 1: Start with the goal
+function displayGradeStats(grades) {
+  // Precondition: grades is a non-empty array of numbers
+  if (!Array.isArray(grades) || grades.length === 0) {
+    throw new Error("Grades must be a non-empty array");
+  }
+
+  // Name what you need - these functions do not exist yet!
+  const average = calculateAverage(grades);
+  const highest = findHighest(grades);
+  const lowest = findLowest(grades);
+
+  console.log("Average:", average);
+  console.log("Highest:", highest);
+  console.log("Lowest:", lowest);
+}
+```
+
+Now the high-level structure is clear. You have *designed* before you have *implemented*. Next, refine each helper:
+
+```javascript
+// Step 2: Refine calculateAverage
+function calculateAverage(grades) {
+  let sum = 0;
+  for (const grade of grades) {
+    sum = sum + grade;
+  }
+  return sum / grades.length;
+}
+
+// Step 3: Refine findHighest
+function findHighest(grades) {
+  let highest = grades[0];
+  for (const grade of grades) {
+    if (grade > highest) {
+      highest = grade;
+    }
+  }
+  return highest;
+}
+
+// Step 4: Refine findLowest
+function findLowest(grades) {
+  let lowest = grades[0];
+  for (const grade of grades) {
+    if (grade < lowest) {
+      lowest = grade;
+    }
+  }
+  return lowest;
+}
+```
+
+### Why This Order Matters
+
+Writing the high-level function *first* forces you to think about the problem structure before getting lost in details. You decide *what* pieces you need before deciding *how* each piece works.
+
+This is harder than it sounds. The temptation is to start coding immediately. Resist it. The few minutes spent on top-down design save hours of confused refactoring.
+
+### Choosing Abstraction Boundaries
+
+Where should you draw the line between functions? Here are principles:
+
+1. **One function, one job**: If you cannot describe what a function does in one sentence without "and", split it
+2. **Consistent abstraction level**: A function should either coordinate other functions OR do detailed work, not both
+3. **Hide decisions**: If a calculation might change, isolate it in a function
+4. **Name what matters**: If a block of code has a meaningful name, make it a function
+
+```javascript
+// BAD: Mixed abstraction levels
+function processOrder(order) {
+  // High-level: validation
+  validateOrder(order);
+
+  // Suddenly low-level: tax calculation details
+  const taxRate = order.state === "CA" ? 0.0725 :
+                  order.state === "NY" ? 0.08 : 0.05;
+  const tax = order.subtotal * taxRate;
+
+  // Back to high-level
+  chargeCustomer(order, tax);
+}
+
+// GOOD: Consistent abstraction
+function processOrder(order) {
+  validateOrder(order);
+  const tax = calculateTax(order);
+  chargeCustomer(order, tax);
+}
+
+function calculateTax(order) {
+  const taxRate = getTaxRateForState(order.state);
+  return order.subtotal * taxRate;
+}
+
+function getTaxRateForState(state) {
+  const rates = { CA: 0.0725, NY: 0.08 };
+  return rates[state] ?? 0.05;
+}
+```
+
+The second version is longer but *better*. Each function operates at one level of abstraction. Tax rules are isolated. The high-level function reads like a summary.
+
+## Scope
+
+Variables declared inside a function are **local** to that function:
+
+```javascript
+function myFunction() {
+  const localVar = "I am local";
+  console.log(localVar);  // Works
+}
+
+myFunction();
+console.log(localVar);  // Error! localVar is not defined
+```
+
+Variables declared outside any function are **global** and accessible everywhere:
+
+```javascript
+const globalVar = "I am global";
+
+function myFunction() {
+  console.log(globalVar);  // Works
+}
+
+myFunction();
+console.log(globalVar);  // Works
+```
+
+<Tip>
+Minimize the use of global variables. They can make code harder to understand and debug because any part of the program can modify them.
+</Tip>
+
+## Pure Functions
+
+A **pure function** has two properties:
+
+1. **Deterministic**: Same inputs always produce the same output
+2. **No side effects**: Does not modify anything outside itself
+
+```javascript
+// Pure function - no side effects, same input = same output
+function add(a, b) {
+  return a + b;
+}
+
+// Impure function - modifies external state
+let total = 0;
+function addToTotal(amount) {
+  total = total + amount;  // Side effect: modifies global variable
+  return total;
+}
+```
+
+### Why Purity Matters
+
+Pure functions have profound advantages:
+
+**Testability**: You can test a pure function by checking that inputs map to expected outputs. No setup, no mocking, no cleanup.
+
+```javascript
+// Testing a pure function is trivial
+console.assert(add(2, 3) === 5);
+console.assert(add(-1, 1) === 0);
+```
+
+**Reasoning**: When you see `add(x, y)`, you know it cannot change `x`, `y`, or anything else. You can understand the code locally without tracing global state.
+
+**Caching**: Pure functions can have their results cached (memoized). If `fibonacci(40)` always returns the same value, compute it once and reuse it.
+
+**Parallelism**: Pure functions can run in parallel without locks or synchronization. They cannot interfere with each other because they share no state.
+
+### The Real World Is Impure
+
+Programs must eventually read files, update databases, and display output. These are side effects. The strategy is:
+
+1. **Push impurity to the edges**: Keep core logic pure
+2. **Isolate side effects**: Contain them in clearly marked functions
+3. **Minimize mutation**: Prefer creating new values to modifying existing ones
+
+```javascript
+// Core logic - pure
+function calculateDiscount(price, percentage) {
+  return price * (percentage / 100);
+}
+
+function formatPrice(amount) {
+  return "$" + amount.toFixed(2);
+}
+
+// Edge - impure (I/O)
+function displayDiscount(price, percentage) {
+  const discount = calculateDiscount(price, percentage);
+  const formatted = formatPrice(discount);
+  console.log("Your discount: " + formatted);  // Side effect
+}
+```
+
+The pure functions `calculateDiscount` and `formatPrice` are easy to test and reuse. The impure function `displayDiscount` is thin - it just glues the pure pieces together and performs I/O.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What is a precondition?"
+  options={[
+    "The result that a function returns",
+    "A requirement that must be true before a function runs",
+    "A variable that never changes",
+    "A type of loop"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="Variables declared inside a function are called ___ variables."
+  answer="local"
+  fuzzyThreshold={1}
+/>
+
+<MultipleChoice
+  question="What does 'fail fast' mean?"
+  options={[
+    "Functions should run as quickly as possible",
+    "Errors should be thrown immediately when preconditions are violated",
+    "Programs should crash randomly",
+    "Functions should return early"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="In stepwise refinement, what should you write first?"
+  options={[
+    "The helper functions with all the details",
+    "The high-level function that uses helpers not yet implemented",
+    "The test cases",
+    "The documentation"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="Why are pure functions easier to test?"
+  options={[
+    "They run faster",
+    "They require less memory",
+    "Same inputs always produce same outputs, with no external state to manage",
+    "They have shorter names"
+  ]}
+  correct={2}
+/>
+
+## Try It Yourself
+
+Practice writing functions to solve problems:
+
+<Exercise id="pm-functions" />
+
+## Summary
+
+You learned:
+
+- Functions group code into reusable blocks
+- The call stack tracks function calls and returns
+- Parameters are placeholders; arguments are actual values
+- `return` exits the function and provides a value
+- **Contracts** formalize the agreement between caller and function:
+  - Preconditions: what the caller promises
+  - Postconditions: what the function guarantees
+- **Fail fast**: validate inputs immediately and throw clear errors
+- **Stepwise refinement**: write high-level functions first, then implement helpers
+- **Abstraction boundaries**: one job per function, consistent abstraction levels
+- **Information hiding**: functions isolate decisions that might change
+- Scope determines where variables are accessible
+- **Pure functions** are deterministic and side-effect-free - prefer them for core logic
+
+## The Ideas That Last
+
+The syntax of functions will feel obvious soon. What lasts are the principles:
+
+- **Design by Contract** (Meyer): Make promises explicit
+- **Information Hiding** (Parnas): Hide what might change
+- **Stepwise Refinement** (Wirth, Dijkstra): Top-down, design before details
+- **Purity**: Isolate complexity, push effects to edges
+
+These ideas are 50 years old. They will outlast any programming language you learn.
+
+Next, we will explore how to work with strings and text data.

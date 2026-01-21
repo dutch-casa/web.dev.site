@@ -1,0 +1,524 @@
+# Control Flow
+
+Programs often need to make decisions based on conditions and repeat actions multiple times. Control flow mechanisms let you direct the execution path of your code.
+
+But control flow is more than syntax. It's how you **reason about what your program does**. Every `if` statement partitions your program's universe into two worlds. Every loop is a machine that must eventually stop. Understanding control flow deeply means understanding how to write code you can *prove* is correct.
+
+This lesson teaches you both the mechanics and the mental models that professional programmers use to write reliable software.
+
+## Making Decisions with if/else
+
+The `if` statement runs code only when a condition is true:
+
+```javascript
+const temperature = 75;
+
+if (temperature > 80) {
+  console.log("It is hot outside!");
+}
+```
+
+You can provide an alternative using `else`:
+
+```javascript
+const temperature = 75;
+
+if (temperature > 80) {
+  console.log("It is hot outside!");
+} else {
+  console.log("It is not too hot.");
+}
+```
+
+For multiple conditions, use `else if`:
+
+```javascript
+const temperature = 75;
+
+if (temperature > 80) {
+  console.log("It is hot outside!");
+} else if (temperature > 60) {
+  console.log("It is pleasant outside.");
+} else {
+  console.log("It is cold outside.");
+}
+```
+
+## Guard Clauses: A Better Pattern
+
+As you write more code, you will find that nested `if/else` becomes hard to read:
+
+```javascript
+// Hard to read: deeply nested
+function processOrder(order) {
+  if (order) {
+    if (order.items.length > 0) {
+      if (order.isPaid) {
+        // Finally, the main logic
+        shipOrder(order);
+        return "shipped";
+      } else {
+        return "not paid";
+      }
+    } else {
+      return "no items";
+    }
+  } else {
+    return "no order";
+  }
+}
+```
+
+**Guard clauses** handle one case at a time - check a condition, handle it, move on. This keeps the main logic at the natural indentation level:
+
+```javascript
+// Easy to read: guard clauses
+function processOrder(order) {
+  if (!order) {
+    return "no order";
+  }
+
+  if (order.items.length === 0) {
+    return "no items";
+  }
+
+  if (!order.isPaid) {
+    return "not paid";
+  }
+
+  // Main logic - not nested
+  shipOrder(order);
+  return "shipped";
+}
+```
+
+<Tip>
+The rule is simple: no `else` after `return`. Handle the exceptional case, return, and move on. The main logic lives at the top level.
+</Tip>
+
+### Why Guard Clauses Work
+
+Guard clauses embody a principle that will serve you throughout your career: **make invalid states unreachable**.
+
+Consider what the nested version does: it allows your code to proceed deeper and deeper while still in potentially invalid states. The order might be null, but you're already three levels deep. The guard clause version is different - by the time you reach `shipOrder(order)`, you have *proven* that:
+
+- `order` exists (not null)
+- `order.items` has at least one item
+- `order.isPaid` is true
+
+This is not just cleaner code - it's a **proof** embedded in the structure of your program. Each guard clause eliminates one class of invalid states. What remains is the valid path.
+
+1. **Invalid states are eliminated early** - Each guard removes one way the code could fail
+2. **The main logic has preconditions guaranteed** - You can reason about it in isolation
+3. **Adding new constraints is additive** - New guards don't restructure existing code
+4. **The code structure matches the logical structure** - What you see is what executes
+
+<Tip>
+Think of guard clauses as a **funnel**: you start with all possible inputs, and each guard narrows the universe until only valid inputs remain. The main logic handles only those valid cases.
+</Tip>
+
+## Comparison Operators
+
+Conditions use comparison operators to produce boolean values:
+
+```javascript
+10 > 5;      // Greater than: true
+10 < 5;      // Less than: false
+10 >= 10;    // Greater than or equal: true
+10 <= 5;     // Less than or equal: false
+10 === 10;   // Equal (strict): true
+10 !== 5;    // Not equal: true
+
+// Avoid == and != in JavaScript (they have unexpected behavior)
+10 == "10";  // true (unexpected!)
+10 === "10"; // false (strict equality is better)
+```
+
+## Logical Operators
+
+Combine or modify boolean conditions:
+
+```javascript
+// AND - both conditions must be true
+true && true;   // true
+true && false;  // false
+
+// OR - at least one condition must be true
+true || false;  // true
+false || false; // false
+
+// NOT - reverses the value
+!true;          // false
+!false;         // true
+
+// Example: checking a range
+const age = 25;
+if (age >= 18 && age <= 65) {
+  console.log("Person is of working age.");
+}
+```
+
+## Repeating with Loops
+
+Loops let you repeat code multiple times. But loops are also where most bugs hide. Understanding loops deeply - not just their syntax, but *why* they work - is what separates reliable programmers from those who debug endlessly.
+
+Every correct loop has three properties:
+1. **It makes progress** - Each iteration moves closer to termination
+2. **It terminates** - It eventually stops
+3. **It maintains invariants** - Certain truths hold before and after each iteration
+
+We will return to these properties after learning the syntax.
+
+### while Loop
+
+The `while` loop repeats while a condition is true:
+
+```javascript
+let count = 0;
+
+while (count < 5) {
+  console.log(count);
+  count = count + 1;  // Do not forget this, or it loops forever!
+}
+// Prints: 0, 1, 2, 3, 4
+```
+
+### for Loop
+
+The `for` loop is ideal when you know how many iterations you need:
+
+```javascript
+// for (initializer; condition; increment)
+for (let i = 0; i < 5; i = i + 1) {
+  console.log(i);
+}
+// Prints: 0, 1, 2, 3, 4
+```
+
+The parts of a for loop:
+- **Initializer**: `let i = 0` - runs once before the loop
+- **Condition**: `i < 5` - checked before each iteration
+- **Increment**: `i = i + 1` - runs after each iteration
+
+Notice how the for loop makes the three properties explicit:
+- **Progress**: `i = i + 1` ensures `i` grows each iteration
+- **Termination**: Since `i` grows and starts at 0, it will eventually reach 5
+- **Invariant**: At the start of each iteration, `i` is the number of iterations completed so far
+
+### Iterating Over Arrays
+
+You will often loop through arrays:
+
+```javascript
+const fruits = ["apple", "banana", "cherry"];
+
+// Classic for loop
+for (let i = 0; i < fruits.length; i = i + 1) {
+  console.log(fruits[i]);
+}
+
+// for...of loop (cleaner when you do not need the index)
+for (const fruit of fruits) {
+  console.log(fruit);
+}
+```
+
+## Reasoning About Loops: Invariants
+
+Here is a secret that most programmers learn too late: **you cannot debug your way to correct loops**. You must *reason* your way to them. The tool for this is the **loop invariant** - a statement that is true before the loop starts and remains true after each iteration.
+
+Consider summing an array:
+
+```javascript
+function sum(numbers) {
+  let total = 0;
+
+  for (let i = 0; i < numbers.length; i = i + 1) {
+    total = total + numbers[i];
+  }
+
+  return total;
+}
+```
+
+The invariant here is: **after iteration i, `total` equals the sum of `numbers[0]` through `numbers[i-1]`**.
+
+Let us trace it:
+- Before the loop: `total = 0`, which is the sum of zero elements (correct)
+- After iteration 0: `total = numbers[0]`, the sum of elements 0 through 0 (correct)
+- After iteration 1: `total = numbers[0] + numbers[1]`, the sum of elements 0 through 1 (correct)
+- After the loop: `i = numbers.length`, so `total` is the sum of all elements (correct)
+
+This is not pedantic - it is how you write loops that work the first time.
+
+### Finding the Invariant
+
+When writing a loop, ask yourself: **what is true after k iterations?** Your answer is the invariant. Design your loop to maintain it.
+
+```javascript
+// Finding the maximum value
+function max(numbers) {
+  let largest = numbers[0];
+
+  for (let i = 1; i < numbers.length; i = i + 1) {
+    if (numbers[i] > largest) {
+      largest = numbers[i];
+    }
+  }
+
+  return largest;
+}
+// Invariant: largest is the maximum of numbers[0] through numbers[i-1]
+```
+
+```javascript
+// Counting occurrences
+function countOccurrences(items, target) {
+  let count = 0;
+
+  for (let i = 0; i < items.length; i = i + 1) {
+    if (items[i] === target) {
+      count = count + 1;
+    }
+  }
+
+  return count;
+}
+// Invariant: count is the number of times target appears in items[0] through items[i-1]
+```
+
+<Tip>
+When a loop does not work, do not add print statements everywhere. Instead, write down what you think the invariant is, then trace through by hand. The iteration where the invariant breaks is where your bug lives.
+</Tip>
+
+### The Three Questions
+
+Before writing any loop, answer these questions:
+
+1. **What is the invariant?** What is true after each iteration?
+2. **Does the loop make progress?** Does each iteration move toward termination?
+3. **Does the loop terminate?** Will the condition eventually become false?
+
+If you cannot answer all three, you do not yet understand your loop well enough to write it.
+
+## Breaking Out of Loops
+
+Use `break` to exit a loop early:
+
+```javascript
+const numbers = [1, 3, 5, 7, 8, 9, 11];
+
+// Find first even number and stop
+for (const num of numbers) {
+  if (num % 2 === 0) {
+    console.log("Found even:", num);
+    break;  // Exit the loop
+  }
+}
+// Prints: Found even: 8
+```
+
+Use `continue` to skip the current iteration:
+
+```javascript
+const numbers = [1, 2, 3, 4, 5];
+
+// Print only odd numbers
+for (const num of numbers) {
+  if (num % 2 === 0) {
+    continue;  // Skip even numbers
+  }
+  console.log(num);
+}
+// Prints: 1, 3, 5
+```
+
+<Tip>
+Be careful with `while (true)` loops. They hide the termination condition inside the loop body, making it harder to reason about whether the loop will actually stop. Use them only when the exit condition is complex or when reading input until a sentinel value.
+</Tip>
+
+## Early Return in Loops
+
+Guard clauses work in loops too. Instead of:
+
+```javascript
+for (const item of items) {
+  if (item.isValid) {
+    if (item.isActive) {
+      processItem(item);
+    }
+  }
+}
+```
+
+Write:
+
+```javascript
+for (const item of items) {
+  if (!item.isValid) {
+    continue;
+  }
+
+  if (!item.isActive) {
+    continue;
+  }
+
+  processItem(item);
+}
+```
+
+## Switch and Lookup Tables
+
+When checking the same value against multiple options, `switch` is cleaner than chained `if/else`:
+
+```javascript
+function getStatusMessage(status) {
+  switch (status) {
+    case "pending":
+      return "Waiting...";
+    case "success":
+      return "Done!";
+    case "error":
+      return "Something went wrong.";
+    default:
+      return "Unknown status.";
+  }
+}
+```
+
+<Tip>
+Always include `return` or `break` in each case. Without them, execution "falls through" to the next case - a common source of bugs.
+</Tip>
+
+In JavaScript, an **object lookup table** often works better than switch:
+
+```javascript
+const statusMessages = {
+  pending: "Waiting...",
+  success: "Done!",
+  error: "Something went wrong.",
+};
+
+function getStatusMessage(status) {
+  return statusMessages[status] ?? "Unknown status.";
+}
+```
+
+The lookup table approach is more concise, and the data (messages) is separated from the logic (lookup). When your cases just map values to values, prefer the table.
+
+## Control Flow as State Machines
+
+Here is a mental model that will serve you for decades: **every program is a state machine**.
+
+Consider a traffic light. It has three states (red, yellow, green) and rules for transitioning between them. Your control flow is how you express those transitions.
+
+```javascript
+// A traffic light as a state machine
+function nextLightState(currentState) {
+  switch (currentState) {
+    case "green":
+      return "yellow";
+    case "yellow":
+      return "red";
+    case "red":
+      return "green";
+    default:
+      throw new Error(`Invalid state: ${currentState}`);
+  }
+}
+```
+
+Notice the `default` case throws an error. This is intentional - if we receive an invalid state, we want to know immediately. This is another example of **making invalid states impossible** - if the only way to get a state is through `nextLightState`, and we start with a valid state, we can never reach an invalid one.
+
+This mental model scales to complex systems:
+- A user can be "logged out", "logging in", "logged in", or "logging out"
+- An order can be "pending", "paid", "shipped", or "delivered"
+- A form can be "empty", "valid", "invalid", or "submitting"
+
+When you think in states and transitions, your control flow writes itself. The `if` statements and loops are just how you express the machine in code.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What does the === operator do?"
+  options={[
+    "Assigns a value",
+    "Compares values loosely",
+    "Compares values with type checking",
+    "Compares values and returns a string"
+  ]}
+  correct={2}
+/>
+
+<FillBlank
+  question="The ___ loop repeats while its condition is true."
+  answer="while"
+  fuzzyThreshold={0}
+/>
+
+<FillBlank
+  question="To exit a loop early, use the ___ keyword."
+  answer="break"
+  fuzzyThreshold={0}
+/>
+
+<MultipleChoice
+  question="What is a guard clause?"
+  options={[
+    "A type of loop",
+    "Handling edge cases first and returning early",
+    "A security feature",
+    "A way to declare variables"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What is a loop invariant?"
+  options={[
+    "A variable that never changes",
+    "A statement that is true before and after each iteration",
+    "The condition that stops the loop",
+    "A bug that causes infinite loops"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="Before writing a loop, which questions should you answer?"
+  options={[
+    "What variable names to use and how to format the code",
+    "What is the invariant, does it make progress, does it terminate",
+    "How many print statements to add for debugging",
+    "Which type of loop to use and where to put the braces"
+  ]}
+  correct={1}
+/>
+
+## Try It Yourself
+
+Practice control flow with a counting exercise:
+
+<Exercise id="pm-control-flow" />
+
+## Summary
+
+You learned the syntax:
+
+- `if`, `else if`, `else` for conditional execution
+- Comparison operators: `>`, `<`, `>=`, `<=`, `===`, `!==`
+- Logical operators: `&&` (AND), `||` (OR), `!` (NOT)
+- `while` and `for` loops for repetition
+- `break` to exit loops, `continue` to skip iterations
+- `switch` for multiple cases, and object lookup tables as a cleaner alternative
+
+But more importantly, you learned the mental models:
+
+- **Guard clauses** eliminate invalid states early, so your main logic only handles valid cases
+- **Loop invariants** let you reason about correctness without tracing every iteration
+- **The three questions** (invariant, progress, termination) tell you if your loop is correct before you run it
+- **State machine thinking** helps you model problems as states and transitions
+
+These are not just techniques - they are how professional programmers think. The syntax you will look up when you forget it. The mental models you will use every day for the rest of your career.
+
+Next, we will explore how to organize code into reusable functions - the building blocks of larger programs.

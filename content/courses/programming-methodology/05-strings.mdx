@@ -1,0 +1,420 @@
+# Strings: Text as a Sequence of Characters
+
+When you think about it, nearly every program deals with text. User input, file contents, network data, error messages—all text. Strings are how we represent and manipulate text in code.
+
+But here's what makes strings interesting from a computer science perspective: **a string is a sequence**. The same mental model you'll use for strings—iterating, slicing, transforming—applies to arrays, lists, streams, and countless other data structures. Master string thinking now, and you've laid groundwork for everything that follows.
+
+## The Big Idea: Strings Are Immutable
+
+Before we look at any syntax, understand this principle:
+
+**Strings cannot be changed after creation.**
+
+This isn't a limitation—it's a feature. When you "modify" a string, you're actually creating a new one:
+
+```javascript
+let greeting = "hello";
+greeting.toUpperCase();    // Returns "HELLO" but greeting is still "hello"
+console.log(greeting);     // "hello" - unchanged!
+
+greeting = greeting.toUpperCase();  // Now greeting points to the NEW string "HELLO"
+console.log(greeting);              // "HELLO"
+```
+
+Why does this matter? Because immutability prevents an entire category of bugs. If you pass a string to a function, you know that function cannot corrupt your original data. You can reason about your code with confidence.
+
+<Tip>
+**Immutability as a Design Principle**: When data cannot be changed, you eliminate bugs caused by unexpected mutations. This same principle applies to functional programming, React state, and database transactions. You're not just learning a string quirk—you're learning a foundational software engineering concept.
+</Tip>
+
+## Creating Strings
+
+JavaScript offers three ways to create strings:
+
+```javascript
+const single = 'Hello';      // Single quotes
+const double = "Hello";      // Double quotes
+const template = `Hello`;    // Template literals (backticks)
+```
+
+Single and double quotes are interchangeable. Template literals are different—they support:
+
+1. **Embedded expressions**: Insert any JavaScript expression
+2. **Multi-line strings**: Preserve line breaks naturally
+
+```javascript
+const name = "Alice";
+const age = 25;
+
+// Expression interpolation
+const bio = `${name} is ${age} years old`;  // "Alice is 25 years old"
+
+// Computed expressions work too
+const summary = `Next year: ${age + 1}`;    // "Next year: 26"
+
+// Multi-line (preserves formatting)
+const poem = `Roses are red,
+Violets are blue,
+Strings are sequences,
+And so are arrays too.`;
+```
+
+<Tip>
+Use template literals by default. They're more readable and flexible than concatenation with `+`.
+</Tip>
+
+## Strings as Sequences: The Index Model
+
+Think of a string as a row of boxes, each containing one character. Each box has an address—its **index**—starting at 0:
+
+```
+String:  "HELLO"
+Index:    0 1 2 3 4
+```
+
+This zero-indexing is universal in programming. The first element is at index 0, not 1.
+
+```javascript
+const word = "HELLO";
+
+word[0]              // "H" - first character
+word[4]              // "O" - fifth character (index 4)
+word[word.length-1]  // "O" - last character (always length - 1)
+word[5]              // undefined - out of bounds
+```
+
+The `length` property tells you how many characters exist:
+
+```javascript
+"HELLO".length       // 5
+"".length            // 0 (empty string)
+" ".length           // 1 (space is a character)
+```
+
+<Warning>
+**Off-by-one errors** are among the most common bugs in programming. A string of length 5 has valid indices 0 through 4, not 0 through 5. When you see yourself writing `i <= word.length`, pause and reconsider.
+</Warning>
+
+## Iterating Through a String
+
+The sequence model means we can process strings character by character:
+
+```javascript
+const word = "CODE";
+
+// Classic for loop - explicit index control
+for (let i = 0; i < word.length; i++) {
+  console.log(`Index ${i}: ${word[i]}`);
+}
+// Index 0: C
+// Index 1: O
+// Index 2: D
+// Index 3: E
+
+// for...of loop - when you only need the character
+for (const char of word) {
+  console.log(char);
+}
+```
+
+Use the classic `for` loop when you need the index. Use `for...of` when you only care about the characters.
+
+### Pattern: Counting Characters
+
+How many vowels are in a string?
+
+```javascript
+function countVowels(str) {
+  const vowels = "aeiouAEIOU";
+  let count = 0;
+
+  for (const char of str) {
+    if (vowels.includes(char)) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+countVowels("Hello World");  // 3
+```
+
+Notice the decomposition: we check each character against a set of known vowels. This "accumulator pattern"—starting with a value and updating it in a loop—appears constantly in programming.
+
+### Pattern: Building a New String
+
+Because strings are immutable, we build new strings by accumulation:
+
+```javascript
+function removeVowels(str) {
+  let result = "";
+
+  for (const char of str) {
+    if (!"aeiouAEIOU".includes(char)) {
+      result += char;  // Append non-vowels to result
+    }
+  }
+
+  return result;
+}
+
+removeVowels("Hello World");  // "Hll Wrld"
+```
+
+Each `+=` creates a new string. For small strings this is fine. For very large strings or performance-critical code, you'd collect characters in an array and `join` them at the end—but don't optimize prematurely.
+
+## Searching Within Strings
+
+Several methods help you find content:
+
+```javascript
+const sentence = "The quick brown fox jumps over the lazy dog";
+
+// Does it contain a substring?
+sentence.includes("fox")        // true
+sentence.includes("cat")        // false
+
+// Where does a substring start?
+sentence.indexOf("quick")       // 4 (starts at index 4)
+sentence.indexOf("cat")         // -1 (not found - memorize this!)
+
+// Does it start or end with something?
+sentence.startsWith("The")      // true
+sentence.endsWith("dog")        // true
+```
+
+<Tip>
+**The -1 Convention**: Many languages return -1 to indicate "not found" rather than `null` or throwing an error. This lets you use the result directly in calculations or comparisons. You'll see this pattern in arrays, file systems, and databases.
+</Tip>
+
+## Extracting Substrings
+
+Use `slice(start, end)` to extract a portion:
+
+```javascript
+const str = "JavaScript";
+//           0123456789
+
+str.slice(0, 4)    // "Java" - indices 0, 1, 2, 3 (not 4!)
+str.slice(4)       // "Script" - from index 4 to end
+str.slice(-3)      // "ipt" - last 3 characters
+str.slice(0, -3)   // "JavaScr" - everything except last 3
+```
+
+The end index is **exclusive**—the slice includes characters up to but not including that index. Think of it as "slice from position A, stopping before position B."
+
+This exclusive end is intentional: `str.slice(0, n)` gives you exactly `n` characters.
+
+## Transforming Strings
+
+These methods return new strings (remember: immutability):
+
+### Case Conversion
+
+```javascript
+const mixed = "HeLLo WoRLD";
+
+mixed.toUpperCase()   // "HELLO WORLD"
+mixed.toLowerCase()   // "hello world"
+```
+
+### Trimming Whitespace
+
+```javascript
+const messy = "   hello world   ";
+
+messy.trim()          // "hello world" - both ends
+messy.trimStart()     // "hello world   " - left only
+messy.trimEnd()       // "   hello world" - right only
+```
+
+User input almost always needs trimming. Make it a habit.
+
+### Replacing Content
+
+```javascript
+const text = "I like cats. Cats are great.";
+
+text.replace("cats", "dogs")       // "I like dogs. Cats are great."
+                                   // Only replaces FIRST occurrence!
+
+text.replaceAll("cats", "dogs")    // "I like dogs. Cats are great."
+                                   // Case-sensitive! "Cats" not replaced
+
+text.toLowerCase().replaceAll("cats", "dogs")  // "i like dogs. dogs are great."
+```
+
+<Warning>
+`replace` only replaces the **first** occurrence. Use `replaceAll` for all occurrences, or use a regular expression with the global flag.
+</Warning>
+
+## Splitting and Joining: Strings ↔ Arrays
+
+This is one of the most useful transformations:
+
+```javascript
+// String → Array (split)
+const csv = "apple,banana,cherry";
+const fruits = csv.split(",");     // ["apple", "banana", "cherry"]
+
+const sentence = "Hello World";
+const words = sentence.split(" "); // ["Hello", "World"]
+const chars = sentence.split("");  // ["H","e","l","l","o"," ","W","o","r","l","d"]
+
+// Array → String (join)
+const parts = ["2024", "01", "15"];
+parts.join("-")                    // "2024-01-15"
+parts.join("/")                    // "2024/01/15"
+parts.join("")                     // "20240115"
+```
+
+This split-transform-join pattern is powerful:
+
+```javascript
+// Capitalize each word
+function titleCase(str) {
+  return str
+    .split(" ")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
+titleCase("hello WORLD");  // "Hello World"
+```
+
+## Unicode: The Reality of Modern Text
+
+A critical concept that many courses skip: characters aren't just A-Z.
+
+```javascript
+const emoji = "Hello 👋";
+console.log(emoji.length);  // 8 (not 7!)
+```
+
+Wait, what? The wave emoji counts as 2 "characters" because of how JavaScript stores Unicode. For most text processing with English and common characters, you won't hit this. But be aware:
+
+```javascript
+// These work fine
+"café".length              // 4
+"naïve".length             // 5
+
+// These might surprise you
+"👨‍👩‍👧".length                // 8 (family emoji is multiple code points)
+```
+
+For now, know that string `length` counts UTF-16 code units, not visual characters. When you work with international text or emoji-heavy content, you'll need more sophisticated approaches.
+
+## Thinking in Transformations
+
+Expert programmers don't think "I need to change this string." They think "I need to transform this input into this output."
+
+Given: `"  HELLO, world!  "`
+Want: `"hello world"`
+
+Decompose it:
+1. Remove extra whitespace → `trim()`
+2. Convert to lowercase → `toLowerCase()`
+3. Remove punctuation → `replace()` or filter
+
+```javascript
+function normalize(input) {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\s]/g, "")  // Remove non-word characters except spaces
+    .replace(/\s+/g, " ");     // Collapse multiple spaces to one
+}
+
+normalize("  HELLO,   world!  ");  // "hello world"
+```
+
+Each step produces a new string. Chain them together. This functional style—transformations flowing into transformations—scales beautifully to complex problems.
+
+## Common String Operations Reference
+
+| Task | Method | Example |
+|------|--------|---------|
+| Get length | `.length` | `"hello".length` → `5` |
+| Get character | `[index]` or `.charAt(i)` | `"hello"[0]` → `"h"` |
+| Find position | `.indexOf(sub)` | `"hello".indexOf("l")` → `2` |
+| Check contains | `.includes(sub)` | `"hello".includes("ell")` → `true` |
+| Extract portion | `.slice(start, end)` | `"hello".slice(1, 4)` → `"ell"` |
+| Convert case | `.toUpperCase()`, `.toLowerCase()` | `"Hello".toUpperCase()` → `"HELLO"` |
+| Remove whitespace | `.trim()` | `"  hi  ".trim()` → `"hi"` |
+| Replace text | `.replace()`, `.replaceAll()` | `"aa".replaceAll("a", "b")` → `"bb"` |
+| Split to array | `.split(delimiter)` | `"a,b".split(",")` → `["a", "b"]` |
+| Join from array | `.join(delimiter)` | `["a","b"].join("-")` → `"a-b"` |
+
+## Edge Cases: Think Before You Code
+
+Before writing any string function, ask:
+- What if the string is empty (`""`)?
+- What if it's all whitespace (`"   "`)?
+- What if the substring isn't found?
+- What if there are multiple matches?
+
+```javascript
+// Fragile - crashes on empty string
+function firstChar(str) {
+  return str[0].toUpperCase();  // TypeError if str is empty!
+}
+
+// Robust - handles edge cases
+function firstChar(str) {
+  if (!str || str.length === 0) {
+    return "";
+  }
+  return str[0].toUpperCase();
+}
+```
+
+The robust version handles empty strings gracefully. This defensive thinking prevents bugs in production.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What does indexOf return when the substring is not found?"
+  options={["undefined", "null", "-1", "false"]}
+  correct={2}
+/>
+
+<MultipleChoice
+  question="What is the output of 'hello'.slice(1, 4)?"
+  options={["'hel'", "'ell'", "'ello'", "'hell'"]}
+  correct={1}
+/>
+
+<FillBlank
+  question="Strings in JavaScript are _____, meaning they cannot be changed after creation."
+  answer="immutable"
+  fuzzyThreshold={0}
+/>
+
+<FillBlank
+  question="To convert an array back into a string with a delimiter, use the _____ method."
+  answer="join"
+  fuzzyThreshold={0}
+/>
+
+## Try It Yourself
+
+<Exercise id="pm-strings" />
+
+## Summary
+
+Key concepts from this lesson:
+
+- **Strings are immutable**: Methods return new strings, never modify the original. This prevents bugs and enables confident reasoning about your code.
+
+- **Strings are sequences**: The index model (0-based) applies to arrays, lists, and countless other structures. Master it once, use it everywhere.
+
+- **Think in transformations**: Don't mutate—transform. Chain operations like `trim().toLowerCase().split()` to build complex processing from simple steps.
+
+- **Handle edge cases**: Empty strings, missing substrings, whitespace. Think about what could go wrong before it goes wrong.
+
+- **The -1 convention**: Many search operations return -1 for "not found." Know this pattern.
+
+The mental models you've built here—immutability, sequences, transformations, defensive programming—extend far beyond strings. You'll use them when we cover arrays, objects, and functional programming patterns.
+
+Next, we'll explore arrays: ordered collections that share the sequence mental model you've now internalized.

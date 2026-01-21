@@ -15,6 +15,7 @@ import {
   Exercise,
   SimpleExercise,
   ExerciseBlock,
+  MermaidDiagram,
 } from "@/components/mdx"
 import { CodeBlockWrapper } from "@/components/mdx/code-block"
 

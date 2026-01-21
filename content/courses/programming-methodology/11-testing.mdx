@@ -1,0 +1,370 @@
+# Testing Your Code
+
+Testing is how you gain confidence that your code works. But more importantly, *thinking about testing changes how you write code*. When you ask "how would I test this?", you are really asking "what should this code do?" and "what could go wrong?"
+
+This lesson teaches you to think systematically about testing—a skill that will serve you for decades.
+
+## The Purpose of Testing
+
+Tests serve four purposes, in order of importance:
+
+1. **Design feedback**: Hard-to-test code is poorly designed. If you struggle to test a function, it is doing too much. Tests are a mirror that reflects your design decisions back at you.
+
+2. **Specification**: Tests document what code *should* do—not what it happens to do today. A good test suite is executable documentation.
+
+3. **Confidence**: Know your code works without manually checking every change.
+
+4. **Fearless refactoring**: Change implementation knowing tests will catch regressions.
+
+<Tip>
+If testing feels painful, that pain is information. It means your code is too tangled, has too many responsibilities, or depends on too much state. Listen to the pain.
+</Tip>
+
+## The Simplest Test
+
+A test is just code that checks if something works:
+
+```javascript
+function add(a, b) {
+  return a + b;
+}
+
+// Test: does add work correctly?
+const result = add(2, 3);
+if (result !== 5) {
+  console.log("FAIL: add(2, 3) should be 5, got", result);
+} else {
+  console.log("PASS: add(2, 3) = 5");
+}
+```
+
+## Assertions
+
+An **assertion** is a statement that something must be true. If false, the assertion fails loudly:
+
+```javascript
+function assert(condition, message) {
+  if (!condition) {
+    throw new Error("Assertion failed: " + message);
+  }
+}
+
+// Using assertions
+assert(add(2, 3) === 5, "add(2, 3) should equal 5");
+assert(add(0, 0) === 0, "add(0, 0) should equal 0");
+assert(add(-1, 1) === 0, "add(-1, 1) should equal 0");
+
+console.log("All tests passed!");
+```
+
+Assertions are binary: pass or fail. There is no "mostly works." This forces clarity.
+
+## Thinking About Input Spaces
+
+Here is the key insight that separates amateur from professional test design:
+
+**Every function has an input space—the set of all possible inputs. Your job is to partition that space into regions where the function should behave the same way, then test at least one input from each region.**
+
+This is called **equivalence partitioning**. Inputs in the same partition are "equivalent" for testing purposes—if the code works for one, it should work for all.
+
+Consider a function that returns the absolute value of a number:
+
+```javascript
+function abs(n) {
+  return n < 0 ? -n : n;
+}
+```
+
+The input space (all numbers) partitions naturally:
+- **Positive numbers**: `abs(5)` → `5`
+- **Negative numbers**: `abs(-5)` → `5`
+- **Zero**: `abs(0)` → `0`
+
+Three partitions, three tests. You do not need to test `abs(1)`, `abs(2)`, `abs(3)`, etc.—they are all in the same partition.
+
+## Boundaries: Where Bugs Hide
+
+Bugs cluster at boundaries between partitions. If your code handles positive numbers one way and negative numbers another way, the bug is probably at zero.
+
+**Always test boundary values:**
+
+```javascript
+// Testing abs at boundaries
+assert(abs(0) === 0, "zero");
+assert(abs(1) === 1, "smallest positive");
+assert(abs(-1) === 1, "largest negative");
+assert(abs(Number.MAX_SAFE_INTEGER) === Number.MAX_SAFE_INTEGER, "max int");
+assert(abs(Number.MIN_SAFE_INTEGER) === 9007199254740991, "min int");
+```
+
+The pattern: identify where behavior changes, then test on both sides of that line.
+
+## Edge Cases: Systematic Derivation
+
+Edge cases are not a random list to memorize. They emerge from thinking about your function's contract:
+
+**Ask these questions about every function:**
+
+1. What happens with empty/zero/null input?
+2. What happens with a single element?
+3. What happens at the boundaries of valid input?
+4. What happens just outside valid input?
+5. What should happen with invalid input?
+
+```javascript
+function findMax(arr) {
+  if (arr.length === 0) {
+    throw new Error("Array cannot be empty");
+  }
+  let max = arr[0];
+  for (const num of arr) {
+    if (num > max) {
+      max = num;
+    }
+  }
+  return max;
+}
+```
+
+Deriving edge cases systematically:
+
+| Question | Edge Case | Test |
+|----------|-----------|------|
+| Empty input? | `[]` | Should throw error |
+| Single element? | `[5]` | Should return `5` |
+| All same values? | `[3, 3, 3]` | Should return `3` |
+| Max at start? | `[9, 1, 2]` | Should return `9` |
+| Max at end? | `[1, 2, 9]` | Should return `9` |
+| Negative numbers? | `[-3, -1, -2]` | Should return `-1` |
+| Mixed signs? | `[-5, 0, 5]` | Should return `5` |
+
+```javascript
+// Test each edge case
+test("findMax with empty array throws", () => {
+  let threw = false;
+  try { findMax([]); } catch (e) { threw = true; }
+  assert(threw, "should throw for empty array");
+});
+
+test("findMax with single element", () => {
+  assert(findMax([5]) === 5, "single element");
+});
+
+test("findMax with all same values", () => {
+  assert(findMax([3, 3, 3]) === 3, "all same");
+});
+
+test("findMax with max at different positions", () => {
+  assert(findMax([9, 1, 2]) === 9, "max at start");
+  assert(findMax([1, 9, 2]) === 9, "max in middle");
+  assert(findMax([1, 2, 9]) === 9, "max at end");
+});
+
+test("findMax with negative numbers", () => {
+  assert(findMax([-3, -1, -2]) === -1, "all negative");
+  assert(findMax([-5, 0, 5]) === 5, "mixed signs");
+});
+```
+
+Notice how each test name describes the *behavior* being tested, not the implementation detail. This makes tests serve as documentation.
+
+## A Simple Test Runner
+
+Organize tests for better output:
+
+```javascript
+function test(name, fn) {
+  try {
+    fn();
+    console.log(`PASS: ${name}`);
+  } catch (error) {
+    console.log(`FAIL: ${name}`);
+    console.log(`  ${error.message}`);
+  }
+}
+
+// Run tests
+test("add returns correct sum", () => {
+  assert(add(2, 3) === 5, "2 + 3 = 5");
+  assert(add(-1, 1) === 0, "-1 + 1 = 0");
+});
+
+test("add handles zero", () => {
+  assert(add(0, 5) === 5, "0 + 5 = 5");
+  assert(add(0, 0) === 0, "0 + 0 = 0");
+});
+```
+
+## Test-Driven Thinking
+
+Think about tests *before* writing code:
+
+1. **What should this function do?**
+2. **What are the edge cases?**
+3. **How will I know if it works?**
+
+This clarifies requirements and often reveals missing details.
+
+```javascript
+// Before writing the function, think:
+// - What if name is empty?
+// - What if name is null?
+// - Should "alice" become "ALICE" or "Alice"?
+
+function formatGreeting(name) {
+  if (!name || name.length === 0) {
+    return "Hello, stranger!";
+  }
+  const capitalized = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  return `Hello, ${capitalized}!`;
+}
+
+// Now test what we decided:
+test("formatGreeting capitalizes name", () => {
+  assert(formatGreeting("alice") === "Hello, Alice!", "alice -> Alice");
+  assert(formatGreeting("BOB") === "Hello, Bob!", "BOB -> Bob");
+});
+
+test("formatGreeting handles missing name", () => {
+  assert(formatGreeting("") === "Hello, stranger!", "empty string");
+  assert(formatGreeting(null) === "Hello, stranger!", "null");
+});
+```
+
+## Testing Pure Functions
+
+Pure functions are easiest to test because they always return the same output for the same input. This is one reason to write small, focused functions - each one is straightforward to verify:
+
+```javascript
+// Pure function - easy to test
+function calculateTax(price, rate) {
+  return price * rate;
+}
+
+test("calculateTax computes correctly", () => {
+  assert(calculateTax(100, 0.1) === 10, "100 * 0.1 = 10");
+  assert(calculateTax(200, 0.05) === 10, "200 * 0.05 = 10");
+  assert(calculateTax(0, 0.1) === 0, "0 price = 0 tax");
+});
+```
+
+## Testing Functions with Side Effects
+
+Functions that modify external state are harder to test. Isolate the side effects:
+
+```javascript
+// Hard to test - mixed logic and side effects
+function updateUserAndNotify(user, newEmail) {
+  // Validation logic
+  if (!newEmail.includes("@")) {
+    throw new Error("Invalid email");
+  }
+  const normalizedEmail = newEmail.toLowerCase().trim();
+
+  // Side effects - how do we test this?
+  database.update(user.id, { email: normalizedEmail });
+  emailService.send(normalizedEmail, "Your email was changed");
+
+  return normalizedEmail;
+}
+
+// Better - pull out the testable piece
+function validateAndNormalizeEmail(email) {
+  if (!email.includes("@")) {
+    throw new Error("Invalid email");
+  }
+  return email.toLowerCase().trim();
+}
+
+function updateUserAndNotify(user, newEmail) {
+  const normalizedEmail = validateAndNormalizeEmail(newEmail);
+  database.update(user.id, { email: normalizedEmail });
+  emailService.send(normalizedEmail, "Your email was changed");
+  return normalizedEmail;
+}
+
+// Now we can thoroughly test the isolated piece
+test("validateAndNormalizeEmail normalizes correctly", () => {
+  assert(validateAndNormalizeEmail("  Alice@Email.COM  ") === "alice@email.com",
+    "should lowercase and trim");
+});
+
+test("validateAndNormalizeEmail rejects invalid emails", () => {
+  let threw = false;
+  try {
+    validateAndNormalizeEmail("not-an-email");
+  } catch (e) {
+    threw = true;
+  }
+  assert(threw, "should throw for missing @");
+});
+```
+
+## Regression Testing
+
+When you fix a bug, add a test for it. This prevents the bug from coming back:
+
+```javascript
+// Bug found: sortNumbers crashes on arrays with nulls
+// After fixing, add a test:
+
+test("sortNumbers handles null values", () => {
+  // This test ensures the bug never returns
+  const result = sortNumbers([3, null, 1, 2]);
+  assert(Array.isArray(result), "should return array");
+  assert(!result.includes(null), "should filter nulls");
+});
+```
+
+<Tip>
+Every bug you fix is an opportunity to add a test. Your test suite grows from real problems, not hypotheticals.
+</Tip>
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What is an edge case?"
+  options={[
+    "A bug in your code",
+    "An input at the boundary of what your code handles",
+    "A type of test framework",
+    "A performance optimization"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="A function that always returns the same output for the same input is called a ___ function."
+  answer="pure"
+  fuzzyThreshold={0}
+/>
+
+<MultipleChoice
+  question="Why add a test when fixing a bug?"
+  options={[
+    "To slow down development",
+    "To document the bug",
+    "To prevent the bug from coming back",
+    "Tests are required by law"
+  ]}
+  correct={2}
+/>
+
+## Try It Yourself
+
+Practice writing tests:
+
+<Exercise id="pm-testing" />
+
+## Summary
+
+You learned:
+
+- Tests give you confidence that code works
+- Assertions check that conditions are true
+- Edge cases test boundaries: empty, single, zero, negative
+- Test-driven thinking clarifies requirements upfront
+- Pure functions are easiest to test
+- Regression tests prevent bugs from returning
+
+Testing is an investment that pays dividends as your codebase grows. Next, we will explore searching algorithms.

@@ -1,0 +1,4 @@
+title: Data Modeling
+description: Design data structures for a problem
+template: simple
+focus: /src/index.js

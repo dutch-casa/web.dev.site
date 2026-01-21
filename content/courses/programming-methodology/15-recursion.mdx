@@ -1,0 +1,489 @@
+# Recursion
+
+Recursion is a function calling itself. That definition is technically correct but useless. Here's the real insight:
+
+**Recursion is recognizing that a problem contains smaller versions of itself.**
+
+Once you see that structure, the code writes itself. The hard part isn't the syntax - it's training your brain to see self-similarity where you didn't before.
+
+## The Recursive Leap of Faith
+
+This is the most important concept in this lesson. Read it carefully.
+
+When writing recursive code, you must **trust that the recursive call works** without tracing through every step. This feels wrong at first. Your instinct is to mentally execute every call. Fight that instinct.
+
+Here's why: if you've correctly identified the base case and the relationship between a problem and its smaller version, the recursive call *will* work. You don't need to verify it by simulation. You verify it by reasoning.
+
+Consider computing the factorial of 5:
+
+```javascript
+function factorial(n) {
+  if (n <= 1) {
+    return 1;
+  }
+  return n * factorial(n - 1);
+}
+```
+
+When writing the recursive case, don't think "factorial(4) will call factorial(3) which will call..."
+
+Instead think: "**If** factorial(n - 1) correctly returns (n-1)!, **then** multiplying by n gives n!."
+
+That's the leap of faith. You assume the recursive call works, then verify that your logic correctly uses that result. If both hold, the recursion is correct.
+
+<Tip>
+The leap of faith is not blind faith. It's mathematical induction: prove the base case works, prove that if the smaller case works then the larger case works. Done.
+</Tip>
+
+## The Three Questions
+
+When facing any problem, ask yourself these questions in order:
+
+**1. What's the simplest possible input?**
+This becomes your base case. For factorial: n = 0 or n = 1. For a list: an empty list. For a tree: a leaf node.
+
+**2. If I had a magic function that solved the smaller version, how would I use it?**
+This is the leap of faith in action. Assume you have a function that correctly handles n - 1, or the rest of the list, or the subtrees. How do you combine that result with the current element?
+
+**3. Does my recursive call actually make progress toward the base case?**
+If n starts at 5 and you call with n - 1, you'll eventually hit 1. If you accidentally call with n + 1, you'll recurse forever.
+
+## The Anatomy of Recursion
+
+Every recursive function has two parts:
+
+1. **Base case**: The smallest input where you return an answer directly
+2. **Recursive case**: Where you solve a smaller version and combine the result
+
+```javascript
+function factorial(n) {
+  // Base case: factorial of 0 or 1 is 1
+  if (n <= 1) {
+    return 1;
+  }
+
+  // Recursive case: n! = n * (n-1)!
+  // Leap of faith: assume factorial(n - 1) works correctly
+  return n * factorial(n - 1);
+}
+
+console.log(factorial(5));  // 120
+```
+
+## Execution: What the Computer Does
+
+Understanding execution is useful for debugging, but don't rely on it for writing recursive code. Use the leap of faith instead.
+
+When `factorial(3)` runs:
+
+```
+factorial(3)
+  ↳ 3 * factorial(2)
+          ↳ 2 * factorial(1)
+                  ↳ 1 (base case hit)
+          ↳ 2 * 1 = 2
+  ↳ 3 * 2 = 6
+```
+
+Each call pauses, waiting for its recursive call to return, then completes its computation.
+
+## The Call Stack
+
+The computer tracks these paused calls using a **call stack**. Each call creates a "frame" holding its local variables:
+
+```
+factorial(3) called → Stack: [fact(3)]
+factorial(2) called → Stack: [fact(3), fact(2)]
+factorial(1) called → Stack: [fact(3), fact(2), fact(1)]
+factorial(1) returns 1 → Stack: [fact(3), fact(2)]
+factorial(2) returns 2 → Stack: [fact(3)]
+factorial(3) returns 6 → Stack: []
+```
+
+<Tip>
+Each call uses stack memory. Very deep recursion (tens of thousands of calls) causes a "stack overflow" error. This is a practical constraint, not a flaw in your logic.
+</Tip>
+
+## Recognizing Recursive Structure
+
+Not every problem is naturally recursive. Here's how to spot the ones that are:
+
+**Self-similar structure**: The problem contains smaller versions of itself.
+- A list is an element followed by... a smaller list
+- A tree is a node connected to... smaller trees
+- A string is a character followed by... a smaller string
+- Finding a path is making one step, then... finding a path from there
+
+**Divide-and-conquer**: The problem can be split into independent subproblems.
+- Sorting a list = sort two halves, then merge
+- Searching a sorted list = check middle, then search one half
+
+**Backtracking**: You try choices and undo them if they fail.
+- Maze solving: try a direction, if stuck, backtrack and try another
+- Sudoku: place a number, if it leads to contradiction, remove and try next
+
+If you see any of these patterns, recursion is likely the cleanest solution.
+
+## Worked Examples: Applying the Method
+
+Let's apply the three questions to real problems.
+
+### Example 1: Sum of Array
+
+**Question 1: What's the simplest input?**
+An empty array. Its sum is 0.
+
+**Question 2: If I had a magic function that summed the rest, how would I use it?**
+Add the first element to the sum of the rest.
+
+**Question 3: Does the call make progress?**
+Yes - the "rest" of the array is always shorter than the original.
+
+```javascript
+function sumArray(arr, index = 0) {
+  // Base case: empty (no more elements)
+  if (index >= arr.length) {
+    return 0;
+  }
+
+  // Leap of faith: sumArray correctly sums the rest
+  return arr[index] + sumArray(arr, index + 1);
+}
+
+console.log(sumArray([1, 2, 3, 4, 5]));  // 15
+```
+
+We use `index` to track position rather than creating new arrays (which would waste memory).
+
+### Example 2: Counting Down
+
+**Q1:** Simplest case? When n is negative - nothing to print.
+**Q2:** Print n, then let the magic function handle the rest (n - 1 down to 0).
+**Q3:** n - 1 is closer to negative, so yes.
+
+```javascript
+function countDown(n) {
+  if (n < 0) {
+    return;  // Base case: nothing to print
+  }
+
+  console.log(n);
+  countDown(n - 1);  // The magic function handles the rest
+}
+
+countDown(5);  // Prints: 5, 4, 3, 2, 1, 0
+```
+
+### Example 3: Fibonacci
+
+This one has a twist: the recursive case needs *two* smaller results.
+
+**Q1:** Simplest cases? fib(0) = 0 and fib(1) = 1. (Two base cases!)
+**Q2:** If I knew fib(n-1) and fib(n-2), I'd add them.
+**Q3:** Both n-1 and n-2 are closer to the base cases.
+
+```javascript
+function fibonacci(n) {
+  // Base cases (two of them!)
+  if (n <= 0) return 0;
+  if (n === 1) return 1;
+
+  // Leap of faith: both recursive calls work correctly
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+console.log(fibonacci(6));  // 8 (sequence: 0, 1, 1, 2, 3, 5, 8)
+```
+
+This is correct but inefficient - we'll fix that later with memoization.
+
+## Trees: Where Recursion Shines
+
+Trees are the canonical example of recursive structure. A tree is:
+- A node, connected to zero or more... trees
+
+That's it. The definition is recursive. Every branch is itself a complete tree.
+
+```javascript
+const fileSystem = {
+  name: "root",
+  children: [
+    { name: "documents", children: [
+      { name: "report.txt", children: [] }
+    ]},
+    { name: "images", children: [
+      { name: "photo.jpg", children: [] },
+      { name: "logo.png", children: [] }
+    ]}
+  ]
+};
+```
+
+**Q1:** Simplest case? A node with no children (a leaf).
+**Q2:** If I could magically list all children's subtrees, I'd just print myself first.
+**Q3:** Children are always smaller subtrees.
+
+```javascript
+function listAllFiles(node, depth = 0) {
+  // Guard against null (defensive, not technically the base case)
+  if (!node) return;
+
+  // Process current node
+  console.log("  ".repeat(depth) + node.name);
+
+  // Leap of faith: listAllFiles correctly handles each subtree
+  for (const child of node.children) {
+    listAllFiles(child, depth + 1);
+  }
+}
+
+listAllFiles(fileSystem);
+// root
+//   documents
+//     report.txt
+//   images
+//     photo.jpg
+//     logo.png
+```
+
+Notice: we don't explicitly write a base case for leaves. When `children` is empty, the loop runs zero times, and the function naturally returns. The loop handles the "base case" implicitly.
+
+### Counting Nodes in a Tree
+
+Here's a cleaner example of the leap of faith with trees:
+
+```javascript
+function countNodes(node) {
+  if (!node) return 0;
+
+  // Start with 1 (this node)
+  let count = 1;
+
+  // Leap of faith: countNodes correctly counts each subtree
+  for (const child of node.children) {
+    count += countNodes(child);
+  }
+
+  return count;
+}
+
+console.log(countNodes(fileSystem));  // 5
+```
+
+Don't trace through this. Just verify: if `countNodes` correctly counts each child subtree, then adding 1 for the current node gives the correct total. That's all you need.
+
+## Memoization
+
+The naive Fibonacci is inefficient because it recalculates the same values repeatedly:
+
+```javascript
+// Slow: O(2^n) - exponential!
+function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+```
+
+To compute `fibonacci(5)`, this function calls `fibonacci(3)` twice, `fibonacci(2)` three times, and so on:
+
+```
+fib(5)
+├── fib(4)
+│   ├── fib(3)          ← computed here
+│   │   ├── fib(2)      ← and here
+│   │   └── fib(1)
+│   └── fib(2)          ← again!
+└── fib(3)              ← again!
+    ├── fib(2)          ← again!
+    └── fib(1)
+```
+
+For `fibonacci(40)`, this redundancy means billions of calls.
+
+**Memoization** caches results so each value is computed only once:
+
+```javascript
+function fibonacciMemo(n, cache = new Map()) {
+  if (n <= 1) {
+    return n;
+  }
+
+  if (cache.has(n)) {
+    return cache.get(n);  // Return cached result
+  }
+
+  const result = fibonacciMemo(n - 1, cache) + fibonacciMemo(n - 2, cache);
+  cache.set(n, result);   // Cache the result
+  return result;
+}
+
+console.log(fibonacciMemo(50));  // Fast!
+// fibonacci(50) naive would take years...
+```
+
+## When to Use Recursion vs Iteration
+
+Any recursion can be converted to iteration using an explicit stack. Any iteration can be converted to recursion. The question is: which is clearer?
+
+```javascript
+// Recursive sum - elegant but uses O(n) stack space
+function sumRecursive(arr, index = 0) {
+  if (index >= arr.length) return 0;
+  return arr[index] + sumRecursive(arr, index + 1);
+}
+
+// Iterative sum - less elegant but uses O(1) space
+function sumIterative(arr) {
+  let total = 0;
+  for (const num of arr) {
+    total += num;
+  }
+  return total;
+}
+```
+
+For flat sequences, iteration is usually cleaner. For recursive structures, recursion is usually cleaner.
+
+### Decision Guide
+
+**Use recursion when:**
+- The data structure is recursive (trees, nested objects, graphs)
+- The problem naturally divides into similar subproblems
+- Backtracking is involved (try something, undo, try another)
+- The recursive code is significantly clearer
+
+**Use iteration when:**
+- You're processing a flat sequence
+- Stack overflow is a real risk (processing millions of items)
+- The iterative code is equally clear
+- Every microsecond of performance matters
+
+## Debugging Recursive Code
+
+When recursion goes wrong, here's how to diagnose it:
+
+### Problem: Infinite Recursion (Stack Overflow)
+
+**Cause:** The recursive call doesn't make progress toward the base case.
+
+```javascript
+// BUG: n never gets smaller!
+function broken(n) {
+  if (n <= 0) return 0;
+  return n + broken(n);  // Should be broken(n - 1)
+}
+```
+
+**Fix:** Check that every recursive call brings you closer to a base case.
+
+### Problem: Wrong Answer
+
+**Cause:** Either the base case is wrong or the combination logic is wrong.
+
+**Debug strategy:** Don't trace the whole thing. Instead:
+1. Test your base case in isolation: `factorial(0)` should return `1`
+2. Test one step above base case: `factorial(1)` should return `1`
+3. If those work, your combination logic is wrong
+
+### Problem: Off-By-One Errors
+
+**Cause:** Base case triggers one step too early or too late.
+
+```javascript
+// BUG: Should be >= not >
+function sum(arr, i = 0) {
+  if (i > arr.length) return 0;  // Misses last element!
+  return arr[i] + sum(arr, i + 1);
+}
+```
+
+**Fix:** Trace just the boundary: what happens at index 0? At the last valid index? At one past the end?
+
+## Tail Recursion (Advanced)
+
+A function is **tail recursive** if the recursive call is the very last operation:
+
+```javascript
+// NOT tail recursive - multiplication happens after the call returns
+function factorial(n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);  // n * (result)
+}
+
+// Tail recursive - nothing happens after the call
+function factorialTail(n, accumulator = 1) {
+  if (n <= 1) return accumulator;
+  return factorialTail(n - 1, n * accumulator);  // Just the call
+}
+```
+
+In tail recursive functions, there's nothing to do after the recursive call returns - so the stack frame isn't needed. Some languages optimize this to use constant stack space. JavaScript technically supports this (in strict mode), but most engines don't implement it reliably.
+
+Know the concept, but don't depend on the optimization.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What is the 'recursive leap of faith'?"
+  options={[
+    "Hoping your code works without testing it",
+    "Assuming the recursive call correctly solves the smaller problem",
+    "Jumping over the base case",
+    "Trusting that the stack won't overflow"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What is a base case in a recursive function?"
+  options={[
+    "The most complex case",
+    "The simplest input that you solve directly without recursion",
+    "The input to the function",
+    "The first call to the function"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="A recursive function must have both a base case and a ___ case."
+  answer="recursive"
+  fuzzyThreshold={1}
+/>
+
+<MultipleChoice
+  question="What technique stores results to avoid redundant recursive calculations?"
+  options={["Iteration", "Memoization", "Tail recursion", "Stack overflow"]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="Which data structure is MOST naturally suited for recursive solutions?"
+  options={["Arrays", "Trees", "Strings", "Numbers"]}
+  correct={1}
+/>
+
+## Try It Yourself
+
+Practice recursion:
+
+<Exercise id="pm-recursion" />
+
+## Summary
+
+**The Leap of Faith:** Don't trace recursive calls. Trust that the recursive call works, then verify your logic uses that result correctly. This is not wishful thinking - it's the same reasoning as mathematical induction.
+
+**The Three Questions:**
+1. What's the simplest case? (Your base case)
+2. If a magic function solved the smaller version, how would I use it? (Your recursive case)
+3. Does each call make progress toward the base case? (Your termination guarantee)
+
+**Recognize Recursive Structure:** Self-similar data (trees, nested structures), divide-and-conquer problems, and backtracking scenarios all signal that recursion will be the cleanest solution.
+
+**Performance:** Memoization transforms exponential algorithms into linear ones by caching results. Always consider it for problems with overlapping subproblems.
+
+**Debugging:** Check base cases in isolation, then one step above. If both work, your combination logic is the problem.
+
+Recursion is not a clever trick - it's a fundamental way of expressing solutions where the problem structure is self-similar. Master the leap of faith. It's the mental skill that separates those who can read recursive code from those who can write it.
+
+Next, we will explore Sets and Maps - data structures for efficient lookups.

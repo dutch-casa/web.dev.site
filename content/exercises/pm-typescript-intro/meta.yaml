@@ -1,0 +1,4 @@
+title: TypeScript Introduction
+description: Add type annotations
+template: simple
+focus: /src/index.ts

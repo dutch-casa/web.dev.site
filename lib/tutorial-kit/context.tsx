@@ -133,6 +133,7 @@ export function useTutorialActions() {
       setTerminalRunning: state.setTerminalRunning,
       togglePanel: state.togglePanel,
       setExpanded: state.setExpanded,
+      toggleSolution: state.toggleSolution,
       reset: state.reset,
     }
   }, [store])
@@ -181,4 +182,12 @@ export function useTutorialActiveFileContent() {
 export function useTutorialFilePaths() {
   const store = useTutorialStore()
   return useStore(store, useShallow((s) => Object.keys(s.files).sort()))
+}
+
+export function useTutorialShowingSolution() {
+  return useTutorial((s) => s.showingSolution)
+}
+
+export function useTutorialHasSolution() {
+  return useTutorial((s) => s.config?.solution && s.config.solution.length > 0)
 }

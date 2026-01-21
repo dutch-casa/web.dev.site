@@ -1,0 +1,631 @@
+# Classes and Composition
+
+A class is a **contract**: it bundles data and behavior together while **guaranteeing that invalid states cannot exist**. This lesson teaches you to think about classes as contracts, understand why inheritance fails, and master composition as the professional alternative.
+
+## The Core Insight: Classes Enforce Invariants
+
+Before we look at syntax, understand what a class actually *is*:
+
+> A class is a boundary that protects invariants.
+
+An **invariant** is a property that must always be true. A bank account balance cannot be negative. A rectangle's dimensions must be positive. A user must have an email address.
+
+Without classes, you hope programmers follow the rules. With classes, you **make breaking the rules impossible**:
+
+```javascript
+// Without a class: hope and pray
+const account = { balance: 100 };
+account.balance = -500;  // Nothing stops this
+
+// With a class: impossible to violate
+class BankAccount {
+  #balance;
+  constructor(initial) {
+    if (initial < 0) throw new Error("Balance cannot be negative");
+    this.#balance = initial;
+  }
+  // All methods maintain the invariant
+}
+```
+
+This is the difference between "documentation says don't do X" and "the compiler won't let you do X." Professional code makes invalid states unrepresentable.
+
+## ES6 Class Syntax
+
+```javascript
+class User {
+  constructor(name, email) {
+    // Enforce invariants: a User must have name and email
+    if (!name || !email) {
+      throw new Error("User requires name and email");
+    }
+    this.name = name;
+    this.email = email;
+    this.createdAt = new Date();
+  }
+
+  greet() {
+    return `Hello, I'm ${this.name}!`;
+  }
+
+  getInfo() {
+    return `${this.name} <${this.email}>`;
+  }
+}
+
+const user = new User("Alice", "alice@example.com");
+console.log(user.greet());    // "Hello, I'm Alice!"
+console.log(user.getInfo());  // "Alice <alice@example.com>"
+```
+
+Notice: the constructor *enforces* that a User always has a name and email. You cannot create a half-initialized User. This is a contract.
+
+## Constructor and Initialization
+
+The `constructor` runs when you create an instance with `new`:
+
+```javascript
+class Rectangle {
+  constructor(width, height) {
+    // Validate inputs (fail fast)
+    if (width <= 0 || height <= 0) {
+      throw new Error("Dimensions must be positive");
+    }
+
+    this.width = width;
+    this.height = height;
+  }
+
+  area() {
+    return this.width * this.height;
+  }
+
+  perimeter() {
+    return 2 * (this.width + this.height);
+  }
+}
+
+const rect = new Rectangle(10, 5);
+console.log(rect.area());       // 50
+console.log(rect.perimeter());  // 30
+```
+
+## Private Fields: The Enforcement Mechanism
+
+Use `#` prefix for private fields. Private fields are *how* you enforce invariants - they prevent outside code from breaking your guarantees:
+
+```javascript
+class BankAccount {
+  #balance = 0;  // Private: only this class can touch it
+
+  // INVARIANT: #balance >= 0 (always)
+
+  constructor(initialBalance) {
+    if (initialBalance < 0) {
+      throw new Error("Initial balance cannot be negative");
+    }
+    this.#balance = initialBalance;
+  }
+
+  deposit(amount) {
+    if (amount <= 0) {
+      throw new Error("Deposit amount must be positive");
+    }
+    this.#balance += amount;
+    return this.#balance;
+  }
+
+  withdraw(amount) {
+    if (amount <= 0) {
+      throw new Error("Withdrawal amount must be positive");
+    }
+    if (amount > this.#balance) {
+      throw new Error("Insufficient funds");
+    }
+    this.#balance -= amount;
+    return this.#balance;
+  }
+
+  getBalance() {
+    return this.#balance;  // Read-only access
+  }
+}
+
+const account = new BankAccount(100);
+account.deposit(50);
+console.log(account.getBalance());  // 150
+// account.#balance = -1000;        // Error! Cannot access private field
+// account.withdraw(200);           // Error! Insufficient funds
+```
+
+The invariant `#balance >= 0` is **guaranteed by the class contract**. No method allows the balance to go negative. No outside code can bypass the methods. This is encapsulation - not "hiding data" but "protecting invariants."
+
+<Tip>
+Ask yourself for every class: "What invariants does this class guarantee?" If you cannot answer, you do not have a class - you have a data bag with methods stapled on.
+</Tip>
+
+## Getters and Setters
+
+Control how properties are accessed and modified:
+
+```javascript
+class Temperature {
+  #celsius;
+
+  constructor(celsius) {
+    this.#celsius = celsius;
+  }
+
+  get celsius() {
+    return this.#celsius;
+  }
+
+  set celsius(value) {
+    if (value < -273.15) {
+      throw new Error("Temperature below absolute zero");
+    }
+    this.#celsius = value;
+  }
+
+  get fahrenheit() {
+    return this.#celsius * 9/5 + 32;
+  }
+
+  set fahrenheit(value) {
+    this.celsius = (value - 32) * 5/9;
+  }
+}
+
+const temp = new Temperature(25);
+console.log(temp.celsius);     // 25
+console.log(temp.fahrenheit);  // 77
+temp.fahrenheit = 100;
+console.log(temp.celsius);     // 37.78
+```
+
+## Why Inheritance Fails
+
+Inheritance seems intuitive but breaks down in practice. Understanding *why* will save you years of painful refactoring.
+
+### The Liskov Substitution Principle
+
+Barbara Liskov, a Turing Award winner, articulated the rule that makes inheritance work:
+
+> If S is a subtype of T, then objects of type T may be replaced with objects of type S without altering any of the desirable properties of the program.
+
+In plain English: a subclass must be usable anywhere the parent class is expected, with no surprises.
+
+This sounds simple but is shockingly hard to maintain. Consider:
+
+```javascript
+class Rectangle {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+  }
+  setWidth(w) { this.width = w; }
+  setHeight(h) { this.height = h; }
+  area() { return this.width * this.height; }
+}
+
+// Square IS-A Rectangle... right?
+class Square extends Rectangle {
+  constructor(size) {
+    super(size, size);
+  }
+  setWidth(w) {
+    this.width = w;
+    this.height = w;  // Must keep it square!
+  }
+  setHeight(h) {
+    this.width = h;   // Must keep it square!
+    this.height = h;
+  }
+}
+
+// Code that works with Rectangle
+function doubleWidth(rect) {
+  rect.setWidth(rect.width * 2);
+  return rect.area();
+}
+
+const rect = new Rectangle(10, 5);
+console.log(doubleWidth(rect));  // 100 (10*2 * 5)
+
+const square = new Square(10);
+console.log(doubleWidth(square)); // 400! (20 * 20, not 20 * 10)
+```
+
+Square violates Liskov. Code expecting a Rectangle gets surprising behavior. This is not a contrived example - real inheritance hierarchies constantly violate Liskov in subtle ways.
+
+### The Combinatorial Explosion
+
+Even when Liskov is satisfied, inheritance cannot handle cross-cutting concerns:
+
+```javascript
+// Attempt: Inheritance hierarchy
+class Notification {
+  constructor(message) {
+    this.message = message;
+  }
+  send() { /* base implementation */ }
+}
+
+class EmailNotification extends Notification {
+  constructor(message, recipient) {
+    super(message);
+    this.recipient = recipient;
+  }
+  send() { /* send email */ }
+}
+
+class SMSNotification extends Notification {
+  constructor(message, phoneNumber) {
+    super(message);
+    this.phoneNumber = phoneNumber;
+  }
+  send() { /* send SMS */ }
+}
+
+// Now requirements change: we need notifications that:
+// - Can be logged
+// - Can retry on failure
+// - Can be batched
+// - Can require acknowledgment
+
+// Where does LoggedEmailNotification go?
+// RetryableSMSNotification?
+// BatchedLoggedRetryableEmailNotification???
+```
+
+With N capabilities and M delivery methods, inheritance requires N × M classes. With composition, you need N + M pieces. This is not a small difference - it is the difference between manageable and unmaintainable.
+
+<Tip>
+Inheritance answers "is-a" but real systems need "has-a" and "can-do". A notification IS-A message, but it also HAS retry logic and CAN be logged. Single-parent hierarchies cannot express this - you need composition.
+</Tip>
+
+## Composition Over Inheritance
+
+Composition builds objects from small, focused pieces. The key insight is algebraic:
+
+> Composable pieces form a **closed** system: combining two pieces gives you another piece of the same kind.
+
+Logging wraps a notification and returns a notification. Retry wraps a notification and returns a notification. You can compose them in any order, any combination. This is why composition scales and inheritance does not - composition is closed under combination.
+
+Let's rebuild the notification system:
+
+```javascript
+// Each capability is a separate function
+function withLogging(notification) {
+  const originalSend = notification.send.bind(notification);
+  return {
+    ...notification,
+    send() {
+      console.log(`Sending: ${this.message}`);
+      const result = originalSend();
+      console.log(`Sent successfully`);
+      return result;
+    }
+  };
+}
+
+function withRetry(notification, maxAttempts = 3) {
+  const originalSend = notification.send.bind(notification);
+  return {
+    ...notification,
+    send() {
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          return originalSend();
+        } catch (error) {
+          if (attempt === maxAttempts) throw error;
+          console.log(`Retry ${attempt}/${maxAttempts}`);
+        }
+      }
+    }
+  };
+}
+
+function withBatching(notifications) {
+  return {
+    notifications,
+    sendAll() {
+      return this.notifications.map(n => n.send());
+    }
+  };
+}
+
+// Create base notifications
+function createEmailNotification(message, recipient) {
+  return {
+    message,
+    recipient,
+    send() {
+      // Send the email
+      return { sent: true, to: this.recipient };
+    }
+  };
+}
+
+// Compose capabilities freely
+const email = createEmailNotification("Hello", "user@example.com");
+const loggedEmail = withLogging(email);
+const reliableEmail = withRetry(withLogging(email));
+
+// Mix and match as needed - no hierarchy explosion
+reliableEmail.send();
+```
+
+Notice: no class hierarchy. Each capability wraps any notification and returns a notification. This closure property means you can:
+
+1. **Combine freely**: `withRetry(withLogging(email))` or `withLogging(withRetry(email))`
+2. **Add capabilities without modifying existing code**: write `withRateLimit()` - existing code unchanged
+3. **Test in isolation**: test logging separately from retry separately from notification
+
+This is the **Open-Closed Principle**: open for extension (add new wrappers), closed for modification (never change existing wrappers).
+
+## Real Example: Form Validation
+
+Composition shines when building reusable validation:
+
+```javascript
+// Validators are functions that return errors or null
+const required = (value) =>
+  value ? null : "This field is required";
+
+const minLength = (min) => (value) =>
+  value.length >= min ? null : `Must be at least ${min} characters`;
+
+const maxLength = (max) => (value) =>
+  value.length <= max ? null : `Must be at most ${max} characters`;
+
+const matches = (pattern, message) => (value) =>
+  pattern.test(value) ? null : message;
+
+const email = matches(
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  "Must be a valid email"
+);
+
+// Compose validators
+function compose(...validators) {
+  return (value) => {
+    for (const validate of validators) {
+      const error = validate(value);
+      if (error) return error;
+    }
+    return null;
+  };
+}
+
+// Build field validators by composition
+const validateUsername = compose(
+  required,
+  minLength(3),
+  maxLength(20),
+  matches(/^[a-z0-9_]+$/, "Only lowercase letters, numbers, and underscores")
+);
+
+const validateEmail = compose(required, email);
+
+const validatePassword = compose(
+  required,
+  minLength(8),
+  matches(/[A-Z]/, "Must contain uppercase letter"),
+  matches(/[0-9]/, "Must contain number")
+);
+
+// Use them
+console.log(validateUsername("ab"));           // "Must be at least 3 characters"
+console.log(validateUsername("valid_user"));   // null (valid)
+console.log(validatePassword("weak"));         // "Must be at least 8 characters"
+console.log(validatePassword("StrongPass1"));  // null (valid)
+```
+
+Each validator is independent and does exactly one check. The `compose` function chains them. Notice the pattern:
+
+- **Validator signature**: `(value) => error | null`
+- **compose signature**: `(...validators) => validator`
+
+Compose takes validators and returns a validator. Closure under composition. This is the same pattern as the notification wrappers, and you will see it everywhere in professional code: middleware, event handlers, data transformers, React hooks.
+
+<Tip>
+When designing systems, ask: "Can I compose two of these to get another one?" If yes, you have a composable design. If no, you may be building an inheritance hierarchy in disguise.
+</Tip>
+
+## When to Use Classes vs. Plain Objects
+
+This is a crucial distinction that separates junior from senior engineers.
+
+### Use Classes When:
+
+1. **You have invariants to enforce**: BankAccount (balance >= 0), User (must have email), Rectangle (dimensions > 0)
+2. **Identity matters**: Two users with the same name are different users. Two `{ x: 1 }` objects with the same data are interchangeable.
+3. **Lifecycle matters**: A database connection that must be opened before use and closed after.
+
+### Use Plain Objects/Factory Functions When:
+
+1. **It's just data**: A point `{ x: 1, y: 2 }` has no invariants beyond being numbers
+2. **Behaviors should compose**: Validators, middleware, event handlers
+3. **You cannot predict combinations**: The notification example
+
+### The Test
+
+Ask: "If someone modifies this object's fields directly, will something break?"
+
+- **Yes** → Use a class with private fields
+- **No** → Use a plain object
+
+```javascript
+// Class: invariants matter
+class Temperature {
+  #celsius;
+  constructor(c) {
+    if (c < -273.15) throw new Error("Below absolute zero");
+    this.#celsius = c;
+  }
+}
+
+// Plain object: just data
+const point = { x: 1, y: 2 };  // No invariants to violate
+```
+
+## Static Methods
+
+Static methods belong to the class, not instances:
+
+```javascript
+class MathUtils {
+  static add(a, b) {
+    return a + b;
+  }
+
+  static clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  }
+}
+
+console.log(MathUtils.add(2, 3));        // 5
+console.log(MathUtils.clamp(15, 0, 10)); // 10
+```
+
+## Factory Functions: Classes Are Closures
+
+Here is the mental model that unlocks JavaScript's object system:
+
+> A class is syntactic sugar for a closure that returns an object.
+
+Factory functions make this explicit:
+
+```javascript
+function createUser(name, email) {
+  // Private data via closure - not #, just scope
+  let loginCount = 0;
+
+  return {
+    name,
+    email,
+    login() {
+      loginCount++;  // Closure captures this variable
+      return `${name} logged in (${loginCount} times)`;
+    },
+    getLoginCount() {
+      return loginCount;
+    }
+  };
+}
+
+const user = createUser("Alice", "alice@example.com");
+console.log(user.login());  // "Alice logged in (1 times)"
+console.log(user.login());  // "Alice logged in (2 times)"
+console.log(user.loginCount);  // undefined - not on the object
+```
+
+The variable `loginCount` is private not because of a `#` prefix, but because it is captured in a closure. The returned object's methods can access it; outside code cannot.
+
+This is exactly what a class does:
+
+```javascript
+// Equivalent class
+class User {
+  #loginCount = 0;
+  constructor(name, email) {
+    this.name = name;
+    this.email = email;
+  }
+  login() {
+    this.#loginCount++;
+    return `${this.name} logged in (${this.#loginCount} times)`;
+  }
+  getLoginCount() {
+    return this.#loginCount;
+  }
+}
+```
+
+Understanding this equivalence explains why JavaScript's object system feels different from Java or C++: it is built on closures, not on a separate "class" mechanism.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What is an invariant in the context of a class?"
+  options={[
+    "A method that never changes",
+    "A property that must always be true, enforced by the class",
+    "A private field that cannot be accessed",
+    "A static method shared by all instances"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="Why is composition algebraically superior to inheritance?"
+  options={[
+    "Composition is faster at runtime",
+    "Composing two wrappers gives you another wrapper (closure under composition)",
+    "Composition uses less memory",
+    "JavaScript does not support inheritance"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="The Liskov Substitution Principle states that a subclass must be usable anywhere the ___ class is expected."
+  answer="parent"
+  fuzzyThreshold={0.8}
+/>
+
+<MultipleChoice
+  question="When should you use a class instead of a plain object?"
+  options={[
+    "Always, because classes are more professional",
+    "When you have invariants that must be enforced",
+    "When you want to use the 'new' keyword",
+    "When you need methods on your object"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="Private fields in JavaScript classes are prefixed with ___."
+  answer="#"
+  fuzzyThreshold={0}
+/>
+
+## Try It Yourself
+
+Practice classes and composition:
+
+<Exercise id="pm-classes" />
+
+## The Principles to Internalize
+
+These ideas will guide you for the next 20 years:
+
+1. **A class is a contract that enforces invariants.** If you cannot state the invariants, you do not need a class.
+
+2. **Private fields are not about hiding - they are about guaranteeing.** The `#balance` field lets `BankAccount` guarantee `balance >= 0`.
+
+3. **Liskov Substitution is the test for inheritance.** If a subclass surprises code expecting the parent, you have a bug.
+
+4. **Composition is closed; inheritance is not.** Composing two wrappers gives you a wrapper. Inheriting from two classes does not give you a class.
+
+5. **Ask "can I compose two of these?"** If yes, you have a scalable design. If no, you are building a hierarchy that will calcify.
+
+6. **Classes are closures with syntax sugar.** Understanding this equivalence explains JavaScript's object model.
+
+## Summary
+
+You learned:
+
+- Classes enforce invariants - properties that must always be true
+- Private fields (`#`) are the mechanism that makes invariants enforceable
+- Getters and setters provide controlled access while maintaining invariants
+- Inheritance violates Liskov Substitution and explodes combinatorially
+- Composition is algebraically closed: combining pieces yields another piece
+- Factory functions reveal that classes are closures returning objects
+- The test: "If someone modifies fields directly, will something break?"
+
+The difference between a junior and senior engineer is not syntax knowledge - it is understanding *why* we structure code this way. Invariants, Liskov, composition closure - these concepts transcend any single language.
+
+Next, we will explore data modeling, where you will apply these principles to structure information.

@@ -1,0 +1,4 @@
+title: Promises
+description: Chain promises
+template: simple
+focus: /src/index.js

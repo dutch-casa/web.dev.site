@@ -1,0 +1,4 @@
+title: Array Methods
+description: Practice array methods (map, filter, reduce)
+template: simple
+focus: /src/index.js

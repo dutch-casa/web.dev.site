@@ -1,0 +1,4 @@
+title: TypeScript Generics
+description: Write generic functions
+template: simple
+focus: /src/index.ts

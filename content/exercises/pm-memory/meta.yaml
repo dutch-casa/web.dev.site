@@ -1,0 +1,4 @@
+title: References vs Copies
+description: Practice understanding references vs copies
+template: simple
+focus: /src/index.js

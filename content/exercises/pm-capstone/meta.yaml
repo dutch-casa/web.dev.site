@@ -1,0 +1,4 @@
+title: Capstone Project
+description: Build a small project combining concepts
+template: simple
+focus: /src/index.ts

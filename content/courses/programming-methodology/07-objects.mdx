@@ -1,0 +1,603 @@
+# Objects: Bundling Data and Behavior
+
+Objects are containers that give names to related pieces of data and bundle them with the operations that manipulate that data. This concept—grouping state with behavior—is one of the most important ideas in programming.
+
+## The Core Insight: Modeling the World
+
+Programs manipulate data that represents something in the real world. A bank account has a balance. A student has a name and grades. A rectangle has width and height.
+
+Without objects, you'd track these separately:
+
+```javascript
+// Scattered data - easy to lose track
+const accountBalance = 1000;
+const accountOwner = "Alice";
+const accountNumber = "12345";
+
+// Which balance goes with which owner?
+const anotherBalance = 500;
+const anotherOwner = "Bob";
+```
+
+Objects let you bundle related data together:
+
+```javascript
+// Coherent unit - the data stays together
+const account = {
+  balance: 1000,
+  owner: "Alice",
+  number: "12345"
+};
+```
+
+This seems simple, but it changes how you think. Instead of tracking many separate variables, you track one thing that contains everything you need.
+
+## Creating Objects
+
+```javascript
+// Empty object - a container with nothing in it yet
+const empty = {};
+
+// Object with properties - data bundled together
+const person = {
+  name: "Alice",
+  age: 30,
+  isStudent: true
+};
+
+// Object with methods - data bundled with behavior
+const calculator = {
+  add(a, b) {
+    return a + b;
+  },
+  subtract(a, b) {
+    return a - b;
+  }
+};
+```
+
+## Accessing Properties
+
+```javascript
+const user = {
+  username: "alice",
+  email: "alice@example.com",
+  active: true
+};
+
+// Dot notation (preferred when property name is known)
+console.log(user.username);  // "alice"
+
+// Bracket notation (needed for dynamic keys)
+const key = "email";
+console.log(user[key]);       // "alice@example.com"
+
+// Accessing nested objects
+const company = {
+  name: "TechCorp",
+  address: {
+    city: "San Francisco",
+    country: "USA"
+  }
+};
+
+console.log(company.address.city);       // "San Francisco"
+console.log(company["address"]["country"]);  // "USA"
+```
+
+## Object Identity: References and Aliasing
+
+This section covers one of the most important concepts in programming. Read it carefully.
+
+### References, Not Values
+
+When you create an object, JavaScript stores it somewhere in memory and gives you a **reference**—essentially an address where the object lives. The variable holds this reference, not the object itself.
+
+```javascript
+const alice = { name: "Alice", age: 30 };
+```
+
+Think of `alice` as holding an arrow that points to the actual object. The variable contains the address, not the data.
+
+### Identity vs. Equality
+
+Objects are compared by **identity** (are they the same object in memory?), not **equality** (do they contain the same values?):
+
+```javascript
+const obj1 = { name: "Alice" };
+const obj2 = { name: "Alice" };
+const obj3 = obj1;
+
+console.log(obj1 === obj2);  // false - different objects, same content
+console.log(obj1 === obj3);  // true - same object
+
+// This is different from primitives:
+const str1 = "hello";
+const str2 = "hello";
+console.log(str1 === str2);  // true - primitives compare by value
+```
+
+### Aliasing: The Source of Many Bugs
+
+When two variables refer to the same object, they are **aliases**. Changes through one alias affect all aliases:
+
+```javascript
+const alice = { name: "Alice", score: 100 };
+const topStudent = alice;  // topStudent is now an alias for alice
+
+topStudent.score = 95;     // Modifying through the alias
+console.log(alice.score);  // 95 - alice changed too!
+```
+
+<Warning>
+**Aliasing bugs are among the most common and hardest-to-find bugs in professional code.** When you pass an object to a function, the function receives an alias. If it modifies the object, the caller sees those changes. This can be intentional or a subtle bug.
+</Warning>
+
+```javascript
+function processStudent(student) {
+  // Danger! This modifies the original object
+  student.processed = true;
+  student.score = Math.round(student.score);
+}
+
+const alice = { name: "Alice", score: 94.7 };
+processStudent(alice);
+console.log(alice.score);      // 95 - the original was modified!
+console.log(alice.processed);  // true - new property added!
+```
+
+### Defensive Programming: When to Copy
+
+If you don't want to modify the original, make a copy first:
+
+```javascript
+function processStudent(student) {
+  // Create a copy before modifying
+  const result = { ...student };
+  result.processed = true;
+  result.score = Math.round(result.score);
+  return result;
+}
+
+const alice = { name: "Alice", score: 94.7 };
+const processed = processStudent(alice);
+console.log(alice.score);      // 94.7 - original unchanged
+console.log(processed.score);  // 95 - copy has the changes
+```
+
+<Tip>
+When writing a function that receives an object, ask yourself: "Should I modify the original, or return a new one?" Make this choice deliberately, not by accident. Document it in the function name or comments.
+</Tip>
+
+## Copying Objects: Shallow vs. Deep
+
+Since assignment creates aliases, you need to explicitly copy objects when you want independence.
+
+### Shallow Copy
+
+A **shallow copy** creates a new object with copies of the top-level properties:
+
+```javascript
+const original = { name: "Alice", age: 30 };
+
+// Spread operator (most common)
+const copy1 = { ...original };
+
+// Object.assign (older style)
+const copy2 = Object.assign({}, original);
+
+copy1.age = 31;
+console.log(original.age);  // 30 - original unchanged
+```
+
+### The Shallow Copy Trap
+
+Shallow copies only go one level deep. Nested objects are still shared:
+
+```javascript
+const original = {
+  name: "Alice",
+  address: { city: "Boston", zip: "02101" }
+};
+
+const shallowCopy = { ...original };
+shallowCopy.name = "Bob";           // Safe - top-level property
+shallowCopy.address.city = "NYC";   // Danger! Modifies original
+
+console.log(original.name);          // "Alice" - unchanged
+console.log(original.address.city);  // "NYC" - changed!
+```
+
+Why? The spread operator copies the `address` reference, not the address object itself. Both `original.address` and `shallowCopy.address` point to the same object.
+
+### Deep Copy
+
+A **deep copy** recursively copies all nested objects:
+
+```javascript
+// Using structuredClone (modern, recommended)
+const deepCopy = structuredClone(original);
+
+// Using JSON (works for simple data, loses functions and special types)
+const deepCopy2 = JSON.parse(JSON.stringify(original));
+
+deepCopy.address.city = "Seattle";
+console.log(original.address.city);  // "Boston" - truly independent
+```
+
+<Tip>
+**Rule of thumb:** Use shallow copy (`{ ...obj }`) for flat objects. Use `structuredClone()` when objects contain nested objects and you need full independence.
+</Tip>
+
+## Modifying Objects
+
+```javascript
+const book = {
+  title: "The Great Gatsby",
+  author: "F. Scott Fitzgerald"
+};
+
+// Add new properties
+book.year = 1925;
+book["genre"] = "Novel";
+
+// Modify existing properties
+book.year = 1926;
+
+// Delete properties
+delete book.genre;
+
+// Check if property exists
+console.log("year" in book);     // true
+console.log("genre" in book);    // false
+```
+
+## Methods and `this`: Bundling Behavior with Data
+
+The real power of objects comes from bundling data with the functions that operate on that data. These functions are called **methods**.
+
+### The `this` Keyword
+
+Inside a method, `this` refers to the object the method was called on:
+
+```javascript
+const alice = {
+  name: "Alice",
+  greet() {
+    return `Hello, I'm ${this.name}`;
+  }
+};
+
+console.log(alice.greet());  // "Hello, I'm Alice"
+```
+
+When you call `alice.greet()`, JavaScript sets `this` to `alice` for the duration of that call.
+
+### Invariants: Rules That Must Always Be True
+
+Professional programmers think about **invariants**—conditions that must always be true for an object to be valid. For a bank account:
+
+- Balance must never be negative
+- Deposits must be positive
+- Withdrawals cannot exceed balance
+
+Methods are responsible for maintaining these invariants:
+
+```javascript
+const bankAccount = {
+  balance: 1000,
+  owner: "Alice",
+
+  // Invariant: balance >= 0 after every operation
+
+  deposit(amount) {
+    if (amount <= 0) {
+      throw new Error("Deposit must be positive");
+    }
+    this.balance = this.balance + amount;
+    return this.balance;
+  },
+
+  withdraw(amount) {
+    if (amount <= 0) {
+      throw new Error("Withdrawal must be positive");
+    }
+    if (amount > this.balance) {
+      throw new Error("Insufficient funds");  // Protects invariant
+    }
+    this.balance = this.balance - amount;
+    return this.balance;
+  },
+
+  getSummary() {
+    return `${this.owner}'s account: $${this.balance}`;
+  }
+};
+```
+
+<Warning>
+**The invariant can still be violated!** Nothing stops someone from writing `bankAccount.balance = -500`. In JavaScript, all properties are accessible. Professional code uses patterns like closures or TypeScript's `private` to truly protect invariants. For now, just know: if you bypass the methods, you break the guarantees.
+</Warning>
+
+### The `this` Trap: Context Loss
+
+`this` is determined by *how* a function is called, not where it's defined. This causes bugs:
+
+```javascript
+const counter = {
+  count: 0,
+  increment() {
+    this.count++;
+  }
+};
+
+counter.increment();  // Works: this = counter
+console.log(counter.count);  // 1
+
+// But if you extract the method...
+const fn = counter.increment;
+fn();  // Broken! this = undefined (in strict mode)
+```
+
+This matters when passing methods as callbacks:
+
+```javascript
+// Common bug with event handlers or setTimeout
+setTimeout(counter.increment, 100);  // Broken! this is wrong
+
+// Fix: use arrow function to preserve context
+setTimeout(() => counter.increment(), 100);  // Works
+
+// Or bind the method
+setTimeout(counter.increment.bind(counter), 100);  // Works
+```
+
+<Tip>
+For now, just remember: always call methods directly on objects (`obj.method()`). If you need to pass a method as a callback, wrap it in an arrow function. We'll explore `this` binding in depth when we cover advanced functions.
+</Tip>
+
+## Object Methods
+
+```javascript
+const scores = { alice: 95, bob: 87, carol: 92 };
+
+// Get all keys
+console.log(Object.keys(scores));   // ["alice", "bob", "carol"]
+
+// Get all values
+console.log(Object.values(scores)); // [95, 87, 92]
+
+// Get all entries (key-value pairs)
+console.log(Object.entries(scores)); // [["alice", 95], ["bob", 87], ["carol", 92]]
+
+// Check if property exists
+console.log(scores.hasOwnProperty("alice"));  // true
+
+// Merge objects (later properties override earlier)
+const defaults = { theme: "light", fontSize: 14 };
+const userPrefs = { theme: "dark" };
+const merged = { ...defaults, ...userPrefs };  // { theme: "dark", fontSize: 14 }
+```
+
+## Object Destructuring
+
+Extract multiple properties at once:
+
+```javascript
+const person = {
+  firstName: "Alice",
+  lastName: "Smith",
+  age: 30,
+  city: "Boston"
+};
+
+// Destructure into variables
+const { firstName, lastName } = person;
+console.log(firstName);  // "Alice"
+console.log(lastName);   // "Smith"
+
+// Rename during destructuring
+const { firstName: fName, age: years } = person;
+console.log(fName);      // "Alice"
+console.log(years);      // 30
+
+// Default values
+const { country = "USA" } = person;
+console.log(country);    // "USA"
+```
+
+## Object Iteration
+
+```javascript
+const config = {
+  theme: "dark",
+  fontSize: 14,
+  language: "en"
+};
+
+// for...in loop (iterates over keys)
+for (const key in config) {
+  console.log(`${key}: ${config[key]}`);
+}
+
+// Object.entries with for...of (iterates over [key, value] pairs)
+for (const [key, value] of Object.entries(config)) {
+  console.log(`${key}: ${value}`);
+}
+```
+
+<Tip>
+Prefer `Object.entries()` with `for...of` over `for...in`. The `for...in` loop has quirks with inherited properties that can cause subtle bugs.
+</Tip>
+
+## Two Patterns: Records vs. Dictionaries
+
+Objects in JavaScript serve two different purposes. Understanding this distinction helps you choose the right tool.
+
+### Pattern 1: Records (Fixed Structure)
+
+A **record** has a known, fixed set of properties. You know at design time what properties exist:
+
+```javascript
+// Record: known structure, fixed properties
+const user = {
+  id: 123,
+  name: "Alice",
+  email: "alice@example.com",
+  isAdmin: false
+};
+
+// Access with dot notation - you know the property names
+console.log(user.name);
+console.log(user.isAdmin);
+```
+
+Records model entities with predictable shapes: users, products, settings, API responses.
+
+### Pattern 2: Dictionaries (Dynamic Keys)
+
+A **dictionary** (or map) stores arbitrary key-value pairs where keys are determined at runtime:
+
+```javascript
+// Dictionary: dynamic keys, values of same type
+const wordCounts = {};
+
+function countWords(text) {
+  for (const word of text.split(" ")) {
+    wordCounts[word] = (wordCounts[word] || 0) + 1;
+  }
+}
+
+countWords("the quick brown fox jumps over the lazy dog");
+console.log(wordCounts["the"]);  // 2
+console.log(wordCounts["fox"]);  // 1
+```
+
+Dictionaries model collections with dynamic keys: caches, frequency counters, lookup tables.
+
+### Choosing the Right Pattern
+
+| Use Record When | Use Dictionary (or Map) When |
+|----------------|------------------------------|
+| Properties known at design time | Keys determined at runtime |
+| Different properties have different types | All values have the same type |
+| Modeling entities (user, product) | Modeling collections (cache, counts) |
+
+<Tip>
+For dictionaries with many entries or non-string keys, consider JavaScript's built-in `Map` instead of plain objects. Maps have better performance for frequent additions/deletions and don't have edge cases with special property names.
+</Tip>
+
+## Immutability: Freezing Objects
+
+Sometimes you want to guarantee an object won't change. Use `Object.freeze()`:
+
+```javascript
+const config = Object.freeze({
+  apiUrl: "https://api.example.com",
+  timeout: 5000,
+  retries: 3
+});
+
+config.timeout = 10000;  // Silently fails (or throws in strict mode)
+console.log(config.timeout);  // Still 5000
+
+config.newProperty = "test";  // Also fails
+console.log(config.newProperty);  // undefined
+```
+
+<Warning>
+`Object.freeze()` is shallow—nested objects can still be modified. Use it for configuration objects, constants, and anywhere mutation would be a bug.
+</Warning>
+
+```javascript
+const settings = Object.freeze({
+  display: { theme: "dark" }  // Nested object is NOT frozen
+});
+
+settings.display.theme = "light";  // This still works!
+```
+
+For deeply frozen objects, you need a recursive freeze function or a library.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What is the result of comparing two objects with identical contents using ===?"
+  options={[
+    "true",
+    "false",
+    "undefined",
+    "An error"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="The keyword used inside a method to access the object's own properties is ___."
+  answer="this"
+  fuzzyThreshold={0}
+/>
+
+<MultipleChoice
+  question="What does a shallow copy of an object create?"
+  options={[
+    "A completely independent copy of the object and all nested objects",
+    "A new object with the same top-level properties, but nested objects are shared",
+    "A reference to the same object",
+    "A frozen version of the object"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="When two variables refer to the same object, they are called:"
+  options={[
+    "Twins",
+    "Aliases",
+    "Clones",
+    "Duplicates"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="An invariant is:"
+  options={[
+    "A variable that never changes",
+    "A frozen object",
+    "A condition that must always be true for an object to be valid",
+    "A method that takes no parameters"
+  ]}
+  correct={2}
+/>
+
+## Try It Yourself
+
+Practice working with objects:
+
+<Exercise id="pm-objects" />
+
+## Summary
+
+You learned:
+
+- **Objects bundle data with behavior**—they're not just data containers but coherent units that model real-world entities
+- **Identity vs. equality**—objects are compared by memory address, not contents
+- **Aliasing is the source of many bugs**—when two variables point to the same object, changes through one affect the other
+- **Shallow vs. deep copy**—spread copies one level; use `structuredClone()` for full independence
+- **Methods maintain invariants**—the rules that must always be true for an object to be valid
+- **`this` depends on how a method is called**—extract methods carefully
+- **Records vs. dictionaries**—two different patterns for when structure is fixed vs. dynamic
+- **Immutability with `Object.freeze()`**—preventing accidental mutation
+
+## Key Takeaways for Your Career
+
+1. **Think about aliasing.** Whenever you assign an object or pass one to a function, ask: "Who else has a reference to this? What happens if it changes?"
+
+2. **Define invariants explicitly.** Before writing methods, write down what must always be true. Then ensure every method maintains those invariants.
+
+3. **Choose mutation vs. transformation deliberately.** Some methods modify objects in place; others return new objects. Pick one style per function and document it.
+
+4. **Copy defensively when in doubt.** If a function shouldn't affect its input, copy the input first. The performance cost is usually negligible; the bug-prevention is invaluable.
+
+Objects are fundamental to organizing code. The mental models you build here—references, aliasing, invariants—will apply in every language you ever learn.

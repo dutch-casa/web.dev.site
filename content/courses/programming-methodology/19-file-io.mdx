@@ -1,0 +1,488 @@
+# File I/O
+
+Until now, your programs have lived in a bubble. Data comes from code you wrote, exists only while the program runs, and vanishes when it stops. Real programs need persistence: the ability to read data someone else created and write data that outlives the process.
+
+This lesson isn't about memorizing API calls. It's about understanding a fundamental shift in how you think about data.
+
+## The Mental Model Shift
+
+When you read from memory, it works. Always. The data is there or your program wouldn't be running. Memory access is fast (nanoseconds), predictable, and under your control.
+
+Files are different in every way:
+
+| Memory | Files |
+|--------|-------|
+| Nanosecond access | Millisecond access (1000x slower) |
+| Always available | May not exist |
+| Private to your process | Shared with other programs |
+| Fixed size (or fails to allocate) | Unbounded size |
+| Under your control | Can change between operations |
+
+This isn't just a performance difference. It requires a different mental model: **design for failure as the normal case**.
+
+<Tip>
+The best file I/O code assumes the operation will fail and is pleasantly surprised when it succeeds. This mindset transfers to databases, networks, and every external system you'll ever work with.
+</Tip>
+
+## Reading Files
+
+Node.js provides the `fs/promises` module for file operations:
+
+```javascript
+import { readFile } from "fs/promises";
+
+async function readTextFile(path) {
+  const content = await readFile(path, "utf-8");
+  return content;
+}
+```
+
+That's the happy path. But files live outside your program's control. The file might not exist. The path might be wrong. You might lack permission. The disk might be full. Another program might have it locked.
+
+```javascript
+import { readFile } from "fs/promises";
+
+async function readTextFile(path) {
+  try {
+    const content = await readFile(path, "utf-8");
+    return content;
+  } catch (error) {
+    console.error(`Failed to read ${path}:`, error.message);
+    throw error;  // Let caller decide how to handle
+  }
+}
+
+// Usage
+try {
+  const text = await readTextFile("./data.txt");
+  console.log(text);
+} catch (error) {
+  console.log("Could not load file, using defaults");
+}
+```
+
+The try/catch isn't defensive programming paranoia. It's acknowledging reality: files fail.
+
+### Reading JSON Files
+
+File operations naturally decompose into steps: read bytes → decode as text → parse as JSON. Each step can fail differently, and understanding this pipeline helps you write better error handling.
+
+```javascript
+import { readFile } from "fs/promises";
+
+async function readJsonFile(path) {
+  try {
+    const content = await readFile(path, "utf-8");
+    return JSON.parse(content);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      throw new Error(`Config file not found: ${path}`);
+    }
+    if (error instanceof SyntaxError) {
+      throw new Error(`Invalid JSON in ${path}: ${error.message}`);
+    }
+    throw error;
+  }
+}
+
+// Usage
+try {
+  const config = await readJsonFile("./config.json");
+  console.log(config.apiKey);
+} catch (error) {
+  console.error(error.message);
+  process.exit(1);  // Exit if config is required
+}
+```
+
+Notice how we distinguish between error types:
+- **ENOENT**: File doesn't exist (user's problem to fix)
+- **SyntaxError**: File exists but contains garbage (data corruption)
+- **Everything else**: Let it propagate (unknown failure mode)
+
+This pattern—catch what you can handle, propagate what you cannot—applies everywhere, not just files.
+
+### Line-by-Line Processing
+
+```javascript
+import { readFile } from "fs/promises";
+
+async function processLines(path) {
+  try {
+    const content = await readFile(path, "utf-8");
+    const lines = content.split("\n");
+
+    for (const line of lines) {
+      if (line.trim()) {  // Skip empty lines
+        console.log("Processing:", line);
+      }
+    }
+  } catch (error) {
+    console.error(`Failed to process ${path}:`, error.message);
+    throw error;
+  }
+}
+```
+
+This works but has a hidden flaw: we load the entire file into memory before processing any of it. For a 10MB log file, this wastes 10MB of RAM. For a 10GB log file, your program crashes.
+
+The alternative is **streaming**: process data as it arrives, never holding more than a small buffer. We'll cover streams in a future lesson, but the principle matters now. Ask yourself: "What if this file is 1000x larger than I expect?"
+
+## Writing Files
+
+```javascript
+import { writeFile } from "fs/promises";
+
+async function writeTextFile(path, content) {
+  await writeFile(path, content, "utf-8");
+}
+
+// Usage
+await writeTextFile("./output.txt", "Hello, World!");
+```
+
+### Writing JSON Files
+
+```javascript
+import { writeFile } from "fs/promises";
+
+async function writeJsonFile(path, data) {
+  const json = JSON.stringify(data, null, 2);  // Pretty-printed
+  await writeFile(path, json, "utf-8");
+}
+
+// Usage
+const user = { name: "Alice", age: 30 };
+await writeJsonFile("./user.json", user);
+```
+
+## Error Handling for Files
+
+Files might not exist or be inaccessible. Always handle errors:
+
+```javascript
+import { readFile } from "fs/promises";
+
+async function readFileOrDefault(path, defaultValue) {
+  try {
+    const content = await readFile(path, "utf-8");
+    return content;
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      // File not found - return default
+      return defaultValue;
+    }
+    // Other errors should propagate
+    throw error;
+  }
+}
+
+// Usage
+const config = await readFileOrDefault("./config.txt", "{}");
+```
+
+### Common Error Codes
+
+| Code | Meaning |
+|------|---------|
+| ENOENT | File or directory not found |
+| EACCES | Permission denied |
+| EEXIST | File already exists |
+| EISDIR | Expected file but found directory |
+
+## Checking If Files Exist (And Why You Usually Shouldn't)
+
+```javascript
+import { access, constants } from "fs/promises";
+
+async function fileExists(path) {
+  try {
+    await access(path, constants.F_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// DON'T DO THIS
+if (await fileExists("./data.json")) {
+  const data = await readJsonFile("./data.json");  // File might be gone!
+}
+```
+
+This code has a bug called TOCTOU (Time-Of-Check-To-Time-Of-Use). Between checking existence and reading, another process could delete the file. The check gave false confidence.
+
+**The pattern to internalize: Don't check, just try.**
+
+```javascript
+// DO THIS INSTEAD
+async function loadDataOrDefault(path, defaultValue) {
+  try {
+    return await readJsonFile(path);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return defaultValue;
+    }
+    throw error;
+  }
+}
+
+const data = await loadDataOrDefault("./data.json", { items: [] });
+```
+
+The try/catch handles the "doesn't exist" case without the race condition. This pattern—"ask forgiveness, not permission"—is safer and often simpler.
+
+<Tip>
+Exception: Use existence checks for user-facing validation ("Please provide a valid file path") where you want to fail fast with a clear message, not attempt the operation and explain the cryptic error.
+</Tip>
+
+## Working with Directories
+
+```javascript
+import { readdir, mkdir } from "fs/promises";
+
+async function listFiles(dirPath) {
+  const entries = await readdir(dirPath);
+  return entries;
+}
+
+async function ensureDirectory(dirPath) {
+  try {
+    await mkdir(dirPath, { recursive: true });
+  } catch (error) {
+    if (error.code !== "EEXIST") {
+      throw error;
+    }
+  }
+}
+
+// Usage
+await ensureDirectory("./output/reports");
+const files = await listFiles("./data");
+```
+
+## Appending to Files
+
+```javascript
+import { appendFile } from "fs/promises";
+
+async function appendToLog(path, message) {
+  const timestamp = new Date().toISOString();
+  await appendFile(path, `${timestamp}: ${message}\n`, "utf-8");
+}
+
+// Usage
+await appendToLog("./app.log", "User logged in");
+await appendToLog("./app.log", "Request processed");
+```
+
+## Practical Example: Configuration Manager
+
+Let's build something real: a configuration manager that handles the messy reality of file I/O.
+
+```javascript
+import { readFile, writeFile, rename } from "fs/promises";
+
+const CONFIG_PATH = "./config.json";
+const CONFIG_TEMP = "./config.json.tmp";
+
+const DEFAULT_CONFIG = Object.freeze({
+  theme: "light",
+  fontSize: 14,
+  autoSave: true
+});
+
+async function loadConfig() {
+  try {
+    const content = await readFile(CONFIG_PATH, "utf-8");
+    const parsed = JSON.parse(content);
+    // Merge with defaults to handle missing keys in old config files
+    return { ...DEFAULT_CONFIG, ...parsed };
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return { ...DEFAULT_CONFIG };
+    }
+    throw error;
+  }
+}
+
+async function saveConfig(config) {
+  const json = JSON.stringify(config, null, 2);
+  // Write to temp file first, then rename atomically
+  // This prevents corruption if we crash mid-write
+  await writeFile(CONFIG_TEMP, json, "utf-8");
+  await rename(CONFIG_TEMP, CONFIG_PATH);
+}
+
+async function updateConfig(updates) {
+  const current = await loadConfig();
+  const updated = { ...current, ...updates };
+  await saveConfig(updated);
+  return updated;
+}
+
+// Usage
+await updateConfig({ theme: "dark" });
+```
+
+Notice two defensive techniques:
+
+1. **Merge with defaults**: Old config files won't have new keys. New config files won't have old keys. Merging handles both gracefully.
+
+2. **Atomic write via rename**: Writing directly to the config file is dangerous. If your program crashes mid-write (power outage, crash, kill signal), you get a corrupted file. Write to a temp file, then rename. Rename is atomic on most filesystems: it either completes entirely or doesn't happen at all.
+
+## Synchronous vs Asynchronous
+
+Node.js has both sync and async file operations:
+
+```javascript
+import { readFileSync } from "fs";
+import { readFile } from "fs/promises";
+
+// Synchronous - blocks the entire process
+const syncContent = readFileSync("./data.txt", "utf-8");
+
+// Asynchronous - process continues while waiting
+const asyncContent = await readFile("./data.txt", "utf-8");
+```
+
+Understanding the difference requires understanding what "blocking" means. A synchronous read on a slow network drive might take 500ms. During those 500ms, a sync call does nothing—no other code runs, no requests get handled, your program is frozen. An async call lets other code run while waiting.
+
+### When to Use Each
+
+| Situation | Approach | Why |
+|-----------|----------|-----|
+| Startup configuration | Sync is acceptable | Nothing else can run anyway |
+| User-triggered operations | Use async | Don't freeze the UI |
+| Multiple files | Use async | Can parallelize reads |
+| CLI scripts | Sync can be simpler | Sequential execution is often fine |
+| Web servers | Always async | Blocking = dropping requests |
+
+The rule: if multiple things should happen concurrently, use async. If you're doing one thing then stopping, sync is fine.
+
+## Parallel File Operations
+
+Async unlocks parallelism. When you need to read multiple files, don't wait for each one sequentially:
+
+```javascript
+// SLOW: Sequential reads
+const file1 = await readFile("./data1.json", "utf-8");  // 50ms
+const file2 = await readFile("./data2.json", "utf-8");  // 50ms
+const file3 = await readFile("./data3.json", "utf-8");  // 50ms
+// Total: ~150ms
+
+// FAST: Parallel reads
+const [file1, file2, file3] = await Promise.all([
+  readFile("./data1.json", "utf-8"),
+  readFile("./data2.json", "utf-8"),
+  readFile("./data3.json", "utf-8")
+]);
+// Total: ~50ms (limited by slowest file)
+```
+
+`Promise.all` starts all operations simultaneously and waits for all to complete. For I/O-bound operations (files, network), this is often 3-10x faster.
+
+But `Promise.all` has a sharp edge: if any promise rejects, the whole thing fails. Use `Promise.allSettled` when you want all results, even if some fail:
+
+```javascript
+const results = await Promise.allSettled([
+  readFile("./exists.json", "utf-8"),
+  readFile("./missing.json", "utf-8"),
+  readFile("./also-exists.json", "utf-8")
+]);
+
+for (const result of results) {
+  if (result.status === "fulfilled") {
+    console.log("Got:", result.value.slice(0, 50));
+  } else {
+    console.log("Failed:", result.reason.message);
+  }
+}
+```
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What does the error code ENOENT mean?"
+  options={[
+    "Permission denied",
+    "File not found",
+    "File already exists",
+    "Disk full"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="To read a file as a string, pass '___ ' as the encoding."
+  answer="utf-8"
+  fuzzyThreshold={1}
+/>
+
+<MultipleChoice
+  question="Why prefer async file operations in web servers?"
+  options={[
+    "They use less memory",
+    "They do not block other requests",
+    "They are faster",
+    "They are more secure"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="Why is checking if a file exists before reading it considered a bug?"
+  options={[
+    "It is slower than just trying to read",
+    "The file can be deleted between the check and the read (TOCTOU)",
+    "The exists check uses more memory",
+    "It requires additional imports"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What technique prevents file corruption if your program crashes mid-write?"
+  options={[
+    "Using try/catch around writeFile",
+    "Writing with synchronous operations",
+    "Writing to a temp file, then renaming atomically",
+    "Using appendFile instead of writeFile"
+  ]}
+  correct={2}
+/>
+
+## Try It Yourself
+
+Practice file operations:
+
+<Exercise id="pm-file-io" />
+
+## The Big Ideas
+
+File I/O is your first encounter with the outside world—data you don't control, operations that can fail, resources that must be managed. The specific APIs will change across languages and runtimes. The principles won't.
+
+**Design for failure**: Files are missing, corrupted, locked, or too large. The happy path is a special case.
+
+**Ask forgiveness, not permission**: Try the operation and handle errors. Don't check preconditions that can change.
+
+**Think about scale**: Code that reads "a file" actually reads "an arbitrarily large file." What happens when it's 1000x bigger?
+
+**Resources need cleanup**: Files, database connections, network sockets—anything you open, you must close. Build habits now.
+
+**Atomic operations**: Writing directly to important files risks corruption. Write to temp, then rename.
+
+## Summary
+
+You learned:
+
+- `readFile` and `writeFile` from `fs/promises`
+- Reading and writing JSON files
+- Error handling with error codes (ENOENT, EACCES)
+- Working with directories (readdir, mkdir)
+- Appending to files
+- Sync vs async: prefer async for non-blocking operations
+- Atomic writes via temp file + rename
+- TOCTOU race conditions and how to avoid them
+
+File I/O is inherently asynchronous: each operation (read, parse, validate, transform) becomes a step you can reason about independently. Next, we will explore how Node.js handles asynchronous operations with callbacks and events.

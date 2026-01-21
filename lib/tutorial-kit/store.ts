@@ -38,6 +38,7 @@ export type TutorialStore = TutorialState & {
   setTerminalRunning: (running: boolean) => void
   togglePanel: (panel: keyof PanelState) => void
   setExpanded: (expanded: boolean) => void
+  toggleSolution: () => void
   reset: () => void
 }
 
@@ -114,6 +115,9 @@ export function createTutorialStore(
 
       setExpanded: (expanded) =>
         set((state) => tutorialReducer(state, { type: "SET_EXPANDED", expanded })),
+
+      toggleSolution: () =>
+        set((state) => tutorialReducer(state, { type: "TOGGLE_SOLUTION" })),
 
       reset: () =>
         set((state) => tutorialReducer(state, { type: "RESET" })),

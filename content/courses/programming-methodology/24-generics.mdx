@@ -1,0 +1,453 @@
+# Generics
+
+## The Deep Insight
+
+Every time you write the same logic for different types, you are doing the compiler's job. Generics shift that burden where it belongs.
+
+Consider what a function *really* is: a mapping from inputs to outputs. When the transformation doesn't depend on the specific type—only on its *structure*—forcing a concrete type is an arbitrary restriction. Generics remove that restriction.
+
+This is called **parametric polymorphism**: code that operates uniformly over all types. Unlike subtype polymorphism (inheritance), which selects different implementations at runtime, parametric polymorphism uses the *same* implementation for every type. The type becomes a parameter, just like a value.
+
+**The payoff**: One function. All types. Zero duplication. Full type safety.
+
+## The Problem Generics Solve
+
+Without generics, we face a dilemma:
+
+```typescript
+// Option 1: Specific but limited
+function firstNumber(arr: number[]): number {
+  return arr[0];
+}
+
+function firstString(arr: string[]): string {
+  return arr[0];
+}
+// Repetitive!
+
+// Option 2: Flexible but loses type info
+function firstAny(arr: any[]): any {
+  return arr[0];
+}
+
+const num = firstAny([1, 2, 3]);  // Type is any, not number
+```
+
+Generics give us both flexibility AND type safety.
+
+**Key insight**: The `any` approach *erases* information. The generic approach *preserves* it. This distinction matters more as systems grow.
+
+## Generic Functions
+
+```typescript
+// T is a type parameter - a placeholder for any type
+function first<T>(arr: T[]): T {
+  return arr[0];
+}
+
+const num = first([1, 2, 3]);           // Type is number
+const str = first(["a", "b", "c"]);     // Type is string
+const obj = first([{ id: 1 }]);         // Type is { id: number }
+```
+
+TypeScript infers the type from the argument. You can also specify it explicitly:
+
+```typescript
+const num = first<number>([1, 2, 3]);
+```
+
+**Mental model**: Think of `<T>` as a function at the type level. Just as `function(x)` takes a value and returns a value, `first<T>` takes a type and returns a specialized function.
+
+## Multiple Type Parameters
+
+```typescript
+function pair<T, U>(first: T, second: U): [T, U] {
+  return [first, second];
+}
+
+const p = pair("hello", 42);  // Type is [string, number]
+```
+
+## Generic Interfaces
+
+```typescript
+interface Container<T> {
+  value: T;
+  getValue(): T;
+}
+
+const stringContainer: Container<string> = {
+  value: "hello",
+  getValue() {
+    return this.value;
+  }
+};
+
+const numberContainer: Container<number> = {
+  value: 42,
+  getValue() {
+    return this.value;
+  }
+};
+```
+
+## Generic Classes
+
+```typescript
+class Box<T> {
+  private contents: T;
+
+  constructor(initial: T) {
+    this.contents = initial;
+  }
+
+  get(): T {
+    return this.contents;
+  }
+
+  set(value: T): void {
+    this.contents = value;
+  }
+}
+
+const stringBox = new Box("hello");
+const value = stringBox.get();  // Type is string
+
+const numberBox = new Box(42);
+numberBox.set(100);  // OK
+numberBox.set("hi"); // Error! Expected number
+```
+
+## Generic Constraints
+
+Sometimes we need to limit what types can be used:
+
+```typescript
+// T must have a length property
+interface HasLength {
+  length: number;
+}
+
+function logLength<T extends HasLength>(item: T): void {
+  console.log(item.length);
+}
+
+logLength("hello");      // OK - string has length
+logLength([1, 2, 3]);    // OK - array has length
+logLength({ length: 5 }); // OK - has length property
+logLength(42);           // Error! number has no length
+```
+
+**The principle**: Constraints express the minimum requirements for your function to work. Request exactly what you need—no more. This is the **Interface Segregation Principle** in action.
+
+## keyof and Type Constraints
+
+```typescript
+function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+  return obj[key];
+}
+
+const user = { name: "Alice", age: 30 };
+
+const name = getProperty(user, "name");  // Type is string
+const age = getProperty(user, "age");    // Type is number
+const foo = getProperty(user, "foo");    // Error! "foo" not in user
+```
+
+## Practical Example: API Response Type
+
+```typescript
+interface ApiResponse<T> {
+  status: number;
+  data: T;
+  timestamp: number;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+interface Post {
+  id: number;
+  title: string;
+  content: string;
+}
+
+async function fetchApi<T>(url: string): Promise<ApiResponse<T>> {
+  const response = await fetch(url);
+  return response.json();
+}
+
+// Usage - TypeScript knows the exact type of data
+const userResponse = await fetchApi<User>("/api/user");
+console.log(userResponse.data.name);  // TypeScript knows .name exists
+
+const postResponse = await fetchApi<Post>("/api/post");
+console.log(postResponse.data.title); // TypeScript knows .title exists
+```
+
+## Generic Type Aliases
+
+```typescript
+// A result type for operations that might fail
+type Result<T, E = Error> =
+  | { success: true; value: T }
+  | { success: false; error: E };
+
+function divide(a: number, b: number): Result<number> {
+  if (b === 0) {
+    return { success: false, error: new Error("Division by zero") };
+  }
+  return { success: true, value: a / b };
+}
+
+const result = divide(10, 2);
+if (result.success) {
+  console.log(result.value);  // TypeScript knows .value exists here
+} else {
+  console.log(result.error);  // TypeScript knows .error exists here
+}
+```
+
+## Default Type Parameters
+
+```typescript
+interface PaginatedResponse<T, M = { page: number; total: number }> {
+  data: T[];
+  meta: M;
+}
+
+// Uses default meta type
+const users: PaginatedResponse<User> = {
+  data: [{ id: 1, name: "Alice", email: "a@a.com" }],
+  meta: { page: 1, total: 100 }
+};
+
+// Custom meta type
+interface CustomMeta {
+  cursor: string;
+  hasMore: boolean;
+}
+
+const posts: PaginatedResponse<Post, CustomMeta> = {
+  data: [{ id: 1, title: "Hello", content: "..." }],
+  meta: { cursor: "abc", hasMore: true }
+};
+```
+
+## Branded Types for Invariants
+
+Use generics to create distinct types for similar underlying values:
+
+```typescript
+type UserId = string & { __brand: "UserId" };
+type PostId = string & { __brand: "PostId" };
+
+function createUserId(id: string): UserId {
+  return id as UserId;
+}
+
+function createPostId(id: string): PostId {
+  return id as PostId;
+}
+
+function fetchUser(id: UserId): Promise<User> { /* ... */ }
+function fetchPost(id: PostId): Promise<Post> { /* ... */ }
+
+const userId = createUserId("user-123");
+const postId = createPostId("post-456");
+
+fetchUser(userId);  // OK
+fetchUser(postId);  // Error! PostId is not UserId
+```
+
+This prevents an entire class of bugs at compile time. You physically cannot pass the wrong ID type.
+
+## Variance: The Hidden Complexity
+
+Here is where most developers get confused—and where understanding pays dividends for your entire career.
+
+**Question**: If `Dog` extends `Animal`, should `Array<Dog>` be assignable to `Array<Animal>`?
+
+Your intuition says yes. Type theory says: *it depends on how you use it*.
+
+```typescript
+class Animal { name: string = ""; }
+class Dog extends Animal { bark() {} }
+class Cat extends Animal { meow() {} }
+
+// This seems fine...
+const dogs: Dog[] = [new Dog()];
+const animals: Animal[] = dogs;  // TypeScript allows this
+
+// But now we can do this:
+animals.push(new Cat());  // Oops! We just put a Cat in a Dog array
+
+// dogs[1].bark();  // Runtime crash! Cat has no bark()
+```
+
+TypeScript allows this assignment for pragmatic reasons, but it's technically unsound. Java had this exact bug for years.
+
+**The three variance modes**:
+
+| Variance | Meaning | Safe for |
+|----------|---------|----------|
+| **Covariant** | `Dog[]` → `Animal[]` | Reading only |
+| **Contravariant** | `Animal[]` → `Dog[]` | Writing only |
+| **Invariant** | Neither direction | Reading AND writing |
+
+```typescript
+// Covariant: output positions (return types)
+// If Dog extends Animal, Producer<Dog> can be used as Producer<Animal>
+type Producer<T> = () => T;
+
+// Contravariant: input positions (parameters)
+// If Dog extends Animal, Consumer<Animal> can be used as Consumer<Dog>
+type Consumer<T> = (item: T) => void;
+
+// Invariant: both positions
+// Processor<Dog> and Processor<Animal> are unrelated
+type Processor<T> = (item: T) => T;
+```
+
+**The rule of thumb**:
+- If your generic only *produces* values of type T, it can be covariant
+- If your generic only *consumes* values of type T, it can be contravariant
+- If it does both, it must be invariant
+
+This is why `ReadonlyArray<Dog>` safely extends `ReadonlyArray<Animal>`—you can only read from it, never write.
+
+## When NOT to Use Generics
+
+Generics are powerful. That makes them dangerous. Over-genericizing code is a common trap.
+
+**Don't use generics when**:
+
+1. **You only have one concrete type**
+```typescript
+// Overengineered
+function processUser<T extends User>(user: T): T { ... }
+
+// Just write this
+function processUser(user: User): User { ... }
+```
+
+2. **The generic serves no purpose**
+```typescript
+// The T adds nothing—it's always inferred as the literal type
+function identity<T>(x: T): T { return x; }
+const x = identity(5);  // Type is just `5`, not useful
+
+// This is fine for learning, but rarely needed in practice
+```
+
+3. **Readability suffers**
+```typescript
+// This is unreadable
+function process<T, U, V extends keyof T, W extends T[V]>(
+  obj: T, key: V, transform: (val: W) => U
+): Partial<Record<V, U>>
+
+// Simpler is better. Create specific types.
+```
+
+**Do use generics when**:
+- Multiple callers will use different types
+- You're building reusable utilities (libraries, shared code)
+- Type relationships must be preserved across a transformation
+
+**The test**: If removing the generic parameter forces you to use `any` or duplicate code, keep it. Otherwise, delete it.
+
+## The Theorems for Free Principle
+
+Here's a profound insight from type theory: the more generic a function's type, the *fewer* things it can do, which means you can reason about it more easily.
+
+```typescript
+function mystery<T>(arr: T[]): T[]
+```
+
+What can this function do? It can:
+- Return the array unchanged
+- Return a subset (filter)
+- Return a reordered version (sort, reverse, shuffle)
+- Return duplicates
+
+What can it NOT do?
+- Create new `T` values (it doesn't know what `T` is)
+- Modify the values (it can't call methods on `T`)
+- Return an array of different types
+
+The type signature *constrains* the implementation. This is called **parametricity**, and it means generic functions are easier to test and reason about.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What does `extends` do in a generic constraint?"
+  options={[
+    "Creates a subclass",
+    "Limits the types that can be used",
+    "Combines two types",
+    "Exports a type"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="A type parameter like T is a ___ for any type."
+  answer="placeholder"
+  fuzzyThreshold={1}
+/>
+
+<MultipleChoice
+  question="Why use generics instead of `any`?"
+  options={[
+    "Generics are faster",
+    "Generics preserve type information",
+    "Generics use less memory",
+    "Generics are required in TypeScript"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="If Dog extends Animal, and you have a function that both reads and writes to an Array<T>, what variance should it be?"
+  options={[
+    "Covariant - Array<Dog> can be used as Array<Animal>",
+    "Contravariant - Array<Animal> can be used as Array<Dog>",
+    "Invariant - neither direction is safe",
+    "Bivariant - both directions work"
+  ]}
+  correct={2}
+/>
+
+<FillBlank
+  question="When a generic function only produces values of type T (returns but never accepts T), it is ___ in T."
+  answer="covariant"
+  fuzzyThreshold={2}
+/>
+
+## Try It Yourself
+
+Practice generics:
+
+<Exercise id="pm-generics" />
+
+## Summary
+
+You learned:
+
+- **Parametric polymorphism**: One implementation for all types, with full type safety
+- **Type parameters** (`<T>`) are type-level functions—they take a type and return a specialized version
+- **Constraints** (`extends`) express minimum requirements—request exactly what you need
+- **Variance** determines type compatibility:
+  - Covariant: safe for reading (output positions)
+  - Contravariant: safe for writing (input positions)
+  - Invariant: required when both reading and writing
+- **Parametricity**: Generic signatures constrain implementations, making code easier to reason about
+- **Judgment**: Use generics when they prevent duplication or preserve type relationships; avoid them when they add complexity without benefit
+
+**The career lesson**: Generics are not just a TypeScript feature. They exist in Java, C#, Rust, Swift, Haskell, and most modern languages. The concepts—parametric polymorphism, variance, type constraints—transfer directly. Master them once, apply them everywhere.
+
+Next, we will explore advanced TypeScript features.

@@ -11,6 +11,14 @@ import {
   IconPlayerStop,
 } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
+
+// Strip ANSI escape codes from terminal output
+// Matches: ESC[...m (colors), ESC[...H (cursor), ESC[...J (clear), etc.
+const ANSI_REGEX = /\x1b\[[0-9;]*[a-zA-Z]|\x1b\].*?\x07/g
+
+function stripAnsi(text: string): string {
+  return text.replace(ANSI_REGEX, "")
+}
 import { ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { Button } from "@/components/ui/button"
 import {
@@ -179,7 +187,7 @@ function TerminalTab({ onRun, onStop }: TerminalTabProps) {
                 line.stream === "stderr" && "text-red-400"
               )}
             >
-              {line.text}
+              {stripAnsi(line.text)}
             </div>
           ))
         )}

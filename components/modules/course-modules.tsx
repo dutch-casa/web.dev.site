@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { IconCheck, IconCircle } from "@tabler/icons-react"
@@ -12,7 +13,13 @@ type CourseModulesProps = {
 }
 
 export function CourseModules({ course }: CourseModulesProps) {
+  const [hydrated, setHydrated] = useState(false)
   const isComplete = useProgressStore((s) => s.isComplete)
+
+  // Wait for client-side hydration before reading localStorage-backed state
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
 
   return (
     <div className="space-y-8">
@@ -27,7 +34,8 @@ export function CourseModules({ course }: CourseModulesProps) {
           </motion.h2>
           <ul className="space-y-2.5">
             {mod.lessons.map((lessonId) => {
-              const completed = isComplete(course.id, lessonId)
+              // Only check completion after hydration to avoid mismatch
+              const completed = hydrated && isComplete(course.id, lessonId)
               const title = formatLessonTitle(lessonId)
 
               return (

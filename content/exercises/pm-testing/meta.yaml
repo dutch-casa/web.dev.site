@@ -1,0 +1,4 @@
+title: Writing Tests
+description: Practice writing simple tests
+template: simple
+focus: /src/index.js

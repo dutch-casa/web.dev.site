@@ -1,0 +1,415 @@
+# Sorting Algorithms
+
+Sorting is the act of arranging elements in order. It sounds mundane, but sorting is one of the most deeply studied problems in computer science. Why? Because it appears *everywhere*. Before you can binary search, you must sort. Before you can find duplicates efficiently, you must sort. Before you can merge datasets, you must sort. Sorting is infrastructure.
+
+More importantly, the study of sorting teaches algorithmic thinking patterns you will use for the rest of your career: loop invariants, divide-and-conquer, space-time tradeoffs, and stability. Master these ideas here, and they transfer everywhere.
+
+## The Core Question
+
+Given an array of n elements, put them in order. Simple statement. Profound depth.
+
+**The fundamental operation** is comparison: given two elements, which comes first? Everything else follows from how we organize comparisons.
+
+## Selection Sort: Thinking in Invariants
+
+The idea: find the smallest element and put it first. Then find the smallest of what remains and put it second. Repeat.
+
+```javascript
+function selectionSort(arr) {
+  const result = [...arr];
+
+  for (let i = 0; i < result.length - 1; i++) {
+    let minIndex = i;
+
+    for (let j = i + 1; j < result.length; j++) {
+      if (result[j] < result[minIndex]) {
+        minIndex = j;
+      }
+    }
+
+    if (minIndex !== i) {
+      [result[i], result[minIndex]] = [result[minIndex], result[i]];
+    }
+  }
+
+  return result;
+}
+```
+
+**The invariant** (the property that holds after each iteration of the outer loop):
+> The first `i` elements are sorted AND they are the `i` smallest elements in the array.
+
+This invariant is what makes the algorithm *correct*. Before the loop starts (i=0), the invariant holds trivially. Each iteration extends the sorted region by one element. When the loop ends (i = n-1), the invariant guarantees the entire array is sorted.
+
+**Train yourself to state the invariant for every loop you write.** This discipline catches bugs before they happen.
+
+### Trace
+
+```
+[5, 2, 8, 1] - Find min (1), swap with first
+[1, 2, 8, 5] - Invariant: [1] is sorted and smallest
+[1, 2, 8, 5] - Find min in rest (2), already in place
+[1, 2, 8, 5] - Invariant: [1, 2] sorted and two smallest
+[1, 2, 5, 8] - Find min in rest (5), swap with 8
+[1, 2, 5, 8] - Invariant: [1, 2, 5] sorted and three smallest
+Done. Full array sorted.
+```
+
+**Complexity:** O(n^2) comparisons always. The inner loop runs n-1, then n-2, ... then 1 times. That sum is n(n-1)/2, which is O(n^2).
+
+**Space:** O(1) extra (in-place if we don't copy).
+
+**Swaps:** At most n-1 swaps. This matters when swapping is expensive (large records, disk I/O).
+
+## Insertion Sort: How Humans Sort Cards
+
+When you sort a hand of playing cards, you don't find the minimum and swap. You pick up each card and *insert* it into its proper place among the cards you've already sorted.
+
+```javascript
+function insertionSort(arr) {
+  const result = [...arr];
+
+  for (let i = 1; i < result.length; i++) {
+    const current = result[i];
+    let j = i - 1;
+
+    while (j >= 0 && result[j] > current) {
+      result[j + 1] = result[j];
+      j--;
+    }
+
+    result[j + 1] = current;
+  }
+
+  return result;
+}
+```
+
+**The invariant:**
+> After iteration i, the first `i+1` elements are sorted (but not necessarily the smallest overall).
+
+This is different from selection sort. Selection sort guarantees the first i elements are the *smallest* i. Insertion sort only guarantees they are *sorted relative to each other*.
+
+**Best case:** O(n) - When the array is already sorted, the inner while loop never executes. This makes insertion sort *adaptive*.
+
+**Worst case:** O(n^2) - When the array is reverse sorted.
+
+**When to use insertion sort:**
+- Small arrays (n < 20). The constant factors are tiny.
+- Nearly-sorted arrays. It runs in O(n + k) where k is the number of inversions.
+- Online sorting (elements arrive one at a time).
+
+<Tip>
+Many sophisticated sorting algorithms use insertion sort as a subroutine for small subarrays. Hybrid approaches win in practice.
+</Tip>
+
+## Bubble Sort: Know It, Don't Use It
+
+Bubble sort compares adjacent pairs and swaps if out of order. Repeat until no swaps occur.
+
+```javascript
+function bubbleSort(arr) {
+  const result = [...arr];
+
+  for (let i = 0; i < result.length - 1; i++) {
+    let swapped = false;
+
+    for (let j = 0; j < result.length - 1 - i; j++) {
+      if (result[j] > result[j + 1]) {
+        [result[j], result[j + 1]] = [result[j + 1], result[j]];
+        swapped = true;
+      }
+    }
+
+    if (!swapped) break;  // Already sorted
+  }
+
+  return result;
+}
+```
+
+Bubble sort has one redeeming quality: it is easy to remember. In all other respects, insertion sort is better. Bubble sort exists primarily so that interview questions can ask why it's bad.
+
+**Complexity:** O(n^2) average and worst. O(n) best (already sorted, with early exit).
+
+## Divide and Conquer: Merge Sort
+
+Here is where algorithmic thinking gets interesting.
+
+The insight: sorting a large array is hard. Sorting two small arrays is easier. If we had a way to *merge* two sorted arrays into one sorted array efficiently, we could:
+
+1. Split the array in half
+2. Sort each half (recursively)
+3. Merge the sorted halves
+
+This is **divide and conquer** - a problem-solving pattern you will use everywhere.
+
+```javascript
+function mergeSort(arr) {
+  // Base case: arrays of length 0 or 1 are already sorted
+  if (arr.length <= 1) {
+    return arr;
+  }
+
+  // Divide: split in half
+  const mid = Math.floor(arr.length / 2);
+  const left = mergeSort(arr.slice(0, mid));
+  const right = mergeSort(arr.slice(mid));
+
+  // Conquer: merge sorted halves
+  return merge(left, right);
+}
+
+function merge(left, right) {
+  const result = [];
+  let i = 0, j = 0;
+
+  while (i < left.length && j < right.length) {
+    if (left[i] <= right[j]) {  // <= for stability
+      result.push(left[i]);
+      i++;
+    } else {
+      result.push(right[j]);
+      j++;
+    }
+  }
+
+  // One side is exhausted; append the remainder
+  return result.concat(left.slice(i)).concat(right.slice(j));
+}
+```
+
+### Why O(n log n)?
+
+Visualize the recursion as a tree:
+- Level 0: 1 array of size n
+- Level 1: 2 arrays of size n/2
+- Level 2: 4 arrays of size n/4
+- ...
+- Level log n: n arrays of size 1
+
+At each level, the total work across all arrays is O(n) (merging). There are O(log n) levels. Total: O(n log n).
+
+This is the **recurrence relation**: T(n) = 2T(n/2) + O(n). Its solution is O(n log n).
+
+### Space Complexity
+
+Merge sort uses O(n) extra space for the merged arrays. This is a real tradeoff. Sometimes memory matters.
+
+### Merge Sort Is Stable
+
+When two elements compare equal, merge takes from the *left* array first (`<=` not `<`). This preserves original order among equal elements.
+
+## QuickSort: The Practical Champion
+
+QuickSort uses a different divide-and-conquer strategy:
+
+1. Pick a "pivot" element
+2. Partition: move elements smaller than pivot to the left, larger to the right
+3. Recursively sort left and right partitions
+
+```javascript
+function quickSort(arr, lo = 0, hi = arr.length - 1) {
+  if (lo >= hi) return arr;
+
+  const pivotIndex = partition(arr, lo, hi);
+  quickSort(arr, lo, pivotIndex - 1);
+  quickSort(arr, pivotIndex + 1, hi);
+
+  return arr;
+}
+
+function partition(arr, lo, hi) {
+  const pivot = arr[hi];  // Simple: use last element as pivot
+  let i = lo;
+
+  for (let j = lo; j < hi; j++) {
+    if (arr[j] < pivot) {
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      i++;
+    }
+  }
+
+  [arr[i], arr[hi]] = [arr[hi], arr[i]];
+  return i;
+}
+```
+
+**Average case:** O(n log n) - When pivots split arrays roughly in half.
+
+**Worst case:** O(n^2) - When pivots are always the smallest or largest (already sorted arrays with naive pivot selection).
+
+**Why is QuickSort popular despite the worst case?**
+1. In-place: O(log n) stack space, no O(n) auxiliary array
+2. Cache-friendly: sequential memory access patterns
+3. Worst case is avoidable with good pivot selection (randomized, median-of-three)
+4. Excellent constant factors
+
+Most standard library sorts use QuickSort or a hybrid (like Introsort: QuickSort that falls back to HeapSort if recursion gets too deep).
+
+## Stability Matters
+
+A **stable** sort maintains the relative order of equal elements.
+
+Why does this matter? Suppose you have tasks with priorities and dates:
+
+```javascript
+const tasks = [
+  { name: "Fix bug", priority: 1, date: "Monday" },
+  { name: "Write docs", priority: 2, date: "Monday" },
+  { name: "Code review", priority: 1, date: "Tuesday" },
+  { name: "Deploy", priority: 2, date: "Tuesday" }
+];
+
+// First: sort by date
+// Result: Monday tasks, then Tuesday tasks
+
+// Second: sort by priority (stable)
+// Result: [Fix bug (Mon), Code review (Tue), Write docs (Mon), Deploy (Tue)]
+// Within each priority, date order is preserved!
+
+// With unstable sort, date order could be scrambled.
+```
+
+**Stable:** Merge sort, Insertion sort, Bubble sort
+**Unstable:** Selection sort, QuickSort, HeapSort
+
+## The Comparison-Based Lower Bound
+
+A profound theoretical result: no comparison-based sorting algorithm can do better than O(n log n) in the worst case.
+
+The proof uses decision trees: any comparison-based algorithm can be modeled as a binary tree where each node is a comparison. There are n! possible orderings of n elements. A binary tree with n! leaves must have height at least log(n!) = O(n log n).
+
+This means merge sort and heapsort are *optimal* among comparison sorts.
+
+**Non-comparison sorts** like counting sort and radix sort can achieve O(n), but only for restricted inputs (integers in a known range).
+
+## Choosing the Right Algorithm
+
+| Situation | Best Choice | Why |
+|-----------|-------------|-----|
+| Small array (< 20 elements) | Insertion sort | Low overhead |
+| Nearly sorted | Insertion sort | O(n) in this case |
+| General purpose | Built-in sort | Heavily optimized |
+| Need stability | Merge sort | Guaranteed stable |
+| Memory constrained | QuickSort/HeapSort | In-place |
+| Guaranteed O(n log n) | Merge sort/HeapSort | No worst case degradation |
+| Parallel processing | Merge sort | Naturally parallelizable |
+
+## Using Built-in Sort
+
+In practice, use the language's built-in sort. It's optimized by experts.
+
+```javascript
+const numbers = [5, 2, 8, 1, 9, 3];
+
+// DANGER: default sorts as strings!
+[10, 2, 100].sort();  // [10, 100, 2] - WRONG!
+
+// Always provide a comparator for numbers
+numbers.sort((a, b) => a - b);  // Ascending
+numbers.sort((a, b) => b - a);  // Descending
+```
+
+### The Comparator Contract
+
+A comparator function takes two elements and returns:
+- Negative: first element comes before second
+- Zero: elements are equal
+- Positive: first element comes after second
+
+```javascript
+// Sort objects by any property
+const users = [
+  { name: "Alice", age: 30 },
+  { name: "Bob", age: 25 },
+  { name: "Carol", age: 35 }
+];
+
+users.sort((a, b) => a.age - b.age);  // By age ascending
+users.sort((a, b) => a.name.localeCompare(b.name));  // By name alphabetically
+
+// Multi-level sort: by priority, then by date
+tasks.sort((a, b) => {
+  if (a.priority !== b.priority) {
+    return a.priority - b.priority;
+  }
+  return a.date.localeCompare(b.date);
+});
+```
+
+The comparator is a powerful abstraction. It decouples the sorting algorithm from the comparison logic, enabling generic sorting of any data type.
+
+## Summary
+
+| Algorithm | Time (Best/Avg/Worst) | Space | Stable | Key Insight |
+|-----------|----------------------|-------|--------|-------------|
+| Selection | O(n^2) / O(n^2) / O(n^2) | O(1) | No | Minimize swaps |
+| Insertion | O(n) / O(n^2) / O(n^2) | O(1) | Yes | Adaptive to sorted input |
+| Bubble | O(n) / O(n^2) / O(n^2) | O(1) | Yes | Don't use it |
+| Merge | O(n log n) all cases | O(n) | Yes | Divide and conquer |
+| Quick | O(n log n) / O(n log n) / O(n^2) | O(log n) | No | Partition around pivot |
+
+**Core lessons:**
+1. **State invariants** for loops - this is how you write correct code
+2. **Divide and conquer** reduces complex problems to simpler ones
+3. **O(n log n) is optimal** for comparison-based sorting
+4. **Stability matters** when sorting by multiple keys
+5. **Use built-in sort** in practice - but understand why it works
+
+The patterns you learn studying sorting - invariants, divide-and-conquer, tradeoff analysis - will serve you for your entire career. Sorting is not just about putting things in order. It is about learning to think algorithmically.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What is the loop invariant for selection sort?"
+  options={[
+    "The array is completely sorted",
+    "The first i elements are sorted and are the i smallest elements",
+    "The first i elements are sorted but may not be the smallest",
+    "All elements after position i are in their final position"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="Why is merge sort O(n log n)?"
+  options={[
+    "It makes n log n comparisons in the merge step",
+    "It has log n levels of recursion, each doing O(n) work",
+    "It uses a binary search to find each element's position",
+    "It makes fewer comparisons than other sorts"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="A sort is ___ if it preserves the relative order of equal elements."
+  answer="stable"
+  fuzzyThreshold={0}
+/>
+
+<MultipleChoice
+  question="Which algorithm is best for a nearly-sorted array of 1000 elements?"
+  options={["Selection Sort", "Merge Sort", "Insertion Sort", "QuickSort"]}
+  correct={2}
+/>
+
+<MultipleChoice
+  question="What does the comparator (a, b) => b - a do?"
+  options={[
+    "Sorts in ascending order",
+    "Sorts in descending order",
+    "Removes duplicates",
+    "Reverses the array"
+  ]}
+  correct={1}
+/>
+
+## Try It Yourself
+
+<Exercise id="pm-sorting" />
+
+## Next Steps
+
+You now understand the foundational sorting algorithms and the thinking patterns behind them. Next, we explore **recursion** in depth - the technique that makes divide-and-conquer possible and enables elegant solutions to problems that seem impossibly complex.

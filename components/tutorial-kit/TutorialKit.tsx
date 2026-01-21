@@ -26,6 +26,7 @@ import {
   IconTerminal2,
   IconEye,
   IconFolder,
+  IconBulb,
 } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -35,6 +36,7 @@ import {
   ResizableHandle,
 } from "@/components/ui/resizable"
 import { TutorialProvider } from "@/lib/tutorial-kit/context"
+import { useSettings } from "@/lib/tutorial-kit/settings"
 import {
   useTutorialExpanded,
   useTutorialActions,
@@ -51,6 +53,8 @@ import {
   useTutorialFiles,
   useTutorialTerminal,
   useTutorialActiveFileContent,
+  useTutorialShowingSolution,
+  useTutorialHasSolution,
 } from "@/lib/tutorial-kit/context"
 import { useAutoBootWebContainer } from "@/lib/tutorial-kit/use-webcontainer"
 import { SettingsPopover } from "./SettingsPopover"
@@ -282,18 +286,29 @@ function Expanded({ children, className }: ExpandedProps) {
   const expanded = useTutorialExpanded()
   const actions = useTutorialActions()
   const [mounted, setMounted] = useState(false)
+  const { vimMode } = useSettings()
 
   // Client-side only portal
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Handle escape key to close
+  // Handle escape key to close (but not when vim mode is active in editor)
   useEffect(() => {
     if (!expanded) return
 
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
+        // Don't close if vim mode is enabled and focus is in the editor
+        // Vim needs escape to return to normal mode
+        const target = e.target as HTMLElement
+        const isInEditor = target.closest(".monaco-editor") !== null
+
+        if (vimMode && isInEditor) {
+          // Let vim handle the escape key
+          return
+        }
+
         actions.setExpanded(false)
       }
     }
@@ -306,7 +321,7 @@ function Expanded({ children, className }: ExpandedProps) {
       document.body.style.overflow = ""
       document.removeEventListener("keydown", handleKeyDown)
     }
-  }, [expanded, actions])
+  }, [expanded, actions, vimMode])
 
   if (!expanded || !mounted) return null
 
@@ -340,13 +355,14 @@ interface ToolbarProps {
 function Toolbar({ className }: ToolbarProps) {
   const { onRun, onStop, onReset, config } = useTutorialKitContext()
   const actions = useTutorialActions()
-  const expanded = useTutorialExpanded()
   const bootState = useTutorialBootState()
   const serverState = useTutorialServerState()
   const isLoading = useTutorialIsLoading()
   const isReady = useTutorialIsReady()
   const error = useTutorialError()
   const panels = useTutorialPanels()
+  const showingSolution = useTutorialShowingSolution()
+  const hasSolution = useTutorialHasSolution()
 
   const isServerRunning = serverState.status === "starting" || serverState.status === "ready"
 
@@ -464,6 +480,22 @@ function Toolbar({ className }: ToolbarProps) {
         >
           <IconRefresh className="w-3.5 h-3.5" />
         </Button>
+
+        {/* Show Solution button */}
+        {hasSolution && (
+          <Button
+            variant={showingSolution ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => actions.toggleSolution()}
+            className="h-7 gap-1.5"
+            title={showingSolution ? "Hide solution" : "Show solution"}
+          >
+            <IconBulb className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">
+              {showingSolution ? "Hide" : "Solution"}
+            </span>
+          </Button>
+        )}
 
         {/* Divider */}
         <div className="w-px h-5 bg-border mx-1" />

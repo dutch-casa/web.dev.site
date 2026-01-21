@@ -1,0 +1,4 @@
+title: Search Algorithms
+description: Implement linear and binary search
+template: simple
+focus: /src/index.js

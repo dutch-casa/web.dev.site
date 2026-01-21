@@ -1,0 +1,74 @@
+{
+  "id": "programming-methodology",
+  "title": "Programming Methodology",
+  "author": "Dutch Casadaban",
+  "description": "Learn to write programs that humans can understand. A modern introduction to programming fundamentals using JavaScript, transitioning to TypeScript for type safety and invariants.",
+  "modules": [
+    {
+      "title": "Foundations",
+      "lessons": [
+        "01-programs-for-humans",
+        "02-variables",
+        "03-control-flow",
+        "04-functions"
+      ]
+    },
+    {
+      "title": "Data Structures",
+      "lessons": [
+        "05-strings",
+        "06-arrays",
+        "07-objects",
+        "08-memory-references"
+      ]
+    },
+    {
+      "title": "Error Handling and Debugging",
+      "lessons": [
+        "09-error-handling",
+        "10-debugging",
+        "11-testing"
+      ]
+    },
+    {
+      "title": "Algorithms and Complexity",
+      "lessons": [
+        "12-searching",
+        "13-complexity",
+        "14-sorting",
+        "15-recursion"
+      ]
+    },
+    {
+      "title": "Collections and Modeling",
+      "lessons": [
+        "16-sets-maps",
+        "17-classes",
+        "18-data-modeling"
+      ]
+    },
+    {
+      "title": "File I/O and Async",
+      "lessons": [
+        "19-file-io",
+        "20-callbacks-events",
+        "21-promises",
+        "22-async-await"
+      ]
+    },
+    {
+      "title": "TypeScript",
+      "lessons": [
+        "23-typescript-intro",
+        "24-generics",
+        "25-advanced-types"
+      ]
+    },
+    {
+      "title": "Software Design",
+      "lessons": [
+        "26-putting-together"
+      ]
+    }
+  ]
+}

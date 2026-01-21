@@ -1,0 +1,4 @@
+title: Debugging Practice
+description: Practice finding bugs in code
+template: simple
+focus: /src/index.js

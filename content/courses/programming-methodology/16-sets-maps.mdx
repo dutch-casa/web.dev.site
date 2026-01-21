@@ -1,0 +1,505 @@
+# Sets and Maps
+
+Sets and Maps are specialized data structures for efficient lookups and uniqueness. Choosing the right data structure starts with asking: what do I actually need to track? Uniqueness? Associations? Order? The answer shapes everything.
+
+## The Core Insight: Hash Tables
+
+Sets and Maps achieve O(1) average-case lookup through **hashing**. A hash function converts any key into an integer, which becomes an index into an array. When you call `set.has(value)`, you're not searching through every element - you're computing a hash and jumping directly to where the value should be.
+
+This is why Sets and Maps are transformative: operations that take O(n) with arrays become O(1). Finding an element in an array of 1 million items means checking up to 1 million elements. Finding an element in a Set of 1 million items means computing one hash.
+
+**The tradeoff:** Hash tables use more memory and don't maintain sorted order. If you need sorted iteration, a Set is the wrong choice.
+
+## Sets
+
+A Set stores unique values - no duplicates allowed:
+
+```javascript
+const numbers = new Set();
+
+// Add values - O(1) average
+numbers.add(1);
+numbers.add(2);
+numbers.add(3);
+numbers.add(1);  // Ignored - duplicate
+
+console.log(numbers.size);  // 3
+
+// Check if value exists - O(1) average
+console.log(numbers.has(2));  // true
+console.log(numbers.has(5));  // false
+
+// Remove value - O(1) average
+numbers.delete(2);
+
+// Iterate - O(n)
+for (const num of numbers) {
+  console.log(num);
+}
+```
+
+### The Equality Trap
+
+**Critical:** JavaScript Sets use strict equality (`===`) for primitives, but **reference equality** for objects. This is the source of countless bugs:
+
+```javascript
+// Primitives: value equality
+const nums = new Set();
+nums.add(5);
+nums.has(5);  // true - same value
+
+// Objects: reference equality
+const objects = new Set();
+objects.add({ id: 1 });
+objects.has({ id: 1 });  // FALSE! Different object, same shape
+
+// The same object reference works
+const obj = { id: 1 };
+objects.add(obj);
+objects.has(obj);  // true - same reference
+```
+
+**Invariant:** A Set guarantees no duplicate references (for objects) or values (for primitives). It does NOT guarantee no duplicate "shapes" or "contents."
+
+If you need content-based deduplication of objects, you must:
+1. Use a Map with a serialized key, or
+2. Normalize objects to a canonical string form, or
+3. Use a library that provides value-based equality
+
+### Creating Sets
+
+```javascript
+// From an array
+const fromArray = new Set([1, 2, 3, 2, 1]);  // {1, 2, 3}
+
+// From a string (characters)
+const letters = new Set("hello");  // {'h', 'e', 'l', 'o'}
+```
+
+### Practical Use: Removing Duplicates
+
+```javascript
+function removeDuplicates(arr) {
+  return [...new Set(arr)];
+}
+
+console.log(removeDuplicates([1, 2, 2, 3, 3, 3, 4]));  // [1, 2, 3, 4]
+console.log(removeDuplicates(["a", "b", "a", "c"]));   // ["a", "b", "c"]
+```
+
+### Set Operations
+
+Modern JavaScript (ES2025+) includes Set methods directly. For older environments, implement them manually:
+
+```javascript
+const setA = new Set([1, 2, 3]);
+const setB = new Set([2, 3, 4]);
+
+// Union (all elements from both)
+const union = setA.union(setB);  // {1, 2, 3, 4}
+// Fallback: new Set([...setA, ...setB])
+
+// Intersection (elements in both)
+const intersection = setA.intersection(setB);  // {2, 3}
+// Fallback: new Set([...setA].filter(x => setB.has(x)))
+
+// Difference (elements in A but not B)
+const difference = setA.difference(setB);  // {1}
+// Fallback: new Set([...setA].filter(x => !setB.has(x)))
+
+// Symmetric difference (elements in one but not both)
+const symmetricDiff = setA.symmetricDifference(setB);  // {1, 4}
+```
+
+## Maps
+
+A Map stores key-value pairs with any type as keys:
+
+```javascript
+const userRoles = new Map();
+
+// Set a key-value pair - O(1) average
+userRoles.set("alice", "admin");
+userRoles.set("bob", "editor");
+userRoles.set("carol", "viewer");
+
+// Get a value - O(1) average
+console.log(userRoles.get("alice"));  // "admin"
+console.log(userRoles.get("unknown"));  // undefined
+
+// Check if key exists - O(1) average
+console.log(userRoles.has("bob"));  // true
+
+// Delete a key - O(1) average
+userRoles.delete("bob");
+
+// Get size
+console.log(userRoles.size);  // 2
+```
+
+### The Same Equality Trap
+
+Maps have the same reference equality behavior for object keys:
+
+```javascript
+const map = new Map();
+
+// Object keys use reference equality
+const key1 = { id: 1 };
+const key2 = { id: 1 };  // Same shape, different reference
+
+map.set(key1, "value1");
+map.get(key1);  // "value1"
+map.get(key2);  // undefined! Different reference
+
+// Practical consequence: you must keep references to your keys
+// If you lose the reference, you lose access to the value
+```
+
+**Invariant:** A Map key is uniquely identified by its reference (for objects) or value (for primitives). Two objects that "look the same" are different keys.
+
+### Creating Maps
+
+```javascript
+// From array of pairs
+const fromPairs = new Map([
+  ["alice", "admin"],
+  ["bob", "editor"]
+]);
+
+// From object entries
+const obj = { x: 1, y: 2 };
+const fromObject = new Map(Object.entries(obj));
+```
+
+### Iterating Maps
+
+```javascript
+const scores = new Map([
+  ["alice", 95],
+  ["bob", 87],
+  ["carol", 92]
+]);
+
+// Iterate over entries
+for (const [user, score] of scores) {
+  console.log(`${user}: ${score}`);
+}
+
+// Iterate over keys
+for (const user of scores.keys()) {
+  console.log(user);
+}
+
+// Iterate over values
+for (const score of scores.values()) {
+  console.log(score);
+}
+```
+
+### Map vs Object
+
+| Feature | Map | Object |
+|---------|-----|--------|
+| Key types | Any type | Strings/symbols only |
+| Order | Preserved (insertion order) | Partially (spec guarantees integer keys first) |
+| Size | `.size` property - O(1) | `Object.keys(obj).length` - O(n) |
+| Iteration | Direct with for...of | Requires Object.keys/entries |
+| Performance | Better for frequent additions/deletions | Better for small, static data |
+| Default keys | None | Has prototype properties |
+| Serialization | Must convert to array/object | JSON.stringify works directly |
+
+```javascript
+// Maps can use any key type
+const objectKey = { id: 1 };
+const map = new Map();
+map.set(objectKey, "value");  // Works!
+
+// Objects convert keys to strings
+const obj = {};
+obj[objectKey] = "value";
+console.log(Object.keys(obj));  // ["[object Object]"] - not useful!
+```
+
+**When to use Object over Map:**
+- Static configuration that won't change
+- You need JSON serialization
+- You're interfacing with APIs that expect objects
+- You need object destructuring syntax
+
+## Choosing the Right Data Structure
+
+This decision will come up in every project. Here's how to think about it:
+
+| Need | Use | Why |
+|------|-----|-----|
+| Check if item exists | Set | O(1) vs O(n) for array.includes() |
+| Store unique items | Set | Built-in deduplication |
+| Count occurrences | Map | Key = item, value = count |
+| Associate data with keys | Map | O(1) lookup by key |
+| Maintain sorted order | Array + binary search | Sets/Maps don't sort |
+| Preserve insertion order | Array, Map, or Set | All preserve insertion order |
+| Need index access | Array | Maps don't have indices |
+| Frequent insertions/deletions | Set or Map | O(1) vs O(n) for array splice |
+
+**The common mistake:** Using an array when you need frequent lookups.
+
+```javascript
+// Bad: O(n) for every check
+const visited = [];
+if (!visited.includes(page)) {
+  visited.push(page);
+}
+
+// Good: O(1) for every check
+const visited = new Set();
+if (!visited.has(page)) {
+  visited.add(page);
+}
+
+// Or simply (Set handles duplicates):
+visited.add(page);  // Idempotent - add is safe to call repeatedly
+```
+
+## Practical Example: Frequency Counter
+
+```javascript
+function countFrequencies(items) {
+  const frequencies = new Map();
+
+  for (const item of items) {
+    const count = frequencies.get(item) ?? 0;
+    frequencies.set(item, count + 1);
+  }
+
+  return frequencies;
+}
+
+const frequencies = countFrequencies(["a", "b", "a", "c", "b", "a"]);
+for (const [item, count] of frequencies) {
+  console.log(`${item}: ${count}`);
+}
+// a: 3, b: 2, c: 1
+```
+
+Note the use of `??` (nullish coalescing) instead of `||`. This matters when `0` is a valid value - `0 || 0` returns `0`, but if the value were `0` and we used `||`, it would be treated as falsy. Using `??` only substitutes when the value is `null` or `undefined`.
+
+## Practical Example: Tracking Unique Visitors
+
+Notice how this example separates two distinct concerns: tracking *who* visited (Set for uniqueness) and tracking *how many* views (Map for counting). Each data structure handles one job.
+
+```javascript
+function createVisitorTracker() {
+  const visitors = new Set();
+  const pageViews = new Map();
+
+  return {
+    recordVisit(userId, page) {
+      visitors.add(userId);
+
+      const views = pageViews.get(page) ?? 0;
+      pageViews.set(page, views + 1);
+    },
+
+    getUniqueVisitorCount() {
+      return visitors.size;
+    },
+
+    getPageViews(page) {
+      return pageViews.get(page) ?? 0;
+    },
+
+    getMostViewedPages(limit = 5) {
+      return [...pageViews.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit);
+    }
+  };
+}
+
+const tracker = createVisitorTracker();
+tracker.recordVisit("user-1", "/home");
+tracker.recordVisit("user-2", "/home");
+tracker.recordVisit("user-1", "/about");  // Same user, different page
+tracker.recordVisit("user-1", "/home");   // Same user, same page
+
+console.log(tracker.getUniqueVisitorCount());  // 2 (not 4)
+console.log(tracker.getPageViews("/home"));    // 3
+```
+
+## Practical Example: Memoization Cache
+
+Memoization stores computed results to avoid redundant work. Maps are ideal because they provide O(1) lookup by key.
+
+```javascript
+function memoize(fn) {
+  const cache = new Map();
+
+  return function(...args) {
+    // Create a cache key from arguments
+    // Note: This only works for primitive arguments
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+
+    const result = fn.apply(this, args);
+    cache.set(key, result);
+    return result;
+  };
+}
+
+// Example: expensive Fibonacci without memoization is O(2^n)
+function fib(n) {
+  if (n <= 1) return n;
+  return fib(n - 1) + fib(n - 2);
+}
+
+// With memoization: O(n)
+const memoizedFib = memoize(fib);
+console.log(memoizedFib(40));  // Fast!
+```
+
+**Cache invalidation** is one of the hardest problems in computer science. For production caches, consider:
+- Time-based expiration (TTL)
+- Size limits (LRU eviction)
+- Manual invalidation on data changes
+
+## WeakMap and WeakSet
+
+Weak collections allow garbage collection of their keys. This matters when:
+1. Keys are objects that might be deleted elsewhere
+2. You want to attach metadata without preventing cleanup
+
+```javascript
+// Problem: Regular Map prevents garbage collection
+const metadata = new Map();
+function trackElement(element) {
+  metadata.set(element, { clicks: 0 });
+  // Even if element is removed from DOM, it can't be garbage collected
+  // because the Map still holds a reference
+}
+
+// Solution: WeakMap allows garbage collection
+const weakMetadata = new WeakMap();
+function trackElementWeak(element) {
+  weakMetadata.set(element, { clicks: 0 });
+  // When element is removed from DOM and no other references exist,
+  // both the element AND its metadata can be garbage collected
+}
+```
+
+**WeakMap constraints:**
+- Keys must be objects (not primitives)
+- Not iterable (no `.keys()`, `.values()`, `.entries()`)
+- No `.size` property
+
+**Common use cases:**
+- Private data for classes (before `#private` fields existed)
+- Caching computed values for DOM elements
+- Storing metadata that shouldn't prevent cleanup
+
+```javascript
+// Classic pattern: private data via WeakMap
+const privateData = new WeakMap();
+
+class Person {
+  constructor(name, ssn) {
+    this.name = name;
+    // SSN is truly private - not on the object
+    privateData.set(this, { ssn });
+  }
+
+  getLastFourSSN() {
+    const { ssn } = privateData.get(this);
+    return ssn.slice(-4);
+  }
+}
+
+const person = new Person("Alice", "123-45-6789");
+console.log(person.name);           // "Alice"
+console.log(person.ssn);            // undefined - not accessible
+console.log(person.getLastFourSSN()); // "6789"
+```
+
+## Complexity Summary
+
+| Operation | Set | Map | Array |
+|-----------|-----|-----|-------|
+| Add/Set | O(1)* | O(1)* | O(1) push, O(n) unshift |
+| Has/Get | O(1)* | O(1)* | O(n) includes/find |
+| Delete | O(1)* | O(1)* | O(n) splice |
+| Size | O(1) | O(1) | O(1) |
+| Iterate | O(n) | O(n) | O(n) |
+
+*Average case. Worst case is O(n) due to hash collisions, but this is rare with good hash functions.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What happens when you add a duplicate value to a Set?"
+  options={[
+    "It throws an error",
+    "It replaces the existing value",
+    "It is silently ignored",
+    "It increments a counter"
+  ]}
+  correct={2}
+/>
+
+<MultipleChoice
+  question="Why does `new Set().add({a:1}).has({a:1})` return false?"
+  options={[
+    "Sets don't support object values",
+    "The syntax is incorrect",
+    "Objects use reference equality, and these are two different objects",
+    "You must use Map for objects"
+  ]}
+  correct={2}
+/>
+
+<FillBlank
+  question="A Map allows ___ types as keys, while objects only allow strings and symbols."
+  answer="any"
+  fuzzyThreshold={1}
+/>
+
+<MultipleChoice
+  question="What is the average time complexity of Map.get()?"
+  options={["O(n)", "O(log n)", "O(1)", "O(n log n)"]}
+  correct={2}
+/>
+
+<MultipleChoice
+  question="When should you use a WeakMap instead of a Map?"
+  options={[
+    "When you need faster lookups",
+    "When keys are primitives",
+    "When you want to allow garbage collection of keys",
+    "When you need to iterate over entries"
+  ]}
+  correct={2}
+/>
+
+## Try It Yourself
+
+Practice with Sets and Maps:
+
+<Exercise id="pm-sets-maps" />
+
+## Summary
+
+You learned:
+
+- **Hash tables** enable O(1) average-case lookup - this is transformative for performance
+- **Sets** store unique values; **Maps** store key-value pairs
+- **Equality trap:** Objects use reference equality, not value equality
+- **Choose wisely:** Sets/Maps for lookups, arrays for ordered/indexed data
+- **Set operations:** union, intersection, difference (native in ES2025+)
+- **WeakMap/WeakSet** allow garbage collection - use for DOM metadata or private data
+- **Memoization** caches expensive computations using Maps
+
+The choice between Array, Set, Map, and Object will come up in every project. The right choice depends on your access patterns: frequent lookups favor Sets/Maps, frequent index access favors Arrays, static configuration favors Objects.
+
+Next, we will explore classes and composition.

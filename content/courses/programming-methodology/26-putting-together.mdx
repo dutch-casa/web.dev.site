@@ -1,0 +1,804 @@
+# Putting It All Together
+
+You have learned the fundamentals of programming methodology. This final lesson synthesizes everything into a unified approach for building software that is readable, maintainable, and correct.
+
+The goal is not to memorize principles but to develop judgment. When you face a design decision, you should be able to reason about tradeoffs and choose well.
+
+## The Core Insight
+
+Everything you learned reduces to one idea: **manage complexity**.
+
+Programs fail when complexity escapes control. Every technique you learned is a weapon against complexity:
+
+| Technique | How It Fights Complexity |
+|-----------|--------------------------|
+| Functions | Hide implementation details |
+| Data structures | Organize information |
+| Types | Catch errors at compile time |
+| Testing | Verify behavior automatically |
+| Guard clauses | Keep logic flat |
+| Pure functions | Eliminate hidden dependencies |
+| Good names | Make code self-documenting |
+
+The question is never "should I use technique X?" but "what complexity am I fighting, and what tool fits?"
+
+## Six Principles That Matter
+
+These principles appear throughout the course. Here they are, unified.
+
+### 1. Data Dominates Design
+
+The shape of your data determines the shape of your code. Get the data right and the code writes itself. Get it wrong and you fight the structure forever.
+
+```typescript
+// Data that fights you: boolean flags create impossible states
+interface Order {
+  isPaid: boolean;
+  isShipped: boolean;
+  isCancelled: boolean;
+  // Can an order be paid AND cancelled? Shipped but not paid?
+}
+
+// Data that helps you: states are explicit and exhaustive
+type OrderStatus =
+  | { status: "pending" }
+  | { status: "paid"; paidAt: Date }
+  | { status: "shipped"; paidAt: Date; shippedAt: Date; trackingNumber: string }
+  | { status: "cancelled"; reason: string };
+
+interface Order {
+  id: string;
+  items: OrderItem[];
+  status: OrderStatus;
+}
+```
+
+When data is right, functions become obvious:
+
+```typescript
+function canShip(order: Order): boolean {
+  return order.status.status === "paid";
+}
+
+function getTrackingNumber(order: Order): string | null {
+  if (order.status.status === "shipped") {
+    return order.status.trackingNumber;
+  }
+  return null;
+}
+```
+
+### 2. Make Invalid States Unrepresentable
+
+This follows from "data dominates." If bad states cannot exist, you cannot write bugs that produce them.
+
+```typescript
+// Bad: many invalid states possible
+interface User {
+  isLoggedIn: boolean;
+  username?: string;
+  sessionToken?: string;
+  // What if isLoggedIn is true but username is undefined?
+  // What if sessionToken exists but isLoggedIn is false?
+}
+
+// Good: only valid states exist
+type User =
+  | { status: "guest" }
+  | { status: "authenticated"; username: string; sessionToken: string };
+
+// Now TypeScript enforces correctness
+function getUsername(user: User): string {
+  if (user.status === "guest") {
+    throw new Error("Guests have no username");
+  }
+  return user.username;  // TypeScript knows this exists
+}
+```
+
+### 3. Single Source of Truth
+
+Every fact lives in one place. Derive everything else.
+
+```typescript
+// Bad: duplicated data that can diverge
+const users = [{ name: "Alice", manager: "Bob" }];
+const managers = [{ name: "Bob", subordinates: ["Alice"] }];
+// What if we update one but not the other?
+
+// Good: single source, derive the rest
+const reportingStructure = new Map([
+  ["Alice", "Bob"],
+  ["Charlie", "Bob"],
+  ["Bob", "Diana"],
+]);
+
+function getManager(employee: string): string | undefined {
+  return reportingStructure.get(employee);
+}
+
+function getDirectReports(manager: string): string[] {
+  return Array.from(reportingStructure.entries())
+    .filter(([_, mgr]) => mgr === manager)
+    .map(([emp]) => emp);
+}
+
+function getAllReports(manager: string): string[] {
+  const direct = getDirectReports(manager);
+  const indirect = direct.flatMap(getAllReports);
+  return [...direct, ...indirect];
+}
+```
+
+### 4. Pure Core, Impure Shell
+
+Keep business logic pure. Push I/O to the boundaries.
+
+```typescript
+// CORE: Pure functions - no I/O, no side effects, easy to test
+function calculateDiscount(cart: Cart, coupon: Coupon | null): number {
+  if (!coupon) return 0;
+  if (coupon.minimumPurchase > cart.subtotal) return 0;
+
+  return coupon.type === "percentage"
+    ? cart.subtotal * (coupon.value / 100)
+    : coupon.value;
+}
+
+function applyDiscount(cart: Cart, discount: number): Cart {
+  return { ...cart, discount, total: cart.subtotal - discount };
+}
+
+// SHELL: Impure boundary - handles I/O
+async function checkout(cartId: string, couponCode: string | null) {
+  // I/O: fetch data
+  const cart = await fetchCart(cartId);
+  const coupon = couponCode ? await fetchCoupon(couponCode) : null;
+
+  // Pure: calculate
+  const discount = calculateDiscount(cart, coupon);
+  const updatedCart = applyDiscount(cart, discount);
+
+  // I/O: persist result
+  await saveCart(updatedCart);
+  return updatedCart;
+}
+```
+
+The pure core is trivial to test. The shell is thin and obvious.
+
+### 5. Composition Over Configuration
+
+Build complex behavior from simple pieces rather than configuring a monolith.
+
+```typescript
+// Bad: one function with many flags
+function fetchData(
+  url: string,
+  options: {
+    retry?: boolean;
+    retryCount?: number;
+    timeout?: number;
+    cache?: boolean;
+    log?: boolean;
+  }
+) { /* 200 lines handling all combinations */ }
+
+// Good: composable pieces
+const withRetry = (fn: () => Promise<any>, attempts = 3) => async () => {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (i === attempts - 1) throw e;
+    }
+  }
+};
+
+const withTimeout = (fn: () => Promise<any>, ms: number) => () =>
+  Promise.race([
+    fn(),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout")), ms)
+    ),
+  ]);
+
+const withLogging = (fn: () => Promise<any>, label: string) => async () => {
+  console.log(`Starting: ${label}`);
+  const result = await fn();
+  console.log(`Completed: ${label}`);
+  return result;
+};
+
+// Compose what you need
+const fetchWithResilience = withLogging(
+  withRetry(
+    withTimeout(() => fetch(url), 5000),
+    3
+  ),
+  "API fetch"
+);
+```
+
+### 6. Local Reasoning
+
+Code should be understandable without chasing indirections across the codebase.
+
+```typescript
+// Bad: must read other files to understand this
+function processOrder(order: Order) {
+  validateOrder(order);           // What does this check?
+  applyBusinessRules(order);      // What rules? What changes?
+  if (shouldNotify(order)) {      // When is this true?
+    sendNotification(order);      // To whom? About what?
+  }
+}
+
+// Good: intent is visible locally
+function processOrder(order: Order): ProcessedOrder {
+  // Validation is explicit
+  if (!order.items.length) {
+    throw new Error("Order must have items");
+  }
+  if (order.total <= 0) {
+    throw new Error("Order total must be positive");
+  }
+
+  // Business rule is visible
+  const discount = order.total > 100 ? order.total * 0.1 : 0;
+  const finalTotal = order.total - discount;
+
+  // Notification condition is clear
+  if (order.total > 1000) {
+    notifyHighValueOrder(order.customerId, order.id, finalTotal);
+  }
+
+  return { ...order, discount, finalTotal, processedAt: new Date() };
+}
+```
+
+## Case Study: Designing a Task Manager
+
+Let us apply these principles to design a task manager from scratch. The goal is to show *how* to think through a design, not just the final code.
+
+### Step 1: Understand the Domain
+
+Before writing code, understand what you are modeling:
+
+- Tasks have text, completion status, and optional due dates
+- Tasks can be grouped into projects
+- Users filter tasks by status or project
+- Tasks can be reordered within a project
+
+### Step 2: Design Data First
+
+Start with the data. Get this right and functions become obvious.
+
+```typescript
+// Branded types prevent mixing IDs
+type TaskId = string & { __brand: "TaskId" };
+type ProjectId = string & { __brand: "ProjectId" };
+
+// Due dates: explicit states, not nullable booleans
+type DueDate =
+  | { type: "none" }
+  | { type: "date"; date: Date }
+  | { type: "overdue"; date: Date };  // Derived state - could be computed
+
+// Task: minimal, correct
+interface Task {
+  id: TaskId;
+  text: string;
+  completed: boolean;
+  dueDate: DueDate;
+  projectId: ProjectId | null;
+  position: number;  // For ordering
+  createdAt: Date;
+}
+
+interface Project {
+  id: ProjectId;
+  name: string;
+  color: string;
+}
+
+// Application state: single source of truth
+interface AppState {
+  tasks: Map<TaskId, Task>;
+  projects: Map<ProjectId, Project>;
+  activeFilter: Filter;
+}
+
+type Filter =
+  | { type: "all" }
+  | { type: "today" }
+  | { type: "project"; projectId: ProjectId };
+```
+
+Notice: no redundant data. Task count per project? Derive it. Overdue tasks? Derive it.
+
+### Step 3: Pure Operations
+
+Operations are pure functions: old state in, new state out.
+
+```typescript
+// Factories for type-safe IDs
+function createTaskId(): TaskId {
+  return crypto.randomUUID() as TaskId;
+}
+
+function createProjectId(): ProjectId {
+  return crypto.randomUUID() as ProjectId;
+}
+
+// Add task - validates, returns new state
+function addTask(
+  state: AppState,
+  text: string,
+  projectId: ProjectId | null = null
+): AppState {
+  if (!text.trim()) {
+    throw new Error("Task text cannot be empty");
+  }
+
+  const tasksInProject = getTasksInProject(state, projectId);
+  const maxPosition = Math.max(0, ...tasksInProject.map(t => t.position));
+
+  const task: Task = {
+    id: createTaskId(),
+    text: text.trim(),
+    completed: false,
+    dueDate: { type: "none" },
+    projectId,
+    position: maxPosition + 1,
+    createdAt: new Date(),
+  };
+
+  const newTasks = new Map(state.tasks);
+  newTasks.set(task.id, task);
+
+  return { ...state, tasks: newTasks };
+}
+
+// Toggle completion - find, validate, update
+function toggleTask(state: AppState, taskId: TaskId): AppState {
+  const task = state.tasks.get(taskId);
+  if (!task) {
+    throw new Error(`Task ${taskId} not found`);
+  }
+
+  const updated: Task = { ...task, completed: !task.completed };
+  const newTasks = new Map(state.tasks);
+  newTasks.set(taskId, updated);
+
+  return { ...state, tasks: newTasks };
+}
+
+// Set due date - type-safe update
+function setDueDate(
+  state: AppState,
+  taskId: TaskId,
+  date: Date | null
+): AppState {
+  const task = state.tasks.get(taskId);
+  if (!task) {
+    throw new Error(`Task ${taskId} not found`);
+  }
+
+  const dueDate: DueDate = date
+    ? { type: "date", date }
+    : { type: "none" };
+
+  const updated: Task = { ...task, dueDate };
+  const newTasks = new Map(state.tasks);
+  newTasks.set(taskId, updated);
+
+  return { ...state, tasks: newTasks };
+}
+```
+
+### Step 4: Derived Data (Never Stored)
+
+Compute everything that can be computed.
+
+```typescript
+function getTasksInProject(state: AppState, projectId: ProjectId | null): Task[] {
+  return Array.from(state.tasks.values())
+    .filter(t => t.projectId === projectId)
+    .sort((a, b) => a.position - b.position);
+}
+
+function getVisibleTasks(state: AppState): Task[] {
+  const allTasks = Array.from(state.tasks.values());
+
+  switch (state.activeFilter.type) {
+    case "all":
+      return allTasks.sort((a, b) => a.position - b.position);
+
+    case "today": {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      return allTasks.filter(t => {
+        if (t.dueDate.type === "none") return false;
+        const due = t.dueDate.date;
+        return due >= today && due < tomorrow;
+      });
+    }
+
+    case "project":
+      return getTasksInProject(state, state.activeFilter.projectId);
+  }
+}
+
+function getStats(state: AppState) {
+  const tasks = Array.from(state.tasks.values());
+  const now = new Date();
+
+  return {
+    total: tasks.length,
+    completed: tasks.filter(t => t.completed).length,
+    active: tasks.filter(t => !t.completed).length,
+    overdue: tasks.filter(t =>
+      !t.completed &&
+      t.dueDate.type !== "none" &&
+      t.dueDate.date < now
+    ).length,
+  };
+}
+
+function getProjectStats(state: AppState, projectId: ProjectId) {
+  const tasks = getTasksInProject(state, projectId);
+  return {
+    total: tasks.length,
+    completed: tasks.filter(t => t.completed).length,
+  };
+}
+```
+
+### Step 5: I/O at the Boundary
+
+Persistence, network, and other side effects stay at the edges.
+
+```typescript
+// Serialization: convert state to/from JSON-safe format
+function serializeState(state: AppState): string {
+  return JSON.stringify({
+    tasks: Array.from(state.tasks.entries()),
+    projects: Array.from(state.projects.entries()),
+    activeFilter: state.activeFilter,
+  });
+}
+
+function deserializeState(json: string): AppState {
+  const data = JSON.parse(json);
+  return {
+    tasks: new Map(data.tasks.map(([id, task]: [TaskId, any]) => [
+      id,
+      { ...task, createdAt: new Date(task.createdAt) }
+    ])),
+    projects: new Map(data.projects),
+    activeFilter: data.activeFilter,
+  };
+}
+
+// Persistence layer
+async function saveState(state: AppState): Promise<void> {
+  localStorage.setItem("taskManager", serializeState(state));
+}
+
+async function loadState(): Promise<AppState> {
+  const saved = localStorage.getItem("taskManager");
+  if (!saved) {
+    return {
+      tasks: new Map(),
+      projects: new Map(),
+      activeFilter: { type: "all" },
+    };
+  }
+
+  try {
+    return deserializeState(saved);
+  } catch {
+    console.error("Failed to load state, starting fresh");
+    return {
+      tasks: new Map(),
+      projects: new Map(),
+      activeFilter: { type: "all" },
+    };
+  }
+}
+```
+
+### Step 6: Tests for Confidence
+
+Because the core is pure, testing is straightforward.
+
+```typescript
+function testAddTask() {
+  const initial: AppState = {
+    tasks: new Map(),
+    projects: new Map(),
+    activeFilter: { type: "all" },
+  };
+
+  const result = addTask(initial, "Learn TypeScript");
+
+  assert(result.tasks.size === 1, "Should have one task");
+
+  const task = Array.from(result.tasks.values())[0];
+  assert(task.text === "Learn TypeScript");
+  assert(task.completed === false);
+  assert(task.dueDate.type === "none");
+}
+
+function testToggleTask() {
+  let state: AppState = {
+    tasks: new Map(),
+    projects: new Map(),
+    activeFilter: { type: "all" },
+  };
+
+  state = addTask(state, "Test task");
+  const taskId = Array.from(state.tasks.keys())[0];
+
+  state = toggleTask(state, taskId);
+  assert(state.tasks.get(taskId)?.completed === true);
+
+  state = toggleTask(state, taskId);
+  assert(state.tasks.get(taskId)?.completed === false);
+}
+
+function testFilteredTasks() {
+  let state: AppState = {
+    tasks: new Map(),
+    projects: new Map(),
+    activeFilter: { type: "all" },
+  };
+
+  state = addTask(state, "Task 1");
+  state = addTask(state, "Task 2");
+
+  const taskId = Array.from(state.tasks.keys())[0];
+  state = toggleTask(state, taskId);  // Complete first task
+
+  // Filter to active only
+  state = { ...state, activeFilter: { type: "all" } };
+  const visible = getVisibleTasks(state);
+
+  // Both should be visible with "all" filter
+  assert(visible.length === 2);
+}
+```
+
+### Why This Design Works
+
+Observe how the principles reinforce each other:
+
+1. **Data dominates**: The types define what is possible
+2. **Invalid states impossible**: A task cannot have conflicting status
+3. **Single source**: Tasks live in one Map, stats are derived
+4. **Pure core**: `addTask`, `toggleTask` are trivially testable
+5. **Impure shell**: `saveState`, `loadState` handle I/O
+6. **Local reasoning**: Each function is understandable alone
+
+## Identifying Good Abstractions
+
+An abstraction is good when it hides complexity you do not need to think about and exposes a simple interface.
+
+**Signs of a good abstraction:**
+- You can use it without reading the implementation
+- The name tells you what it does
+- It handles one concept, not several
+- Edge cases are handled internally
+
+**Signs of a bad abstraction:**
+- Callers need to understand implementation details
+- It has many parameters or configuration options
+- Adding features requires modifying it
+- It leaks internal state
+
+```typescript
+// Bad abstraction: leaky, complex interface
+class DataManager {
+  private cache: Map<string, any>;
+  private pending: Map<string, Promise<any>>;
+
+  async getData(key: string, fetcher: () => Promise<any>, options: {
+    useCache?: boolean;
+    ttl?: number;
+    retryCount?: number;
+    onError?: (e: Error) => void;
+  }): Promise<any> { /* ... */ }
+}
+
+// Good abstraction: simple interface, complexity hidden
+async function cachedFetch<T>(
+  key: string,
+  fetcher: () => Promise<T>
+): Promise<T> {
+  // Cache logic hidden inside
+  // Retry logic hidden inside
+  // Error handling has sensible defaults
+}
+```
+
+## Module Organization
+
+As programs grow, organization matters. Group by feature, not by type.
+
+```
+// Bad: grouped by type (all components together, all utils together)
+src/
+  components/
+    TaskList.tsx
+    ProjectList.tsx
+    UserProfile.tsx
+  utils/
+    taskUtils.ts
+    projectUtils.ts
+    userUtils.ts
+
+// Good: grouped by feature (everything for a feature together)
+src/
+  tasks/
+    TaskList.tsx
+    taskOperations.ts
+    taskTypes.ts
+  projects/
+    ProjectList.tsx
+    projectOperations.ts
+    projectTypes.ts
+  users/
+    UserProfile.tsx
+    userOperations.ts
+```
+
+The test: "To understand feature X, how many directories must I open?"
+
+## Code Review Mindset
+
+When reviewing code (yours or others'), ask these questions in order:
+
+1. **Does it work?** Does it actually solve the problem?
+2. **Is the data design right?** Are invalid states possible?
+3. **Is the intent clear?** Could someone unfamiliar understand this?
+4. **Are edge cases handled?** What happens with empty, null, or unexpected input?
+5. **Is there duplication?** Could this be refactored?
+6. **Are the names good?** Do they reveal intent?
+7. **Are there tests?** How do we know this works?
+8. **What happens when things go wrong?** Is error handling appropriate?
+
+## When to Refactor
+
+Refactor when you see these signals:
+
+| Signal | What It Means |
+|--------|---------------|
+| Copying code | Missing abstraction |
+| Long parameter lists | Function doing too much |
+| Shotgun surgery (one change, many files) | Poor module boundaries |
+| Feature envy (function uses another object's data more than its own) | Method belongs elsewhere |
+| Primitive obsession (strings for IDs, numbers for money) | Missing domain types |
+| Hard to test | Too many dependencies or side effects |
+
+**Do not refactor:**
+- Prematurely (wait until you see the pattern three times)
+- Without tests (you will break things and not know)
+- Just to use a new pattern you learned
+- When deadlines are tight (note it and come back)
+
+## How It All Connects
+
+The lessons in this course build on each other:
+
+```
+Variables & Control Flow
+         ↓
+    Functions (decomposition)
+         ↓
+    Data Structures (organization)
+         ↓
+    References & Memory (understanding)
+         ↓
+    Error Handling (robustness)
+         ↓
+    Testing (confidence)
+         ↓
+    Types (compile-time safety)
+         ↓
+    Design Principles (judgment)
+```
+
+Each layer makes the next possible. You cannot write good tests without understanding functions. You cannot use types effectively without understanding data structures. You cannot apply design principles without all of the above.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What does 'data dominates design' mean?"
+  options={[
+    "Always use databases",
+    "The shape of your data determines the shape of your code",
+    "Store as much data as possible",
+    "Data is more important than code"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What does 'make invalid states unrepresentable' mean?"
+  options={[
+    "Delete all error handling",
+    "Design data types so impossible states cannot exist",
+    "Use only primitive types",
+    "Never throw exceptions"
+  ]}
+  correct={1}
+/>
+
+<FillBlank
+  question="Pure functions take old state and return ___ state, without side effects."
+  answer="new"
+  fuzzyThreshold={1}
+/>
+
+<MultipleChoice
+  question="When should you refactor code?"
+  options={[
+    "Before writing any tests",
+    "When you see patterns of duplication or complexity after seeing them multiple times",
+    "Whenever you learn a new technique",
+    "After every commit"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What is 'local reasoning'?"
+  options={[
+    "Only using local variables",
+    "Understanding code without chasing indirections across the codebase",
+    "Keeping all code in one file",
+    "Using only functions defined in the same module"
+  ]}
+  correct={1}
+/>
+
+## Try It Yourself
+
+Apply everything you have learned:
+
+<Exercise id="pm-capstone" />
+
+## Summary
+
+You learned to manage complexity through:
+
+- **Data dominates design** - Get the data right, code follows
+- **Make invalid states unrepresentable** - Let types prevent bugs
+- **Single source of truth** - Store once, derive everything else
+- **Pure core, impure shell** - Business logic pure, I/O at edges
+- **Composition over configuration** - Simple pieces, combined
+- **Local reasoning** - Understand code without chasing indirections
+- **Good abstractions** - Hide complexity, expose simple interfaces
+- **Module organization** - Group by feature, not by type
+- **Refactor with evidence** - Wait for patterns, have tests first
+
+## What Next?
+
+This course gave you a foundation. To continue growing:
+
+1. **Build projects** - Apply what you learned to real problems. Start small, finish completely.
+2. **Read code** - Study well-written open source projects. Notice how they handle complexity.
+3. **Write tests** - Testing changes how you think about design. Untestable code is poorly designed code.
+4. **Learn patterns** - Design patterns are named solutions to common problems. Learn the classics.
+5. **Practice debugging** - Every bug teaches you something about how systems fail.
+6. **Teach others** - Explaining forces clarity. You do not understand something until you can teach it.
+
+Programming is a craft. The more you practice with intention, the better you become. But intention matters: mindless repetition does not build skill. Reflect on what you build. Ask what could be better.
+
+The best programmers are not the fastest typists. They are the ones who think clearly about complexity and choose the right tool to fight it.
+
+Good luck on your journey.

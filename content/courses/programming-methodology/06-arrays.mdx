@@ -1,0 +1,480 @@
+# Arrays: Ordered Collections
+
+Arrays are the most fundamental data structure in programming. Understanding them deeply will shape how you think about data for your entire career.
+
+## The Mental Model
+
+An array is a **contiguous sequence of elements**, each accessible by its position (index). Think of it like a row of numbered mailboxes:
+
+| Index | 0 | 1 | 2 | 3 | 4 |
+|-------|---|---|---|---|---|
+| **Value** | `"a"` | `"b"` | `"c"` | `"d"` | `"e"` |
+
+This structure gives us two critical properties:
+
+1. **O(1) random access**: Getting `arr[3]` is instant - the computer jumps directly to that memory location
+2. **O(n) insertion/deletion**: Adding to the middle requires shifting all subsequent elements
+
+This tradeoff matters. If you're constantly adding/removing from the middle, an array may be the wrong choice.
+
+## Creating Arrays
+
+```typescript
+// Empty array with type annotation
+const empty: string[] = [];
+
+// Array with initial values (type inferred)
+const numbers = [1, 2, 3, 4, 5];
+
+// Explicit generic syntax (equivalent to above)
+const moreNumbers: Array<number> = [1, 2, 3];
+
+// Array of strings
+const fruits = ["apple", "banana", "cherry"];
+```
+
+<Note>
+In TypeScript, `string[]` and `Array<string>` are equivalent. Most codebases prefer `string[]` for simple cases and `Array<T>` when the type itself is complex.
+</Note>
+
+## Accessing Elements
+
+Array indices start at 0. This is not arbitrary - it represents the **offset from the start**.
+
+```typescript
+const colors = ["red", "green", "blue"];
+
+console.log(colors[0]);              // "red"
+console.log(colors[1]);              // "green"
+console.log(colors[2]);              // "blue"
+console.log(colors[colors.length - 1]);  // "blue" (last element)
+
+// Out of bounds returns undefined (TypeScript can catch this with noUncheckedIndexedAccess)
+console.log(colors[10]);             // undefined
+```
+
+<Tip>
+The last element is always at index `length - 1`. This is because we start counting at 0, so an array of 3 elements has indices 0, 1, 2.
+</Tip>
+
+## Arrays Are References
+
+This is one of the most important concepts in the course. Arrays are **reference types**:
+
+```typescript
+const original = [1, 2, 3];
+const alias = original;     // NOT a copy - same array!
+
+alias.push(4);
+console.log(original);      // [1, 2, 3, 4] - original is affected!
+console.log(original === alias);  // true - they ARE the same array
+```
+
+When you assign an array to a variable, you're storing a **pointer** to the array's location in memory, not the array itself. Both `original` and `alias` point to the same mailboxes.
+
+### Creating Actual Copies
+
+```typescript
+const original = [1, 2, 3];
+
+// Spread operator creates a shallow copy
+const copy1 = [...original];
+
+// slice() also creates a shallow copy
+const copy2 = original.slice();
+
+copy1.push(4);
+console.log(original);     // [1, 2, 3] - original unchanged
+console.log(copy1);        // [1, 2, 3, 4]
+```
+
+<Warning>
+"Shallow copy" means the array container is copied, but if it contains objects, those objects are still shared:
+
+```typescript
+const people = [{ name: "Alice" }, { name: "Bob" }];
+const peopleCopy = [...people];
+
+peopleCopy[0].name = "Zara";
+console.log(people[0].name);  // "Zara" - the object was shared!
+```
+
+For deep copying objects inside arrays, you need `structuredClone()` or a library.
+</Warning>
+
+## Modifying Arrays
+
+Arrays are **mutable** - they can be changed after creation:
+
+```typescript
+const arr = ["a", "b", "c"];
+
+// Add to the end: O(1) amortized
+arr.push("d");       // arr is now ["a", "b", "c", "d"]
+
+// Remove from the end: O(1)
+const last = arr.pop();  // last is "d", arr is now ["a", "b", "c"]
+
+// Add to the beginning: O(n) - must shift everything!
+arr.unshift("z");    // arr is now ["z", "a", "b", "c"]
+
+// Remove from the beginning: O(n) - must shift everything!
+const first = arr.shift();  // first is "z", arr is now ["a", "b", "c"]
+```
+
+<Note>
+Notice the performance difference: `push`/`pop` are O(1) because they work at the end. `unshift`/`shift` are O(n) because every element must move. If you frequently add/remove from the beginning, consider whether an array is the right data structure.
+</Note>
+
+## Searching: Linear Search
+
+The simplest algorithm is **linear search**: check each element one by one.
+
+```typescript
+const numbers = [4, 2, 7, 1, 9, 3];
+
+// Built-in linear search methods
+console.log(numbers.indexOf(7));      // 2 (index where found)
+console.log(numbers.indexOf(10));     // -1 (not found)
+
+console.log(numbers.includes(7));     // true
+console.log(numbers.includes(10));    // false
+
+// Find element matching a condition
+const firstBig = numbers.find(n => n > 5);  // 7
+const firstBigIndex = numbers.findIndex(n => n > 5);  // 2
+```
+
+All of these are O(n) - in the worst case, you check every element. Later in the course, you'll learn how **sorting** enables O(log n) binary search.
+
+## Transforming Arrays: map, filter, reduce
+
+These three methods are the foundation of functional array processing. Master them.
+
+### map: Transform Each Element
+
+`map` applies a function to every element and returns a new array of results:
+
+```typescript
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(n => n * 2);  // [2, 4, 6, 8, 10]
+
+const names = ["alice", "bob"];
+const capitalized = names.map(name => name.toUpperCase());  // ["ALICE", "BOB"]
+```
+
+**Key insight**: `map` always returns an array of the same length. One input, one output.
+
+### filter: Keep Elements Matching a Condition
+
+`filter` returns a new array containing only elements that pass a test:
+
+```typescript
+const numbers = [1, 2, 3, 4, 5, 6];
+const evens = numbers.filter(n => n % 2 === 0);  // [2, 4, 6]
+
+const words = ["cat", "elephant", "dog", "hippopotamus"];
+const shortWords = words.filter(w => w.length <= 4);  // ["cat", "dog"]
+```
+
+**Key insight**: `filter` returns an array of length 0 to original length. Elements are unchanged, just selected.
+
+### reduce: Combine All Elements Into One Value
+
+`reduce` is the most powerful and most misunderstood. It "reduces" an array to a single value by accumulating results:
+
+```typescript
+const numbers = [1, 2, 3, 4, 5];
+
+// Sum all numbers
+const sum = numbers.reduce((accumulator, current) => accumulator + current, 0);
+// Step by step:
+// Start: accumulator = 0
+// After [1]: accumulator = 0 + 1 = 1
+// After [2]: accumulator = 1 + 2 = 3
+// After [3]: accumulator = 3 + 3 = 6
+// After [4]: accumulator = 6 + 4 = 10
+// After [5]: accumulator = 10 + 5 = 15
+// Result: 15
+
+// Find maximum
+const max = numbers.reduce((acc, n) => n > acc ? n : acc, numbers[0]);  // 5
+
+// Count occurrences
+const letters = ["a", "b", "a", "c", "a", "b"];
+const counts = letters.reduce((acc, letter) => {
+  acc[letter] = (acc[letter] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+// { a: 3, b: 2, c: 1 }
+```
+
+**Key insight**: `reduce` can implement both `map` and `filter`. It's the most general transformation:
+
+```typescript
+// map implemented with reduce
+const doubled = numbers.reduce((acc, n) => [...acc, n * 2], [] as number[]);
+
+// filter implemented with reduce
+const evens = numbers.reduce((acc, n) => n % 2 === 0 ? [...acc, n] : acc, [] as number[]);
+```
+
+Understanding reduce deeply means understanding that any array transformation is just accumulation with different combining functions.
+
+## Sorting
+
+**Warning**: `sort()` mutates the original array. This surprises many programmers:
+
+```typescript
+const scores = [85, 92, 78, 95, 88];
+const sorted = scores.sort((a, b) => a - b);
+
+console.log(sorted);  // [78, 85, 88, 92, 95]
+console.log(scores);  // [78, 85, 88, 92, 95] - original mutated!
+console.log(sorted === scores);  // true - same array!
+```
+
+### The Comparator Function
+
+The function passed to `sort` is a **comparator**. It takes two elements and returns:
+- Negative number: `a` comes before `b`
+- Zero: order doesn't matter
+- Positive number: `b` comes before `a`
+
+```typescript
+// Ascending (smallest first)
+const ascending = [...numbers].sort((a, b) => a - b);
+
+// Descending (largest first)
+const descending = [...numbers].sort((a, b) => b - a);
+
+// Sort strings by length
+const words = ["cat", "elephant", "dog"];
+const byLength = [...words].sort((a, b) => a.length - b.length);
+// ["cat", "dog", "elephant"]
+```
+
+<Warning>
+Without a comparator, `sort()` converts elements to strings and sorts lexicographically:
+
+```typescript
+const nums = [10, 2, 1];
+console.log(nums.sort());  // [1, 10, 2] - WRONG! "10" < "2" as strings
+console.log([...nums].sort((a, b) => a - b));  // [1, 2, 10] - correct
+```
+
+Always provide a comparator for numbers.
+</Warning>
+
+## Slicing and Splicing
+
+Two similarly-named methods with very different behaviors:
+
+```typescript
+const arr = ["a", "b", "c", "d", "e"];
+
+// slice: extract portion (does NOT modify original)
+const slice1 = arr.slice(1, 3);    // ["b", "c"]
+const slice2 = arr.slice(2);       // ["c", "d", "e"]
+const slice3 = arr.slice(-2);      // ["d", "e"]
+console.log(arr);  // ["a", "b", "c", "d", "e"] - unchanged
+
+// splice: remove/add elements (MODIFIES original)
+const removed = arr.splice(1, 2, "x", "y");  // removes 2 elements at index 1, inserts "x", "y"
+console.log(removed);  // ["b", "c"]
+console.log(arr);      // ["a", "x", "y", "d", "e"]
+```
+
+**Memory aid**: sli**c**e **c**opies, spli**c**e **c**hanges.
+
+## Iterating Over Arrays
+
+```typescript
+const fruits = ["apple", "banana", "cherry"];
+
+// for loop: when you need the index
+for (let i = 0; i < fruits.length; i++) {
+  console.log(`${i}: ${fruits[i]}`);
+}
+
+// for...of: when you just need the values
+for (const fruit of fruits) {
+  console.log(fruit);
+}
+
+// forEach: functional style (can't break early)
+fruits.forEach((fruit, index) => {
+  console.log(`${index}: ${fruit}`);
+});
+```
+
+<Note>
+The classic `for` loop has a common bug called **off-by-one error**. The pattern `i < length` (not `i <= length`) is correct because indices go from 0 to length-1.
+</Note>
+
+## Nested Arrays (2D Arrays)
+
+Real problems often involve grids, matrices, or tables:
+
+```typescript
+// A 3x3 tic-tac-toe board
+const board: string[][] = [
+  ["X", "O", "X"],
+  ["O", "X", "O"],
+  ["O", "X", "X"]
+];
+
+// Access: board[row][column]
+console.log(board[0][0]);  // "X" (top-left)
+console.log(board[2][2]);  // "X" (bottom-right)
+
+// Iterate over all cells
+for (let row = 0; row < board.length; row++) {
+  for (let col = 0; col < board[row].length; col++) {
+    console.log(`(${row}, ${col}): ${board[row][col]}`);
+  }
+}
+```
+
+## When NOT to Use Arrays
+
+Arrays are not always the right choice:
+
+| If you need... | Consider instead |
+|----------------|------------------|
+| Fast lookup by key | `Map` or object |
+| Unique values only | `Set` |
+| Frequent add/remove from middle | Linked list (rare in JS) |
+| Stack (LIFO) | Array with push/pop is fine |
+| Queue (FIFO) | Array works, but shift is O(n) |
+
+```typescript
+// When checking membership frequently, use a Set
+const allowedUsers = new Set(["alice", "bob", "charlie"]);
+console.log(allowedUsers.has("alice"));  // O(1), not O(n)
+
+// When looking up by key, use a Map
+const userScores = new Map([
+  ["alice", 100],
+  ["bob", 85]
+]);
+console.log(userScores.get("alice"));  // O(1)
+```
+
+## TypeScript Array Types
+
+```typescript
+// Basic array types
+const numbers: number[] = [1, 2, 3];
+const strings: string[] = ["a", "b"];
+
+// Read-only array (can't push, pop, or modify)
+const frozen: readonly number[] = [1, 2, 3];
+// frozen.push(4);  // Error!
+
+// Tuple: fixed-length array with specific types at each position
+const pair: [string, number] = ["age", 25];
+const rgb: [number, number, number] = [255, 128, 0];
+
+// Array of objects
+interface Person {
+  name: string;
+  age: number;
+}
+const people: Person[] = [
+  { name: "Alice", age: 30 },
+  { name: "Bob", age: 25 }
+];
+```
+
+## Immutable Patterns
+
+Mutating arrays causes bugs when the same array is shared across your program. Prefer methods that return new arrays:
+
+```typescript
+// Mutable (dangerous if arr is shared)
+arr.push(4);
+arr.sort();
+arr.reverse();
+
+// Immutable (safe)
+const withNewItem = [...arr, 4];
+const sorted = [...arr].sort((a, b) => a - b);
+const reversed = [...arr].reverse();
+```
+
+In modern JavaScript, `toSorted()`, `toReversed()`, and `toSpliced()` return new arrays without mutation.
+
+## Check Your Understanding
+
+<MultipleChoice
+  question="What is the time complexity of accessing an element by index in an array?"
+  options={[
+    "O(n) - must search through all elements",
+    "O(1) - direct access by memory offset",
+    "O(log n) - uses binary search",
+    "O(n^2) - depends on array size squared"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="What does the map method return?"
+  options={[
+    "A single value",
+    "The original array modified",
+    "A new array with transformed elements",
+    "undefined"
+  ]}
+  correct={2}
+/>
+
+<FillBlank
+  question="The ___ method is the most general array transformation - it can implement both map and filter."
+  answer="reduce"
+  fuzzyThreshold={0}
+/>
+
+<MultipleChoice
+  question="What happens when you assign an array to another variable?"
+  options={[
+    "The array is copied",
+    "Both variables point to the same array",
+    "The original array is deleted",
+    "An error occurs"
+  ]}
+  correct={1}
+/>
+
+<MultipleChoice
+  question="Why is unshift() slower than push()?"
+  options={[
+    "It's not - they have the same performance",
+    "unshift() must shift all existing elements to make room at the beginning",
+    "unshift() creates a copy of the array",
+    "push() uses special hardware acceleration"
+  ]}
+  correct={1}
+/>
+
+## Try It Yourself
+
+Practice array manipulation:
+
+<Exercise id="pm-arrays" />
+
+## Summary
+
+You learned:
+
+- Arrays are contiguous sequences with O(1) index access
+- Arrays are reference types - assignment shares, spread copies
+- `push`/`pop` are O(1), `unshift`/`shift` are O(n)
+- `map` transforms, `filter` selects, `reduce` accumulates
+- `reduce` is the most powerful - it can implement the others
+- `sort()` mutates! Copy first with `[...arr]`
+- Use `Set` for membership checks, `Map` for key-value lookup
+- Prefer immutable patterns to avoid shared-state bugs
+- TypeScript offers `readonly` arrays and tuples for stronger guarantees
+
+Arrays are how you think about sequential data. The mental model of contiguous memory with O(1) access will guide your data structure choices for decades. Next, we explore objects - collections where data is accessed by name, not position.

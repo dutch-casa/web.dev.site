@@ -2,6 +2,7 @@ import Link from "next/link"
 import { getAllCourses } from "@/lib/course-loader"
 import { flattenLessons } from "@/lib/course-types"
 import { CourseCard } from "@/components/modules/course-card"
+import { CommandMenuTrigger } from "@/components/command-menu/command-menu-trigger"
 
 export const metadata = {
   title: "Modules",
@@ -15,9 +16,12 @@ export default async function ModulesPage() {
     <main className="min-h-screen px-4 py-16 md:px-8 lg:px-16">
       <div className="mx-auto max-w-6xl">
         <header className="mb-12 space-y-4">
-          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-            Learning Modules
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+              Learning Modules
+            </h1>
+            <CommandMenuTrigger />
+          </div>
           <p className="max-w-2xl text-lg text-muted-foreground">
             Free courses with interactive code examples, quizzes, and hands-on
             exercises. Your progress is saved locally.

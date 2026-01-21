@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { TagFilter } from "@/components/vault/tag-filter"
 import { VaultCard } from "@/components/vault/vault-card"
 import { IconSearch } from "@tabler/icons-react"
+import { CommandMenuTrigger } from "@/components/command-menu/command-menu-trigger"
 
 import vaultData from "@/content/vault/vault.json"
 import cacheDataRaw from "@/content/vault/vault-cache.json"
@@ -88,9 +89,12 @@ export default function VaultPage() {
     <main className="min-h-screen px-4 py-16 md:px-8 lg:px-16">
       <div className="mx-auto max-w-6xl">
         <header className="mb-8 space-y-4">
-          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-            The Vault
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+              The Vault
+            </h1>
+            <CommandMenuTrigger />
+          </div>
           <p className="max-w-2xl text-lg text-muted-foreground">
             A curated collection of the best resources for web developers.
             Tools, documentation, tutorials, and more.

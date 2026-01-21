@@ -1,187 +1,290 @@
-# Visual Effects
+# The Magic of Clip Path
 
-Visual effects add depth and polish to interfaces. Transforms create smooth interactive feedback, filters add atmosphere, masks shape content elegantly. This lesson covers CSS effects that enhance design without compromising performance.
+`clip-path` is often used for trimming elements into specific shapes, like triangles and circles. But what if I told you that it's also great for animations?
 
-## Transforms
+In this lesson, we'll dive into `clip-path` and explore some of the cool things you can do with it. Once you read it, **you'll start seeing this CSS property being used everywhere**.
 
-Transforms move, rotate, scale, and skew elements without affecting document flow:
+## The Basics
+
+The `clip-path` property clips an element into a specific shape. We create a clipping region, and content outside this region becomes invisible while content inside stays visible. This lets us turn a rectangle into a circle, for example.
+
+```css
+.avatar {
+  clip-path: circle(50%);
+}
+```
+
+Here's the key insight: **clip-path has no effect on layout**. An element with `clip-path` occupies the same space as it would without it, just like `transform`. The element is still there—we're just hiding parts of it.
+
+## Positioning with Coordinates
+
+We position shapes using a coordinate system that starts at the top left corner (0, 0).
 
 ```css
 .element {
-  transform: translateX(100px);
+  clip-path: circle(50% at 50% 50%);
 }
 ```
 
-Unlike changing `left` or `margin`, transforms run on the GPU and don't trigger layout recalculation. This makes them ideal for animation and interactive effects.
+This means: create a circle with radius 50%, positioned at 50% from the left and 50% from the top (the center).
 
-### Transform Functions
-
-**translate:** Move elements
+You can position the circle anywhere:
 
 ```css
 .element {
-  transform: translateX(100px); /* Move right 100px */
-  transform: translateY(-50px); /* Move up 50px */
-  transform: translate(100px, -50px); /* Move right and up */
+  /* Circle in top-left corner */
+  clip-path: circle(30% at 0% 0%);
+
+  /* Circle in bottom-right corner */
+  clip-path: circle(30% at 100% 100%);
 }
 ```
 
-Use `translate` instead of `position: relative` with `top`/`left` for better performance.
+## Shape Functions
 
-**scale:** Resize elements
+CSS provides several shape functions for `clip-path`:
+
+**circle()** — Creates circular clips
 
 ```css
 .element {
-  transform: scale(1.5); /* 150% size */
-  transform: scale(0.5); /* 50% size */
-  transform: scale(1.2, 0.8); /* 120% width, 80% height */
+  clip-path: circle(50%); /* Fills the element */
+  clip-path: circle(100px at center); /* Fixed size */
 }
 ```
 
-Scaling doesn't affect layout. Other elements stay in place as if the element hasn't changed size.
-
-**rotate:** Rotate elements
+**ellipse()** — Creates oval clips
 
 ```css
 .element {
-  transform: rotate(45deg); /* 45 degrees clockwise */
-  transform: rotate(-90deg); /* 90 degrees counterclockwise */
+  clip-path: ellipse(50% 30% at center);
 }
 ```
 
-**skew:** Slant elements
+**polygon()** — Creates any shape with points
+
+```css
+/* Triangle */
+.element {
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+/* Hexagon */
+.element {
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+```
+
+**inset()** — Creates rectangular clips with offsets
+
+This is the most powerful shape for animations. The values define how much to cut from each side: top, right, bottom, left.
 
 ```css
 .element {
-  transform: skewX(10deg); /* Slant horizontally */
-  transform: skewY(10deg); /* Slant vertically */
+  /* No clipping - show everything */
+  clip-path: inset(0);
+
+  /* Hide everything */
+  clip-path: inset(100%);
+
+  /* Hide right half */
+  clip-path: inset(0 50% 0 0);
+
+  /* Hide left half */
+  clip-path: inset(0 0 0 50%);
+
+  /* Hide top half */
+  clip-path: inset(50% 0 0 0);
+
+  /* 10px border on all sides */
+  clip-path: inset(10px);
+
+  /* Rounded corners */
+  clip-path: inset(0 round 16px);
 }
 ```
 
-Skew is less common but useful for perspective effects and decorative elements.
+The `inset()` function is what we'll use for animations. It lets us precisely control which parts of an element are visible.
 
-### Combining Transforms
+## Why Inset is Perfect for Animation
 
-Chain multiple transforms in one property:
+Think about what `inset(0 50% 0 0)` means: cut 0 from top, 50% from right, 0 from bottom, 0 from left. This hides the right half.
+
+Now, if we animate from `inset(0 100% 0 0)` to `inset(0 0 0 0)`, we reveal the element from left to right:
+
+```css
+.reveal {
+  clip-path: inset(0 100% 0 0); /* Start: fully hidden from right */
+  transition: clip-path 0.5s ease;
+}
+
+.reveal.active {
+  clip-path: inset(0 0 0 0); /* End: fully visible */
+}
+```
+
+This is the foundation of clip-path animations: **we animate the clipping region to reveal or hide content**.
+
+## Building a Comparison Slider
+
+Let's apply this knowledge. Comparison sliders show "before" and "after" by overlaying two images.
+
+The technique:
+1. Stack two images on top of each other using `position: absolute`
+2. Apply `clip-path: inset(0 50% 0 0)` to the top image to hide its right half
+3. Adjust the inset value based on drag position
+
+```css
+.comparison {
+  position: relative;
+}
+
+.comparison .after {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 50% 0 0); /* Hide right half */
+  transition: clip-path 0.1s ease;
+}
+```
+
+When the user drags, we calculate the percentage and update the clip-path:
+
+```javascript
+// If user drags to 30% from left
+afterImage.style.clipPath = 'inset(0 70% 0 0)';
+```
+
+This approach is hardware-accelerated and doesn't require extra DOM elements. The clipped image stays in place—we're just revealing more or less of it.
+
+## The Overlay Technique
+
+Here's where it gets interesting. Instead of clipping a single element, we can **overlay two identical elements** and clip one to create highlight effects.
+
+Imagine a row of tabs. The inactive state is gray text on a transparent background. The active state is white text on a blue background. Instead of changing styles on click, we:
+
+1. Render the tabs twice, stacked on top of each other
+2. The bottom layer shows the inactive state (gray text)
+3. The top layer shows the active state (white text on blue background)
+4. We clip the top layer to only show the active tab
+
+```html
+<div class="tabs-wrapper">
+  <!-- Bottom layer: inactive appearance -->
+  <div class="tabs">
+    <button>Payments</button>
+    <button>Balances</button>
+    <button>Customers</button>
+  </div>
+
+  <!-- Top layer: active appearance, clipped -->
+  <div class="tabs tabs-active" style="clip-path: inset(0 75% 0 0 round 17px)">
+    <button>Payments</button>
+    <button>Balances</button>
+    <button>Customers</button>
+  </div>
+</div>
+```
+
+The top layer is positioned absolutely over the bottom layer. The `clip-path` only reveals the portion covering the active tab. When the user clicks a different tab, we animate the clip-path to slide over to the new tab.
+
+This creates a smooth, fluid highlight effect that feels like a physical indicator sliding between tabs.
+
+## Calculating the Clip Path
+
+To clip the overlay to exactly cover one tab, we need to calculate the tab's position:
+
+```javascript
+function updateClipPath(activeTab) {
+  const container = document.querySelector('.tabs-active');
+  const containerWidth = container.offsetWidth;
+
+  // Get the active tab's position
+  const tabLeft = activeTab.offsetLeft;
+  const tabWidth = activeTab.offsetWidth;
+  const tabRight = tabLeft + tabWidth;
+
+  // Convert to percentages
+  const clipLeft = (tabLeft / containerWidth) * 100;
+  const clipRight = 100 - (tabRight / containerWidth) * 100;
+
+  // Apply the clip-path
+  container.style.clipPath = `inset(0 ${clipRight}% 0 ${clipLeft}% round 17px)`;
+}
+```
+
+The math:
+- `clipLeft`: How much to cut from the left (as a percentage)
+- `clipRight`: How much to cut from the right (as a percentage)
+- `round 17px`: Adds rounded corners to the clipped region
+
+When combined with a CSS transition, the clip-path smoothly animates from one tab to another:
+
+```css
+.tabs-active {
+  transition: clip-path 0.25s ease;
+}
+```
+
+## Why This Technique Works
+
+The overlay technique has several advantages:
+
+1. **GPU-accelerated**: `clip-path` animations run on the compositor thread
+2. **No layout shifts**: Elements don't move or resize
+3. **Smooth color transitions**: The active state "slides" into view rather than snapping
+4. **Works with any content**: Icons, text, badges—everything gets the treatment
+
+The key insight is that we're not changing the tabs themselves. We're revealing and hiding a pre-styled overlay. This separation makes the animation buttery smooth.
+
+## Performance Considerations
+
+`clip-path` is generally performant, but keep these tips in mind:
+
+- **Use simple shapes**: `inset()` and `circle()` are faster than complex `polygon()` shapes
+- **Avoid clipping large areas**: Clipping a small element is cheaper than clipping a full-page section
+- **Test on mobile**: Some older devices struggle with `clip-path` animations
+
+<Warning>
+Complex polygon clip-paths with many points can cause jank on lower-powered devices. Stick to `inset()` for animations when possible.
+</Warning>
+
+## Other Visual Effects
+
+While `clip-path` is powerful for animations, CSS offers other visual effects worth knowing:
+
+### Transforms
+
+Move, rotate, scale, and skew elements without affecting layout:
 
 ```css
 .element {
-  transform: translate(100px, 50px) rotate(45deg) scale(1.2);
+  transform: translateX(100px) rotate(45deg) scale(1.2);
+  transform-origin: center; /* Pivot point */
 }
 ```
 
-Order matters. `translate` then `rotate` produces different results than `rotate` then `translate`. Transforms apply right-to-left in the declaration.
+Transforms are GPU-accelerated and ideal for hover effects and animations.
 
-### Transform Origin
+### Filters
 
-`transform-origin` sets the pivot point for transforms:
-
-```css
-.element {
-  transform: rotate(45deg);
-  transform-origin: top left; /* Rotate around top-left corner */
-}
-```
-
-Default is `center center`. Changing origin affects how scale and rotate behave:
-
-```css
-/* Card flip effect */
-.card {
-  transform-origin: center;
-  transition: transform 0.6s;
-}
-
-.card:hover {
-  transform: rotateY(180deg);
-}
-```
-
-The card rotates around its center point. If origin were `left`, it would rotate around its left edge instead.
-
-## Filters
-
-Filters apply visual effects like blur, brightness, and shadows.
-
-### Common Filters
-
-**blur:** Blur the element
+Apply visual effects like blur and brightness:
 
 ```css
 .element {
   filter: blur(5px);
-}
-```
-
-**brightness:** Adjust brightness
-
-```css
-.element {
-  filter: brightness(1.2); /* 120% brightness */
-}
-
-.element:hover {
-  filter: brightness(0.8); /* Darken on hover */
-}
-```
-
-**contrast:** Adjust contrast
-
-```css
-.element {
-  filter: contrast(1.5); /* Increase contrast */
-}
-```
-
-**grayscale:** Remove color
-
-```css
-.element {
-  filter: grayscale(100%); /* Fully grayscale */
-}
-
-.element:hover {
-  filter: grayscale(0%); /* Color on hover */
-}
-```
-
-**hue-rotate:** Shift colors
-
-```css
-.element {
-  filter: hue-rotate(90deg); /* Shift hue by 90 degrees */
-}
-```
-
-**drop-shadow:** Add shadows
-
-```css
-.element {
+  filter: brightness(1.2) contrast(1.1);
+  filter: grayscale(100%);
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
 }
 ```
 
-Unlike `box-shadow`, `drop-shadow` follows the alpha channel. It creates shadows around transparent PNGs instead of around the rectangular box.
-
-### Combining Filters
-
-Chain multiple filters:
-
-```css
-.element {
-  filter: brightness(1.1) contrast(1.2) saturate(1.3);
-}
-```
-
-Filters apply in order, so results can vary based on sequence.
-
 <Warning>
-Blur filters above 20px are expensive, especially in Safari. Large blur values cause significant performance issues. Use blur sparingly and test on mobile devices.
+Blur filters above 20px are expensive, especially in Safari. Use blur sparingly on mobile.
 </Warning>
 
-## Backdrop Filter
+### Backdrop Filter
 
-`backdrop-filter` applies filters to content behind an element, creating frosted glass effects:
+Apply filters to content behind an element (frosted glass effect):
 
 ```css
 .glass-panel {
@@ -190,367 +293,72 @@ Blur filters above 20px are expensive, especially in Safari. Large blur values c
 }
 ```
 
-This blurs the content behind the panel while keeping the panel's content sharp. It's commonly used for overlays, navigation bars, and modals.
+### Masks
+
+Hide parts of elements using images or gradients:
 
 ```css
-.modal-overlay {
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(8px);
-}
-```
-
-`backdrop-filter` is more expensive than regular filters because it processes the entire background. Use conservative blur values and test performance.
-
-## Clip Path
-
-`clip-path` creates custom shapes by clipping elements:
-
-```css
-.element {
-  clip-path: circle(50%); /* Circular crop */
-}
-
-.element {
-  clip-path: polygon(50% 0%, 100% 100%, 0% 100%); /* Triangle */
-}
-
-.element {
-  clip-path: inset(10px 20px 30px 40px); /* Rectangular inset */
-}
-```
-
-`clip-path` is useful for:
-- Custom shaped avatars
-- Geometric design elements
-- Reveal animations
-
-```css
-.reveal {
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path 0.5s;
-}
-
-.reveal.active {
-  clip-path: inset(0 0 0 0); /* Reveal from left */
-}
-```
-
-## Masks
-
-Masks hide parts of elements using images or gradients.
-
-### Mask Image
-
-Use images as masks:
-
-```css
-.element {
-  mask-image: url('mask.png');
-}
-```
-
-Black areas of the mask image are opaque, white areas are transparent, gray areas are semi-transparent.
-
-### Gradient Masks
-
-Gradients create smooth fades:
-
-```css
-.element {
+.fade-out {
   mask-image: linear-gradient(to bottom, black 70%, transparent);
 }
 ```
 
-This fades out the bottom 30% of the element. **Use `mask-image` over gradients for fades because masks work with any content.** A gradient overlay requires knowing the background color; a mask works regardless.
-
-```css
-/* Good - works with any background */
-.scrollable-list {
-  mask-image: linear-gradient(to bottom, black 90%, transparent);
-}
-
-/* Bad - only works on white backgrounds */
-.scrollable-list::after {
-  content: '';
-  background: linear-gradient(to bottom, transparent, white);
-}
-```
-
-<Warning>
-Don't use fade masks on scrollable content. Users need to see what's being cut off. Fades work for static content or decorative overflows, not interactive scrollable areas.
-</Warning>
-
-### Decorative Elements
-
-When adding decorative elements that shouldn't interfere with interaction:
-
-```css
-.decorative {
-  pointer-events: none; /* Ignore clicks */
-  user-select: none; /* Prevent text selection */
-}
-```
-
-This ensures decorative overlays don't block buttons or prevent text selection.
-
-## Blend Modes
-
-Blend modes control how elements mix with backgrounds:
-
-```css
-.element {
-  background: blue;
-  mix-blend-mode: multiply;
-}
-```
-
-Common blend modes:
-- `multiply` - Darker, like overlapping physical filters
-- `screen` - Lighter, like overlapping lights
-- `overlay` - Contrast boost, combines multiply and screen
-- `difference` - Inverts colors based on brightness difference
-
-Blend modes are useful for creative effects but should be used sparingly in UI. They can cause readability issues and unexpected color interactions.
-
-## Gradients
-
-Gradients create smooth color transitions.
-
-### Linear Gradients
-
-```css
-.element {
-  background: linear-gradient(to right, blue, red);
-}
-```
-
-Control direction:
-
-```css
-background: linear-gradient(to bottom, blue, red);
-background: linear-gradient(to top right, blue, red);
-background: linear-gradient(45deg, blue, red);
-```
-
-Add color stops:
-
-```css
-background: linear-gradient(to right, blue 0%, purple 50%, red 100%);
-```
-
-### Radial Gradients
-
-```css
-.element {
-  background: radial-gradient(circle, blue, red);
-}
-```
-
-Control shape and position:
-
-```css
-background: radial-gradient(circle at top left, blue, red);
-background: radial-gradient(ellipse at center, blue, red);
-```
-
-### Conic Gradients
-
-Conic gradients rotate around a center point:
-
-```css
-.element {
-  background: conic-gradient(from 0deg, red, yellow, green, blue, red);
-}
-```
-
-Useful for pie charts, color wheels, and loading spinners.
-
-### Eased Gradients
-
-Linear color interpolation creates banding in gradients. **Use eased gradients for smoother results:**
-
-```css
-/* Linear - visible banding */
-background: linear-gradient(to right, blue, red);
-
-/* Eased - smoother transition */
-background: linear-gradient(
-  to right,
-  blue 0%,
-  color-mix(in oklch, blue 90%, red 10%) 20%,
-  color-mix(in oklch, blue 50%, red 50%) 50%,
-  color-mix(in oklch, blue 10%, red 90%) 80%,
-  red 100%
-);
-```
-
-Tools like larsenwork.com/easing-gradients generate eased gradients automatically. The improvement is subtle but noticeable in large gradients.
-
-## Multiple Backgrounds
-
-Stack multiple background layers:
-
-```css
-.element {
-  background:
-    linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)),
-    url('image.jpg');
-  background-size: cover, cover;
-  background-position: center, center;
-}
-```
-
-Layers stack front-to-back. The first gradient overlays the image. This is useful for darkening images to improve text contrast.
-
-## Shadows
-
-Shadows add depth but should be subtle.
-
-### Box Shadow
-
-```css
-.element {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-```
-
-The four values are:
-1. Horizontal offset
-2. Vertical offset
-3. Blur radius
-4. Color
-
-Multiple shadows create layered depth:
-
-```css
-.card {
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.12),
-    0 1px 2px rgba(0, 0, 0, 0.24);
-}
-```
-
-Shadows should be directional. `0 4px` (shadow below) suggests a light source above. Inconsistent shadow directions look wrong.
-
-### Text Shadow
-
-```css
-.element {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-```
-
-Text shadows improve readability on images:
-
-```css
-.hero-text {
-  color: white;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-}
-```
-
-But use them sparingly. Heavy text shadows look dated.
-
-## Scroll Snap
-
-`scroll-snap` creates snapping scroll behavior:
-
-```css
-.container {
-  scroll-snap-type: x mandatory;
-  overflow-x: scroll;
-}
-
-.item {
-  scroll-snap-align: start;
-}
-```
-
-This creates a carousel-like scroll where items snap into position. Types:
-- `mandatory` - Always snap to an item
-- `proximity` - Snap only if close to an item
-
-Align options:
-- `start` - Snap to start of container
-- `center` - Snap to center
-- `end` - Snap to end
-
-```css
-/* Image carousel */
-.carousel {
-  display: flex;
-  overflow-x: scroll;
-  scroll-snap-type: x mandatory;
-  scroll-padding: 20px;
-}
-
-.carousel-item {
-  scroll-snap-align: center;
-  flex-shrink: 0;
-}
-```
-
-`scroll-padding` adds space before the snap point, useful for centering items with surrounding padding.
+Masks work with any content, unlike gradient overlays which require knowing the background color.
 
 ## Check Your Understanding
 
 <MultipleChoice
-  question="Why should you use transform: translate() instead of changing left or margin?"
+  question="What does clip-path: inset(0 50% 0 0) do?"
   options={[
-    "It has better browser support",
-    "It runs on the GPU and doesn't trigger layout recalculation",
-    "It produces smoother visual results",
-    "It's easier to write"
+    "Hides the top half of the element",
+    "Hides the right half of the element",
+    "Hides the bottom half of the element",
+    "Hides the left half of the element"
   ]}
   correct={1}
 />
 
 <MultipleChoice
-  question="What's the advantage of mask-image over gradient overlays for fades?"
+  question="Why is the overlay technique effective for tab animations?"
   options={[
-    "Better performance",
-    "Works with varying content and backgrounds",
-    "Smoother transitions",
-    "Better browser support"
+    "It uses less memory than changing styles directly",
+    "It allows smooth color transitions by revealing a pre-styled layer",
+    "It's the only way to animate tabs",
+    "It works without JavaScript"
   ]}
   correct={1}
 />
 
 <MultipleChoice
-  question="What's the maximum safe blur filter value before performance degrades?"
+  question="What's the advantage of clip-path animations over width/height animations?"
   options={[
-    "10px",
-    "20px",
-    "50px",
-    "100px"
+    "Better browser support",
+    "Simpler code",
+    "GPU-accelerated with no layout shifts",
+    "Works with all elements"
   ]}
-  correct={1}
+  correct={2}
 />
 
 <FillBlank
-  question="To make a decorative element ignore click events, use: pointer-events: ___;"
-  answer="none"
+  question="To add rounded corners to an inset clip-path, use: clip-path: inset(0 ___ 16px);"
+  answer="round"
   fuzzyThreshold={0.1}
 />
 
 ## Practice
 
-<Exercise id="hc-glassmorphism-card" />
+Build a tab component that uses the overlay technique. The icons and basic structure are provided—your job is to implement the clip-path animation that slides between tabs.
+
+<Exercise id="hc-clippath-tabs" />
 
 ## Summary
 
-- **Transforms:** Use `translate`, `rotate`, `scale`, and `skew` for GPU-accelerated effects that don't affect layout
-- **Transform origin:** Set pivot point with `transform-origin` to control rotation and scale behavior
-- **Filters:** Apply effects like `blur`, `brightness`, `contrast`, `grayscale`, and `drop-shadow`
-- **Blur performance:** Blur above 20px is expensive, especially in Safari—use sparingly
-- **Backdrop filter:** Apply filters to content behind an element for frosted glass effects
-- **Clip path:** Create custom shapes with `circle()`, `polygon()`, and `inset()`
-- **Mask image:** Use gradients as masks for fades that work with any content
-- **Don't fade scrollable lists:** Users need to see content that's cut off
-- **Decorative elements:** Use `pointer-events: none` and `user-select: none`
-- **Blend modes:** Control element mixing with `multiply`, `screen`, `overlay`, and `difference`
-- **Gradients:** Create linear, radial, and conic gradients; use eased gradients for smoother results
-- **Eased gradients:** Prefer eased color stops over linear interpolation to avoid banding
-- **Multiple backgrounds:** Stack layers front-to-back for overlays and effects
-- **Shadows:** Use subtle, directional shadows for depth; layer multiple shadows for realism
-- **Scroll snap:** Create carousel-like scroll behavior with `scroll-snap-type` and `scroll-snap-align`
+- **clip-path basics**: Clips elements into shapes without affecting layout
+- **inset() function**: Defines rectangular clips with top, right, bottom, left offsets
+- **Animation foundation**: Animate from `inset(0 100% 0 0)` to `inset(0)` to reveal content
+- **Overlay technique**: Stack two identical elements, clip the styled one to create sliding highlights
+- **Calculating position**: Use `offsetLeft` and `offsetWidth` to compute clip percentages
+- **Performance**: `clip-path` is GPU-accelerated; prefer `inset()` over complex polygons
+- **Transitions**: Add `transition: clip-path 0.25s ease` for smooth animations
+- **Round corners**: Use `inset(... round Xpx)` for rounded clip regions

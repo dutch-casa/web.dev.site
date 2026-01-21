@@ -1,0 +1,95 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #f8fafc;
+  padding: 16px;
+}
+
+/* Container for the tabs - positions the overlay */
+.wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: fit-content;
+}
+
+/* Base tab list styling */
+.tabs {
+  position: relative;
+  display: flex;
+  list-style: none;
+  gap: 8px;
+}
+
+/* Individual tab button */
+.tab-button {
+  display: flex;
+  height: 34px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 17px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab-button:hover {
+  color: #334155;
+}
+
+/* ========================================
+   OVERLAY STYLES - The "active" layer
+   ======================================== */
+
+/* The overlay container - positions absolutely over the base tabs */
+.tabs-overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+
+  /* Smooth animation when clip-path changes */
+  -webkit-transition: -webkit-clip-path 0.25s ease, clip-path 0.25s ease;
+  transition: -webkit-clip-path 0.25s ease, clip-path 0.25s ease;
+
+  /* Initial clip-path - will be set by JavaScript */
+  -webkit-clip-path: inset(0 75% 0 0 round 17px);
+  clip-path: inset(0 75% 0 0 round 17px);
+}
+
+/* Active tab styling - white text on blue background */
+.tabs-active {
+  background: #2563eb;
+  border-radius: 17px;
+}
+
+.tabs-active .tab-button {
+  color: #fff;
+}
+
+/* ========================================
+   ACCESSIBILITY
+   ======================================== */
+
+.tab-button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+[aria-selected="true"] {
+  color: #1e293b;
+}

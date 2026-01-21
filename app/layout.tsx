@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Figtree, Playfair_Display, JetBrains_Mono, EB_Garamond } from "next/font/google";
 import "./globals.css";
 import { SpeedDialNav } from "@/components/ui/speed-dial-nav";
+import { CommandMenuProvider } from "@/components/command-menu/command-menu-provider";
+import { getSearchData } from "@/lib/search-data";
 
 const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
 
@@ -40,20 +42,24 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const searchData = await getSearchData();
+
   return (
     <html lang="en" className={`${figtree.variable} ${playfair.variable} ${ebGaramond.variable} overflow-x-hidden`}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${jetbrainsMono.variable} antialiased overflow-x-hidden`}
       >
-        {children}
-        <div className="fixed bottom-8 right-8 z-50">
-          <SpeedDialNav />
-        </div>
+        <CommandMenuProvider searchData={searchData}>
+          {children}
+          <div className="fixed bottom-8 right-8 z-50">
+            <SpeedDialNav />
+          </div>
+        </CommandMenuProvider>
       </body>
     </html>
   );

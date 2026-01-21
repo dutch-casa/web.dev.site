@@ -22,6 +22,17 @@ export default async function ModulesPage() {
             Free courses with interactive code examples, quizzes, and hands-on
             exercises. Your progress is saved locally.
           </p>
+          <p className="text-sm text-muted-foreground">
+            Course contributions are welcome!{" "}
+            <Link
+              href="https://github.com/RobotCrookedMan/web.dev.site"
+              className="underline underline-offset-4 hover:text-foreground transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Submit a pull request on GitHub.
+            </Link>
+          </p>
         </header>
 
         {courses.length === 0 ? (

@@ -7,6 +7,7 @@ import {
   Warning,
   Tip,
   StarterCode,
+  ExternalLink,
   CodeSlidesSimple,
   YouTubeVideo,
   MultipleChoice,
@@ -80,6 +81,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
 
     // Starter code links
     StarterCode,
+
+    // External links
+    ExternalLink,
 
     // Code slides (comparison/slideshow)
     CodeSlides: CodeSlidesSimple,
